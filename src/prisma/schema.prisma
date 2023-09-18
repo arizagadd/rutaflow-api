@@ -8,7 +8,7 @@ datasource db {
 }
 
 model checklist {
-        id_checklist    Int               @id
+        id_checklist    Int               @id @default(autoincrement())
         item            String?           @db.VarChar(100)
         id_client       Int
         client          client            @relation(fields: [id_client], references: [id_client], onDelete: NoAction, onUpdate: NoAction, map: "fk_checklist_client1")
@@ -18,7 +18,7 @@ model checklist {
 }
 
 model checklist_event {
-        id_checklist_event Int       @id
+        id_checklist_event Int       @id @default(autoincrement())
         id_checklist       Int
         id_route           Int
         img                String?   @db.VarChar(100)
@@ -30,18 +30,18 @@ model checklist_event {
 }
 
 model client {
-        id_client            Int         @id
-        id_company           Int
+        id_client            Int         @id @default(autoincrement())
+        id_enterprise        Int
         name                 String?     @db.VarChar(200)
         contract_description String?     @db.VarChar(45)
         pickup_time          Int?
         delivery_time        Int?
         checklist            checklist[]
-        enterprise           enterprise  @relation(fields: [id_company], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_client_company1")
+        enterprise           enterprise  @relation(fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_client_enterprise1")
         route                route[]
         stop                 stop[]
 
-        @@index([id_company], map: "fk_client_company1_idx")
+        @@index([id_enterprise], map: "fk_client_company1_idx")
 }
 
 model cms_menu {
@@ -54,8 +54,7 @@ model cms_menu {
         tipo        String        @default("catalogo") @db.VarChar(100)
         listado     String        @db.Text
         campos      String        @db.Text
-        search      CmsMenuSearch
-        // search      CmsMenuSearch @default(dbgenerated("0"))
+        search      CmsMenuSearch @default(FALSE)
         extra       String?       @db.VarChar(500)
         orden       Int
 }
@@ -64,51 +63,63 @@ model delivery_week {
         id_delivery_week Int                  @id @default(autoincrement())
         week_start       DateTime             @db.Date
         notes            String?              @db.VarChar(500)
-        finished         DeliveryWeekFinished
-        // finished         DeliveryWeekFinished @default(dbgenerated("0"))
-        id_company       Int
-        enterprise       enterprise           @relation(fields: [id_company], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_delivery_week_company1")
+        finished         DeliveryWeekFinished @default(FALSE)
+        id_enterprise    Int
+        enterprise       enterprise           @relation(fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_delivery_week_enterprise1")
 
-        @@index([id_company], map: "fk_delivery_week_company1_idx")
+        @@index([id_enterprise], map: "fk_delivery_week_company1_idx")
 }
 
 model driver {
-        id_driver     Int           @id
-        id_user       Int
-        id_enterprise Int
-        alias         String?       @db.VarChar(45)
-        img           String?       @db.VarChar(200)
-        status        DriverStatus?
-        enterprise    enterprise    @relation(fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_driver_enterprise1")
-        user          user          @relation(fields: [id_user], references: [id_user], onDelete: NoAction, onUpdate: NoAction, map: "fk_driver_user")
-        route         route[]
+        id_driver           Int                       @id @default(autoincrement())
+        id_user             Int
+        id_enterprise       Int
+        date_of_birth       DateTime?                 @db.Date
+        alias               String?                   @db.VarChar(45)
+        img                 String?                   @db.VarChar(200)
+        status              DriverStatus?
+        ine_exp_date        DateTime?                 @db.Date
+        license_exp_date    DateTime?                 @db.Date
+        insurance_status    DriverInsuranceStatus?
+        insurance_number    String?                   @db.VarChar(45)
+        emergency_contact   String?                   @db.VarChar(45)
+        operator_type       String?                   @db.VarChar(45)
+        certification       DriverCertification?
+        courses             DriverCourses?
+        entry_date          DateTime?                 @db.Date
+        travel_availability DriverTravelAvailability?
+        maneuvers           DriverManeuvers?
+        enterprise          enterprise                @relation(fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_driver_enterprise1")
+        user                user                      @relation(fields: [id_user], references: [id_user], onDelete: NoAction, onUpdate: NoAction, map: "fk_driver_user")
+        event               event[]
+        route               route[]
 
         @@index([id_enterprise], map: "fk_driver_enterprise1_idx")
         @@index([id_user], map: "fk_driver_user_idx")
 }
 
 model enterprise {
-        id_enterprise                    Int                  @id @default(autoincrement())
-        name                             String?              @db.VarChar(100)
-        id_owner                         Int
-        components                       String?              @db.VarChar(45)
-        description                      String?              @db.VarChar(45)
-        objective                        EnterpriseObjective?
-        settings                         String?              @db.VarChar(1000)
-        client                           client[]
-        delivery_week                    delivery_week[]
-        driver                           driver[]
-        user_enterprise_id_ownerTouser   user                 @relation("enterprise_id_ownerTouser", fields: [id_owner], references: [id_user], onDelete: NoAction, onUpdate: NoAction, map: "fk_company_user1")
-        route                            route[]
-        route_template                   route_template[]
-        user_user_id_companyToenterprise user[]               @relation("user_id_companyToenterprise")
-        vehicle                          vehicle[]
+        id_enterprise                       Int                  @id @default(autoincrement())
+        name                                String?              @db.VarChar(100)
+        id_owner                            Int
+        components                          String?              @db.VarChar(45)
+        description                         String?              @db.VarChar(45)
+        objective                           EnterpriseObjective?
+        settings                            String?              @db.VarChar(1000)
+        client                              client[]
+        delivery_week                       delivery_week[]
+        driver                              driver[]
+        user_enterprise_id_ownerTouser      user                 @relation("enterprise_id_ownerTouser", fields: [id_owner], references: [id_user], onDelete: NoAction, onUpdate: NoAction, map: "fk_company_user1")
+        route                               route[]
+        route_template                      route_template[]
+        user_user_id_enterpriseToenterprise user[]               @relation("user_id_enterpriseToenterprise")
+        vehicle                             vehicle[]
 
         @@index([id_owner], map: "fk_company_user1_idx")
 }
 
 model event {
-        id_event          Int                  @id
+        id_event          Int                  @id @default(autoincrement())
         id_route          Int
         id_stop           Int
         status            EventStatus?
@@ -124,16 +135,18 @@ model event {
         km                Decimal?             @db.Decimal(10, 2)
         logistic_comments String?              @db.VarChar(1000)
         pos               Int?
+        driver            driver?              @relation(fields: [id_driver], references: [id_driver], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_driver1")
         route             route                @relation(fields: [id_route], references: [id_route], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_route1")
         stop              stop                 @relation(fields: [id_stop], references: [id_stop], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_stop1")
         evidence          evidence[]
 
         @@index([id_route], map: "fk_event_route1_idx")
         @@index([id_stop], map: "fk_event_stop1_idx")
+        @@index([id_driver], map: "fk_event_driver1_idx")
 }
 
 model event_template {
-        id_event_template Int            @id
+        id_event_template Int            @id @default(autoincrement())
         id_route_template Int
         id_stop           Int
         pos               String?        @db.VarChar(45)
@@ -145,7 +158,7 @@ model event_template {
 }
 
 model evidence {
-        id_evidence Int               @id
+        id_evidence Int               @id @default(autoincrement())
         id_event    Int
         img         String?           @db.VarChar(100)
         type        String?           @db.VarChar(45)
@@ -191,7 +204,7 @@ model report {
 }
 
 model route {
-        id_route          Int               @id
+        id_route          Int               @id @default(autoincrement())
         id_enterprise     Int
         id_client         Int
         id_vehicle        Int
@@ -227,15 +240,16 @@ model route_template {
         description       String?          @db.VarChar(45)
         color             String?          @db.VarChar(45)
         symbol            String?          @db.VarChar(45)
-        id_company        Int
+        id_enterprise     Int
         stop_initial      Int?
         stop_final        Int?
+        tag               String?          @db.VarChar(100)
         event_template    event_template[]
         route             route[]
-        enterprise        enterprise       @relation(fields: [id_company], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_base_route_company1")
+        enterprise        enterprise       @relation(fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_base_route_enterprise1")
         stop              stop[]
 
-        @@index([id_company], map: "fk_base_route_company1_idx")
+        @@index([id_enterprise], map: "fk_base_route_company1_idx")
 }
 
 model stop {
@@ -274,32 +288,46 @@ model support_log {
 }
 
 model user {
-        id_user                                Int          @id @default(autoincrement())
-        name                                   String?      @db.VarChar(100)
-        type                                   UserType?
-        email                                  String?      @db.VarChar(45)
-        user                                   String?      @db.VarChar(45)
-        pass                                   String?      @db.VarChar(45)
-        token                                  String?      @db.VarChar(45)
-        phone                                  String?      @db.VarChar(45)
-        referral_code                          String?      @db.VarChar(200)
-        active                                 UserActive?
-        id_company                             Int?
-        driver                                 driver[]
-        enterprise_enterprise_id_ownerTouser   enterprise[] @relation("enterprise_id_ownerTouser")
-        enterprise_user_id_companyToenterprise enterprise?  @relation("user_id_companyToenterprise", fields: [id_company], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_company1")
+        id_user                                   Int          @id @default(autoincrement())
+        name                                      String?      @db.VarChar(100)
+        last_name                                 String?      @db.VarChar(100)
+        date_of_birth                             DateTime?    @db.Date
+        type                                      UserType?
+        email                                     String?      @db.VarChar(45)
+        user                                      String?      @db.VarChar(45)
+        pass                                      String?      @db.VarChar(45)
+        token                                     String?      @db.VarChar(45)
+        phone                                     String?      @db.VarChar(45)
+        referral_code                             String?      @db.VarChar(200)
+        active                                    UserActive?
+        id_enterprise                             Int?
+        driver                                    driver[]
+        enterprise_enterprise_id_ownerTouser      enterprise[] @relation("enterprise_id_ownerTouser")
+        enterprise_user_id_enterpriseToenterprise enterprise?  @relation("user_id_enterpriseToenterprise", fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_enterprise1")
 
-        @@index([id_company], map: "fk_user_company1_idx")
+        @@index([id_enterprise], map: "fk_user_company1_idx")
 }
 
 model vehicle {
-        id_vehicle    Int            @id
-        id_enterprise Int
-        name          String?        @db.VarChar(200)
-        img           String?        @db.VarChar(200)
-        status        VehicleStatus?
-        route         route[]
-        enterprise    enterprise     @relation(fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_vehicle_enterprise1")
+        id_vehicle       Int            @id @default(autoincrement())
+        id_enterprise    Int
+        name             String?        @db.VarChar(200)
+        img              String?        @db.VarChar(200)
+        status           VehicleStatus?
+        brand            String?        @db.VarChar(100)
+        model            String?        @db.VarChar(45)
+        year             Int?
+        color            String?        @db.VarChar(45)
+        motor            String?        @db.VarChar(45)
+        serial_number    String?        @db.VarChar(45)
+        insurance_number String?        @db.VarChar(45)
+        fuel_type        String?        @db.VarChar(45)
+        plate_number     String?        @db.VarChar(45)
+        capacity         String?        @db.VarChar(45)
+        dimension        String?        @db.VarChar(45)
+        comments         String?        @db.VarChar(500)
+        route            route[]
+        enterprise       enterprise     @relation(fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_vehicle_enterprise1")
 
         @@index([id_enterprise], map: "fk_vehicle_enterprise1_idx")
 }
@@ -368,13 +396,6 @@ enum EnterpriseObjective {
         @@map("enterprise_objective")
 }
 
-enum StopMain {
-        FALSE @map("0")
-        TRUE  @map("1")
-
-        @@map("stop_main")
-}
-
 enum DriverStatus {
         AVAILABLE   @map("available")
         NODOCS      @map("nodocs")
@@ -397,12 +418,11 @@ enum CmsMenuSearch {
         @@map("cms_menu_search")
 }
 
-// How it's represented in TSS
 enum UserActive {
         FALSE @map("0")
         TRUE  @map("1")
 
-        @@map("user_active") // How it appears in MySQL
+        @@map("user_active")
 }
 
 enum EventPriorityStatus {
@@ -411,4 +431,46 @@ enum EventPriorityStatus {
         NOTURGENT @map("noturgent")
 
         @@map("event_priority_status")
+}
+
+enum StopMain {
+        FALSE @map("0")
+        TRUE  @map("1")
+
+        @@map("stop_main")
+}
+
+enum DriverInsuranceStatus {
+        FALSE @map("0")
+        TRUE  @map("1")
+
+        @@map("driver_insurance_status")
+}
+
+enum DriverCertification {
+        FALSE @map("0")
+        TRUE  @map("1")
+
+        @@map("driver_certification")
+}
+
+enum DriverCourses {
+        FALSE @map("0")
+        TRUE  @map("1")
+
+        @@map("driver_courses")
+}
+
+enum DriverTravelAvailability {
+        FALSE @map("0")
+        TRUE  @map("1")
+
+        @@map("driver_travel_availability")
+}
+
+enum DriverManeuvers {
+        FALSE @map("0")
+        TRUE  @map("1")
+
+        @@map("driver_maneuvers")
 }
