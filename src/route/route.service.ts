@@ -79,6 +79,7 @@ export class RouteService {
                                         throw new Error('record not found');
                                 }
 
+                                const checklist = await this.enterpriseRepository.createChecklist(client.id_client);
                                 const rd: RouteData = {
                                         enterpriseId: data.enterpriseId,
                                         clientId: data.clientId,
@@ -96,6 +97,11 @@ export class RouteService {
                                 };
                                 const newRoute = await this.routeRepository.createRoute(rd);
 
+                                // create checklist_event
+                                await this.routeRepository.createChecklistEvent(checklist.id_checklist, newRoute.id_route);
+
+                                // TODO: create a an event for the route but you need to also create stops
+
                                 // totalDistance: `${totalDistance / 1000} km`, // convert meters to kilometers
                                 // totalDuration: `${totalDuration / 3600} hours`, // convert seconds to hours
                                 // stopInitial: legPolyline[0],
@@ -104,7 +110,7 @@ export class RouteService {
                                 return newRoute;
                         }
                 } catch (err) {
-                        throw new Error('Unable to fetch directions from Google Maps API.');
+                        throw new Error(err);
                 }
         }
 

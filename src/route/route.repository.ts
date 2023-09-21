@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { route, route_template } from '@prisma/client';
+import { checklist_event, event, route, route_template } from '@prisma/client';
 import { PrismaRepository } from '../prisma/prisma.repository';
 import { RouteData } from './interfaces/route.interface';
 @Injectable()
@@ -27,8 +27,8 @@ export class RouteRepository {
                                         total_distance: data.totalDistance,
                                         stop_initial: 0,
                                         stop_final: data.stopFinal,
-                                        // checklist_event[] TODO: set these up later
-                                        //event[] TODO: set this up later too
+                                        // checklist_event[] TODO: might have to extract these to a function at the service level or controller level
+                                        //event[] TODO:  might have to extract these to a function at the service level or controller level
                                 },
                         });
                 } catch (error) {
@@ -58,5 +58,28 @@ export class RouteRepository {
                 } catch (err) {
                         console.log(err);
                 }
+        }
+        async findAllEvents(): Promise<event[]> {
+                try {
+                        return await this.prismaRepository.event.findMany();
+                } catch (e) {
+                        console.log(e);
+                }
+        }
+
+        async findAllChecklistEvents(): Promise<checklist_event[]> {
+                try {
+                        return await this.prismaRepository.checklist_event.findMany();
+                } catch (e) {
+                        console.log(e);
+                }
+        }
+        async createChecklistEvent(checklistId: number, routeId: number) {
+                return await this.prismaRepository.checklist_event.create({
+                        data: {
+                                id_checklist: checklistId,
+                                id_route: routeId,
+                        },
+                });
         }
 }

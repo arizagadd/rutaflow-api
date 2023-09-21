@@ -21,4 +21,11 @@ export class EnterpriseRepository {
                         },
                 });
         }
+        async createChecklist(clientId: number) {
+                return await this.prismaRepository.checklist.create({
+                        data: {
+                                id_client: clientId,
+                        },
+                });
+        }
 }
