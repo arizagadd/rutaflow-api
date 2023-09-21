@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { route } from '@prisma/client';
 import { DriverRepository } from '../driver/driver.repository';
 import { EnterpriseRepository } from '../enterprise/enterprise.repository';
-import { MapDirectionsParams } from '../maps/maps.interface';
+import { DirectionsRequestParams } from '../maps/maps.interface';
 import { MapsService } from '../maps/maps.service';
 import { VehicleRepository } from '../vehicle/vehicle.repository';
 import { CreateRouteDto } from './dtos/route.dto';
@@ -20,7 +20,7 @@ export class RouteService {
         ) {}
 
         async generateRoute(data: CreateRouteDto): Promise<route> {
-                const params: MapDirectionsParams = {
+                const params: DirectionsRequestParams = {
                         origin: data.origin,
                         destination: data.destination,
                         waypoints: data.waypoints,
@@ -60,7 +60,6 @@ export class RouteService {
                                 const vehicle = await this.vehicleRepository.findVehicleById(data.vehicleId);
                                 const routeTemplate = await this.routeRepository.findRouteTemplateById(data.routeTemplateId);
 
-                                // representation of the Route Entity in DB
                                 const rd: RouteData = {
                                         enterpriseId: enterprise.id_enterprise,
                                         clientId: client.id_client,
@@ -76,12 +75,13 @@ export class RouteService {
                                         stopInitial: 0,
                                         stopFinal: totalStops,
                                 };
+                                const newRoute = await this.routeRepository.createRoute(rd);
+
                                 // totalDistance: `${totalDistance / 1000} km`, // convert meters to kilometers
                                 // totalDuration: `${totalDuration / 3600} hours`, // convert seconds to hours
                                 // stopInitial: legPolyline[0],
                                 // stopFinal: legPolyline[legPolyline.length - 1],
 
-                                const newRoute = await this.routeRepository.createRoute(rd);
                                 return newRoute;
                         }
                 } catch (err) {

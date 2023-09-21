@@ -1,15 +1,7 @@
 import { Client, DirectionsResponse, LatLng, TravelMode } from '@googlemaps/google-maps-services-js';
 import { geocode } from '@googlemaps/google-maps-services-js/dist/geocode/geocode';
 import { Injectable } from '@nestjs/common';
-import { MapDirectionsParams } from './maps.interface';
-
-// interface DirectionsRequestParams {
-//         origin: string;
-//         destination: string;
-//         // mode: TravelMode;
-//         waypoints: LatLng[];
-//         key: string;
-// }
+import { DirectionsRequestParams } from './maps.interface';
 
 @Injectable()
 export class MapsService {
@@ -21,7 +13,7 @@ export class MapsService {
                 this.googleMapsClient = new Client({});
         }
 
-        public async getDirections(data: MapDirectionsParams): Promise<DirectionsResponse> {
+        public async getDirections(data: DirectionsRequestParams): Promise<DirectionsResponse> {
                 try {
                         const origin = await this.convertLocationToLatLng(data.origin);
                         const destination = await this.convertLocationToLatLng(data.destination);
