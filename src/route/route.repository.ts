@@ -19,14 +19,14 @@ export class RouteRepository {
                                         id_vehicle: data.vehicleId,
                                         id_driver: data.driverId,
                                         id_route_template: data.routeTemplateId,
-                                        name: 'Test Route 1',
+                                        name: data.name,
                                         date_start: new Date(),
                                         date_end: new Date(),
                                         polyline: data.polyline,
                                         total_duration: data.totalDuration,
                                         total_distance: data.totalDistance,
                                         stop_initial: 0,
-                                        stop_final: 4,
+                                        stop_final: data.stopFinal,
                                         // checklist_event[] TODO: set these up later
                                         //event[] TODO: set this up later too
                                 },
