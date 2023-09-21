@@ -55,17 +55,36 @@ export class RouteService {
                                 const totalStops = legPolyline.length;
 
                                 const enterprise = await this.enterpriseRepository.findEnterpriseById(data.enterpriseId);
+                                if (!enterprise) {
+                                        throw new Error('record not found');
+                                }
+
                                 const client = await this.enterpriseRepository.findClientById(data.clientId);
+                                if (!client) {
+                                        throw new Error('record not found');
+                                }
+
                                 const driver = await this.driverRepository.findDriverById(data.driverId);
+                                if (!driver) {
+                                        throw new Error('record not found');
+                                }
+
                                 const vehicle = await this.vehicleRepository.findVehicleById(data.vehicleId);
+                                if (!vehicle) {
+                                        throw new Error('record not found');
+                                }
+
                                 const routeTemplate = await this.routeRepository.findRouteTemplateById(data.routeTemplateId);
+                                if (!routeTemplate) {
+                                        throw new Error('record not found');
+                                }
 
                                 const rd: RouteData = {
-                                        enterpriseId: enterprise.id_enterprise,
-                                        clientId: client.id_client,
-                                        vehicleId: vehicle.id_vehicle,
-                                        driverId: driver.id_driver,
-                                        routeTemplateId: routeTemplate.id_route_template,
+                                        enterpriseId: data.enterpriseId,
+                                        clientId: data.clientId,
+                                        vehicleId: data.vehicleId,
+                                        driverId: data.driverId,
+                                        routeTemplateId: data.routeTemplateId,
                                         name: data.name,
                                         dateStart: new Date(),
                                         dateEnd: new Date(),
