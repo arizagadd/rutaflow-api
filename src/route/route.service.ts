@@ -3,7 +3,7 @@ import { DriverRepository } from '../driver/driver.repository';
 import { EnterpriseRepository } from '../enterprise/enterprise.repository';
 import { MapsService } from '../maps/maps.service';
 import { VehicleRepository } from '../vehicle/vehicle.repository';
-import { RouteData } from './route.interface';
+import { CreateRouteDto } from './route.dto';
 import { RouteRepository } from './route.repository';
 
 @Injectable()
@@ -15,7 +15,7 @@ export class RouteService {
                 private readonly vehicleRepository: VehicleRepository,
                 private readonly driverRepository: DriverRepository,
         ) {}
-        async generateRoute(data: RouteData) {
+        async generateRoute(data: CreateRouteDto) {
                 try {
                         const directions = await this.mapsService.getDirections(data);
 

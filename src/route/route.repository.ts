@@ -10,38 +10,6 @@ export class RouteRepository {
 
         async createRoute(data: any) {
                 try {
-                        // // hacer query a bd para obtener entidad
-                        // const enterprise = await this.prismaRepository.enterprise.findFirst({
-                        //         where: {
-                        //                 id_enterprise: 2,
-                        //         },
-                        // });
-                        // const client = await this.prismaRepository.client.findFirst({
-                        //         where: {
-                        //                 id_client: 2,
-                        //         },
-                        // });
-
-                        // const vehicle = await this.prismaRepository.vehicle.findFirst({
-                        //         where: {
-                        //                 id_vehicle: 2,
-                        //         },
-                        // });
-
-                        // const driver = await this.prismaRepository.driver.findFirst({
-                        //         where: {
-                        //                 id_driver: 2,
-                        //         },
-                        // });
-
-                        // const routeTemplate = await this.prismaRepository.route_template.findFirst({
-                        //         where: {
-                        //                 id_route_template: 30,
-                        //         },
-                        // });
-
-                        // const checklistEvent = this.prismaRepository.checklist_event.findMany();
-
                         const result = await this.prismaRepository.route.create({
                                 data: {
                                         id_enterprise: data.id_enterprise,
@@ -58,7 +26,7 @@ export class RouteRepository {
                                         stop_initial: 0,
                                         stop_final: 4,
                                         // checklist_event[] TODO: set these up later
-                                        //event[]
+                                        //event[] TODO: set this up later too
                                 },
                         });
                         console.log(result);

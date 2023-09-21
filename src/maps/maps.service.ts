@@ -1,6 +1,7 @@
 import { Client, DirectionsResponse, LatLng, TravelMode } from '@googlemaps/google-maps-services-js';
 import { geocode } from '@googlemaps/google-maps-services-js/dist/geocode/geocode';
 import { Injectable } from '@nestjs/common';
+import { CreateRouteDto } from '../route/route.dto';
 
 // interface DirectionsRequestParams {
 //         origin: string;
@@ -20,20 +21,25 @@ export class MapsService {
                 this.googleMapsClient = new Client({});
         }
 
-        public async getDirections(data: any): Promise<DirectionsResponse> {
-                const origin = await this.convertLocationToLatLng(data.origin);
-                const destination = await this.convertLocationToLatLng(data.destination);
-                const waypoints: LatLng[] = await this.convertLocationsToLatLng(data.waypoints);
+        public async getDirections(data: CreateRouteDto): Promise<DirectionsResponse> {
+                try {
+                        const origin = await this.convertLocationToLatLng(data.origin);
+                        const destination = await this.convertLocationToLatLng(data.destination);
+                        const waypoints: LatLng[] = await this.convertLocationsToLatLng(data.waypoints);
+                        console.log([origin, destination, waypoints, this.apiKey]);
 
-                return await this.googleMapsClient.directions({
-                        params: {
-                                origin,
-                                destination,
-                                mode: TravelMode.driving,
-                                waypoints,
-                                key: this.apiKey,
-                        },
-                });
+                        return await this.googleMapsClient.directions({
+                                params: {
+                                        origin,
+                                        destination,
+                                        mode: TravelMode.driving,
+                                        waypoints,
+                                        key: this.apiKey,
+                                },
+                        });
+                } catch (error) {
+                        console.log(error);
+                }
         }
 
         public isLatLngFormat(location: string): boolean {
