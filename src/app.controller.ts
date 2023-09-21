@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { AppService } from './app.service';
 import { UserRepository } from './user/user.repository';
 
@@ -8,17 +8,21 @@ export class AppController {
                 private readonly appService: AppService,
                 private readonly userRepository: UserRepository,
         ) {}
+        // @Get('seed')
+        // private async seedDatabase() {
 
-        @Get()
-        getHello(): string {
-                const user = {
-                        name: 'example',
-                        email: 'example',
-                        pass: 'example',
-                };
+        // }
 
-                this.userRepository.create(user);
+        // @Get()
+        // getHello(): string {
+        //         const user = {
+        //                 name: 'example',
+        //                 email: 'example',
+        //                 pass: 'example',
+        //         };
 
-                return this.appService.getHello();
-        }
+        //         this.userRepository.create(user);
+
+        //         return this.appService.getHello();
+        // }
 }

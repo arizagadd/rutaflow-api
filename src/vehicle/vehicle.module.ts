@@ -1,7 +1,11 @@
 import { Module } from '@nestjs/common';
+import { PrismaModule } from '../prisma/prisma.module';
+import { VehicleRepository } from './vehicle.repository';
 import { VehicleService } from './vehicle.service';
 
 @Module({
-  providers: [VehicleService]
+        imports: [PrismaModule],
+        providers: [VehicleService, VehicleRepository],
+        exports: [VehicleService, VehicleRepository],
 })
 export class VehicleModule {}
