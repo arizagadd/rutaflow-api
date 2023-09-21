@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common';
+import { route } from '@prisma/client';
 import { DriverRepository } from '../driver/driver.repository';
 import { EnterpriseRepository } from '../enterprise/enterprise.repository';
+import { MapDirectionsParams } from '../maps/maps.interface';
 import { MapsService } from '../maps/maps.service';
 import { VehicleRepository } from '../vehicle/vehicle.repository';
 import { CreateRouteDto } from './route.dto';
+import { RouteData } from './route.interface';
 import { RouteRepository } from './route.repository';
 
 @Injectable()
@@ -15,9 +18,16 @@ export class RouteService {
                 private readonly vehicleRepository: VehicleRepository,
                 private readonly driverRepository: DriverRepository,
         ) {}
-        async generateRoute(data: CreateRouteDto) {
+
+        async generateRoute(data: CreateRouteDto): Promise<route> {
+                const params: MapDirectionsParams = {
+                        origin: data.origin,
+                        destination: data.destination,
+                        waypoints: data.waypoints,
+                };
+
                 try {
-                        const directions = await this.mapsService.getDirections(data);
+                        const directions = await this.mapsService.getDirections(params);
 
                         if (directions.data.routes && directions.data.routes[0]) {
                                 // get complete route polyline
@@ -42,6 +52,8 @@ export class RouteService {
                                         return leg.steps.map((step) => step.polyline.points).join('');
                                 });
 
+                                const totalStops = legPolyline.length;
+
                                 const enterprise = await this.enterpriseRepository.findEnterpriseById(data.enterpriseId);
                                 const client = await this.enterpriseRepository.findClientById(data.clientId);
                                 const driver = await this.driverRepository.findDriverById(data.driverId);
@@ -49,31 +61,40 @@ export class RouteService {
                                 const routeTemplate = await this.routeRepository.findRouteTemplateById(data.routeTemplateId);
 
                                 // representation of the Route Entity in DB
-                                const routeObj = {
-                                        id_enterprise: enterprise.id_enterprise,
-                                        id_client: client.id_client,
-                                        id_vehicle: vehicle.id_vehicle,
-                                        id_driver: driver.id_driver,
-                                        id_route_template: routeTemplate.id_route_template,
-                                        name: 'LA - Colorado',
+                                const rd: RouteData = {
+                                        enterpriseId: enterprise.id_enterprise,
+                                        clientId: client.id_client,
+                                        vehicleId: vehicle.id_vehicle,
+                                        driverId: driver.id_driver,
+                                        routeTemplateId: routeTemplate.id_route_template,
+                                        name: data.name,
                                         dateStart: new Date(),
-                                        dateEnd: 'evening',
+                                        dateEnd: new Date(),
                                         polyline: pl,
-                                        // totalDistance: `${totalDistance / 1000} km`, // convert meters to kilometers
-                                        // totalDuration: `${totalDuration / 3600} hours`, // convert seconds to hours
                                         totalDistance,
                                         totalDuration,
-                                        stopInitial: legPolyline[0],
-                                        stopFinal: legPolyline[legPolyline.length - 1],
+                                        stopInitial: 0,
+                                        stopFinal: 4,
                                 };
+                                // totalDistance: `${totalDistance / 1000} km`, // convert meters to kilometers
+                                // totalDuration: `${totalDuration / 3600} hours`, // convert seconds to hours
+                                // stopInitial: legPolyline[0],
+                                // stopFinal: legPolyline[legPolyline.length - 1],
 
-                                const result = await this.routeRepository.createRoute(routeObj);
-                                console.log(result);
+                                const newRoute = await this.routeRepository.createRoute(rd);
 
-                                return { status: 'ok' };
+                                return newRoute;
                         }
-                } catch (error) {
+                } catch (err) {
                         throw new Error('Unable to fetch directions from Google Maps API.');
+                }
+        }
+
+        async findRouteById(id: number): Promise<route> {
+                try {
+                        return await this.routeRepository.findRouteById(id);
+                } catch (err) {
+                        console.log(err);
                 }
         }
 }

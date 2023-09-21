@@ -1,7 +1,7 @@
 import { Client, DirectionsResponse, LatLng, TravelMode } from '@googlemaps/google-maps-services-js';
 import { geocode } from '@googlemaps/google-maps-services-js/dist/geocode/geocode';
 import { Injectable } from '@nestjs/common';
-import { CreateRouteDto } from '../route/route.dto';
+import { MapDirectionsParams } from './maps.interface';
 
 // interface DirectionsRequestParams {
 //         origin: string;
@@ -21,12 +21,11 @@ export class MapsService {
                 this.googleMapsClient = new Client({});
         }
 
-        public async getDirections(data: CreateRouteDto): Promise<DirectionsResponse> {
+        public async getDirections(data: MapDirectionsParams): Promise<DirectionsResponse> {
                 try {
                         const origin = await this.convertLocationToLatLng(data.origin);
                         const destination = await this.convertLocationToLatLng(data.destination);
                         const waypoints: LatLng[] = await this.convertLocationsToLatLng(data.waypoints);
-                        console.log([origin, destination, waypoints, this.apiKey]);
 
                         return await this.googleMapsClient.directions({
                                 params: {

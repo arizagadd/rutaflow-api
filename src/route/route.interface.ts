@@ -4,15 +4,15 @@ export interface RouteData {
         driverId: number;
         vehicleId: number;
         routeTemplateId?: number;
-        origin: string;
-        destination: string;
-        waypoints: string[];
-        // name: string;
-        // dateStart: Date;
-        // dateEnd: Date;
-        // polyline: string;
-        // totalDistance: number;
-        // totalDuration: number;
-        // stopInitial: number;
-        // stopFinal: number;
+        // origin: string;
+        // destination: string;
+        // waypoints: string[];
+        name: string;
+        dateStart: Date;
+        dateEnd: Date;
+        polyline: string;
+        totalDistance: number;
+        totalDuration: number;
+        stopInitial: number;
+        stopFinal: number;
 }

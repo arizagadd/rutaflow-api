@@ -1,6 +1,10 @@
 import { ArrayMinSize, IsArray, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateRouteDto {
+        @IsString()
+        @IsNotEmpty()
+        name: string;
+
         @IsNumber()
         @IsNotEmpty()
         enterpriseId: number;

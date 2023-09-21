@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { route, route_template } from '@prisma/client';
 import { PrismaRepository } from '../prisma/prisma.repository';
+import { RouteData } from './route.interface';
 @Injectable()
 
 //FIXME: after running introspect with prisma and fixing the fields
@@ -8,15 +10,15 @@ import { PrismaRepository } from '../prisma/prisma.repository';
 export class RouteRepository {
         constructor(private readonly prismaRepository: PrismaRepository) {}
 
-        async createRoute(data: any) {
+        async createRoute(data: RouteData): Promise<route> {
                 try {
-                        const result = await this.prismaRepository.route.create({
+                        return await this.prismaRepository.route.create({
                                 data: {
-                                        id_enterprise: data.id_enterprise,
-                                        id_client: data.id_client,
-                                        id_vehicle: data.id_vehicle,
-                                        id_driver: data.id_driver,
-                                        id_route_template: data.id_route_template,
+                                        id_enterprise: data.enterpriseId,
+                                        id_client: data.clientId,
+                                        id_vehicle: data.vehicleId,
+                                        id_driver: data.driverId,
+                                        id_route_template: data.routeTemplateId,
                                         name: 'Test Route 1',
                                         date_start: new Date(),
                                         date_end: new Date(),
@@ -29,19 +31,32 @@ export class RouteRepository {
                                         //event[] TODO: set this up later too
                                 },
                         });
-                        console.log(result);
                 } catch (error) {
                         console.log(error);
                 }
-
-                return { status: 'ok' };
         }
 
-        async findRouteTemplateById(id: number) {
-                return await this.prismaRepository.route_template.findFirst({
-                        where: {
-                                id_route_template: id, // 30
-                        },
-                });
+        async findRouteById(id: number): Promise<route> {
+                try {
+                        return await this.prismaRepository.route.findFirst({
+                                where: {
+                                        id_route: id,
+                                },
+                        });
+                } catch (err) {
+                        console.log(err);
+                }
+        }
+
+        async findRouteTemplateById(id: number): Promise<route_template> {
+                try {
+                        return await this.prismaRepository.route_template.findFirst({
+                                where: {
+                                        id_route_template: id, // 30
+                                },
+                        });
+                } catch (err) {
+                        console.log(err);
+                }
         }
 }
