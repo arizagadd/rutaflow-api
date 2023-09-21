@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { checklist_event, event, route, route_template } from '@prisma/client';
+
+import { ChecklistEvent, Event, Route, RouteTemplate } from '@prisma/client';
 import { PrismaRepository } from '../prisma/prisma.repository';
 import { RouteData } from './interfaces/route.interface';
 @Injectable()
@@ -10,7 +11,7 @@ import { RouteData } from './interfaces/route.interface';
 export class RouteRepository {
         constructor(private readonly prismaRepository: PrismaRepository) {}
 
-        async createRoute(data: RouteData): Promise<route> {
+        async createRoute(data: RouteData): Promise<Route> {
                 try {
                         return await this.prismaRepository.route.create({
                                 data: {
@@ -36,7 +37,7 @@ export class RouteRepository {
                 }
         }
 
-        async findRouteById(id: number): Promise<route> {
+        async findRouteById(id: number): Promise<Route> {
                 try {
                         return await this.prismaRepository.route.findFirst({
                                 where: {
@@ -48,9 +49,9 @@ export class RouteRepository {
                 }
         }
 
-        async findRouteTemplateById(id: number): Promise<route_template> {
+        async findRouteTemplateById(id: number): Promise<RouteTemplate> {
                 try {
-                        return await this.prismaRepository.route_template.findFirst({
+                        return await this.prismaRepository.routeTemplate.findFirst({
                                 where: {
                                         id_route_template: id, // 30
                                 },
@@ -59,7 +60,7 @@ export class RouteRepository {
                         console.log(err);
                 }
         }
-        async findAllEvents(): Promise<event[]> {
+        async findAllEvents(): Promise<Event[]> {
                 try {
                         return await this.prismaRepository.event.findMany();
                 } catch (e) {
@@ -67,15 +68,15 @@ export class RouteRepository {
                 }
         }
 
-        async findAllChecklistEvents(): Promise<checklist_event[]> {
+        async findAllChecklistEvents(): Promise<ChecklistEvent[]> {
                 try {
-                        return await this.prismaRepository.checklist_event.findMany();
+                        return await this.prismaRepository.checklistEvent.findMany();
                 } catch (e) {
                         console.log(e);
                 }
         }
         async createChecklistEvent(checklistId: number, routeId: number) {
-                return await this.prismaRepository.checklist_event.create({
+                return await this.prismaRepository.checklistEvent.create({
                         data: {
                                 id_checklist: checklistId,
                                 id_route: routeId,

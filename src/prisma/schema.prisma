@@ -7,44 +7,47 @@ datasource db {
         url      = env("DATABASE_URL")
 }
 
-model checklist {
-        id_checklist    Int               @id @default(autoincrement())
-        item            String?           @db.VarChar(100)
+model Checklist {
+        id_checklist    Int              @id @default(autoincrement())
+        item            String?          @db.VarChar(100)
         id_client       Int
-        client          client            @relation(fields: [id_client], references: [id_client], onDelete: NoAction, onUpdate: NoAction, map: "fk_checklist_client1")
-        checklist_event checklist_event[]
+        client          Client           @relation(fields: [id_client], references: [id_client], onDelete: NoAction, onUpdate: NoAction, map: "fk_checklist_client1")
+        checklist_event ChecklistEvent[]
 
         @@index([id_client], map: "fk_checklist_client1_idx")
+        @@map("checklist")
 }
 
-model checklist_event {
+model ChecklistEvent {
         id_checklist_event Int       @id @default(autoincrement())
         id_checklist       Int
         id_route           Int
         img                String?   @db.VarChar(100)
-        checklist          checklist @relation(fields: [id_checklist], references: [id_checklist], onDelete: NoAction, onUpdate: NoAction, map: "fk_checklist_event_checklist1")
-        route              route     @relation(fields: [id_route], references: [id_route], onDelete: NoAction, onUpdate: NoAction, map: "fk_checklist_event_route1")
+        checklist          Checklist @relation(fields: [id_checklist], references: [id_checklist], onDelete: NoAction, onUpdate: NoAction, map: "fk_checklist_event_checklist1")
+        route              Route     @relation(fields: [id_route], references: [id_route], onDelete: NoAction, onUpdate: NoAction, map: "fk_checklist_event_route1")
 
         @@index([id_checklist], map: "fk_checklist_event_checklist1_idx")
         @@index([id_route], map: "fk_checklist_event_route1_idx")
+        @@map("checklist_event")
 }
 
-model client {
+model Client {
         id_client            Int         @id @default(autoincrement())
         id_enterprise        Int
         name                 String?     @db.VarChar(200)
         contract_description String?     @db.VarChar(45)
         pickup_time          Int?
         delivery_time        Int?
-        checklist            checklist[]
-        enterprise           enterprise  @relation(fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_client_enterprise1")
-        route                route[]
-        stop                 stop[]
+        checklist            Checklist[]
+        enterprise           Enterprise  @relation(fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_client_enterprise1")
+        route                Route[]
+        stop                 Stop[]
 
         @@index([id_enterprise], map: "fk_client_company1_idx")
+        @@map("client")
 }
 
-model cms_menu {
+model CMSMenu {
         id_cms_menu Int           @id @default(autoincrement())
         titulo      String        @db.VarChar(100)
         tabla       String        @db.VarChar(100)
@@ -57,20 +60,23 @@ model cms_menu {
         search      CmsMenuSearch @default(FALSE)
         extra       String?       @db.VarChar(500)
         orden       Int
+
+        @@map("cms_menu")
 }
 
-model delivery_week {
+model DeliveryWeek {
         id_delivery_week Int                  @id @default(autoincrement())
         week_start       DateTime             @db.Date
         notes            String?              @db.VarChar(500)
         finished         DeliveryWeekFinished @default(FALSE)
         id_enterprise    Int
-        enterprise       enterprise           @relation(fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_delivery_week_enterprise1")
+        enterprise       Enterprise           @relation(fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_delivery_week_enterprise1")
 
         @@index([id_enterprise], map: "fk_delivery_week_company1_idx")
+        @@map("delivery_week")
 }
 
-model driver {
+model Driver {
         id_driver           Int                       @id @default(autoincrement())
         id_user             Int
         id_enterprise       Int
@@ -89,16 +95,17 @@ model driver {
         entry_date          DateTime?                 @db.Date
         travel_availability DriverTravelAvailability?
         maneuvers           DriverManeuvers?
-        enterprise          enterprise                @relation(fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_driver_enterprise1")
-        user                user                      @relation(fields: [id_user], references: [id_user], onDelete: NoAction, onUpdate: NoAction, map: "fk_driver_user")
-        event               event[]
-        route               route[]
+        enterprise          Enterprise                @relation(fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_driver_enterprise1")
+        user                User                      @relation(fields: [id_user], references: [id_user], onDelete: NoAction, onUpdate: NoAction, map: "fk_driver_user")
+        event               Event[]
+        route               Route[]
 
         @@index([id_enterprise], map: "fk_driver_enterprise1_idx")
         @@index([id_user], map: "fk_driver_user_idx")
+        @@map("driver")
 }
 
-model enterprise {
+model Enterprise {
         id_enterprise                       Int                  @id @default(autoincrement())
         name                                String?              @db.VarChar(100)
         id_owner                            Int
@@ -106,19 +113,20 @@ model enterprise {
         description                         String?              @db.VarChar(45)
         objective                           EnterpriseObjective?
         settings                            String?              @db.VarChar(1000)
-        client                              client[]
-        delivery_week                       delivery_week[]
-        driver                              driver[]
-        user_enterprise_id_ownerTouser      user                 @relation("enterprise_id_ownerTouser", fields: [id_owner], references: [id_user], onDelete: NoAction, onUpdate: NoAction, map: "fk_company_user1")
-        route                               route[]
-        route_template                      route_template[]
-        user_user_id_enterpriseToenterprise user[]               @relation("user_id_enterpriseToenterprise")
-        vehicle                             vehicle[]
+        client                              Client[]
+        delivery_week                       DeliveryWeek[]
+        driver                              Driver[]
+        user_enterprise_id_ownerTouser      User                 @relation("enterprise_id_ownerTouser", fields: [id_owner], references: [id_user], onDelete: NoAction, onUpdate: NoAction, map: "fk_company_user1")
+        route                               Route[]
+        route_template                      RouteTemplate[]
+        user_user_id_enterpriseToenterprise User[]               @relation("user_id_enterpriseToenterprise")
+        vehicle                             Vehicle[]
 
         @@index([id_owner], map: "fk_company_user1_idx")
+        @@map("enterprise")
 }
 
-model event {
+model Event {
         id_event          Int                  @id @default(autoincrement())
         id_route          Int
         id_stop           Int
@@ -135,65 +143,74 @@ model event {
         km                Decimal?             @db.Decimal(10, 2)
         logistic_comments String?              @db.VarChar(1000)
         pos               Int?
-        driver            driver?              @relation(fields: [id_driver], references: [id_driver], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_driver1")
-        route             route                @relation(fields: [id_route], references: [id_route], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_route1")
-        stop              stop                 @relation(fields: [id_stop], references: [id_stop], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_stop1")
-        evidence          evidence[]
+        driver            Driver?              @relation(fields: [id_driver], references: [id_driver], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_driver1")
+        route             Route                @relation(fields: [id_route], references: [id_route], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_route1")
+        stop              Stop                 @relation(fields: [id_stop], references: [id_stop], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_stop1")
+        evidence          Evidence[]
 
         @@index([id_route], map: "fk_event_route1_idx")
         @@index([id_stop], map: "fk_event_stop1_idx")
         @@index([id_driver], map: "fk_event_driver1_idx")
+        @@map("event")
 }
 
-model event_template {
-        id_event_template Int            @id @default(autoincrement())
+model EventTemplate {
+        id_event_template Int           @id @default(autoincrement())
         id_route_template Int
         id_stop           Int
-        pos               String?        @db.VarChar(45)
-        route_template    route_template @relation(fields: [id_route_template], references: [id_route_template], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_template_route_template1")
-        stop              stop           @relation(fields: [id_stop], references: [id_stop], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_template_stop1")
+        pos               String?       @db.VarChar(45)
+        route_template    RouteTemplate @relation(fields: [id_route_template], references: [id_route_template], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_template_route_template1")
+        stop              Stop          @relation(fields: [id_stop], references: [id_stop], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_template_stop1")
 
         @@index([id_route_template], map: "fk_event_template_route_template1_idx")
         @@index([id_stop], map: "fk_event_template_stop1_idx")
+        @@map("event_template")
 }
 
-model evidence {
+model Evidence {
         id_evidence Int               @id @default(autoincrement())
         id_event    Int
         img         String?           @db.VarChar(100)
         type        String?           @db.VarChar(45)
         approved    EvidenceApproved?
-        event       event             @relation(fields: [id_event], references: [id_event], onDelete: NoAction, onUpdate: NoAction, map: "fk_evidence_event1")
+        event       Event             @relation(fields: [id_event], references: [id_event], onDelete: NoAction, onUpdate: NoAction, map: "fk_evidence_event1")
 
         @@index([id_event], map: "fk_evidence_event1_idx")
+        @@map("evidence")
 }
 
-model log {
+model Log {
         id_log     Int      @id @default(autoincrement())
         id_user    Int
         action     String?  @db.VarChar(100)
         table      String   @db.VarChar(100)
         created_at DateTime @default(now()) @db.DateTime(0)
         data       String?  @db.Text
+
+        @@map("log")
 }
 
-model mc_log {
+model MCLog {
         id_mc_log     Int       @id @default(autoincrement())
         content       String?   @db.VarChar(1000)
         messages_sent Int?
         type          String?   @db.VarChar(45)
         date_sent     DateTime? @default(now()) @db.DateTime(0)
+
+        @@map("mc_log")
 }
 
-model mc_template {
+model MCTemplate {
         id_mc_template Int     @id @default(autoincrement())
         name           String? @db.VarChar(45)
         content        String? @db.VarChar(1000)
         objective      String? @db.VarChar(500)
         filters        String? @db.VarChar(1000)
+
+        @@map("mc_template")
 }
 
-model report {
+model Report {
         id_report   Int     @id @default(autoincrement())
         name        String  @db.VarChar(100)
         description String? @db.VarChar(500)
@@ -201,93 +218,100 @@ model report {
         filter      String? @db.VarChar(100)
         query       String  @db.Text
         extra       String? @db.VarChar(100)
+
+        @@map("report")
 }
 
-model route {
-        id_route          Int               @id @default(autoincrement())
+model Route {
+        id_route          Int              @id @default(autoincrement())
         id_enterprise     Int
         id_client         Int
         id_vehicle        Int
         id_driver         Int
         id_route_template Int?
-        name              String?           @db.VarChar(200)
-        date_start        DateTime?         @db.DateTime(0)
-        date_end          DateTime?         @db.DateTime(0)
-        polyline          String?           @db.VarChar(2500)
-        total_duration    Float?            @db.Float
-        total_distance    Float?            @db.Float
+        name              String?          @db.VarChar(200)
+        date_start        DateTime?        @db.DateTime(0)
+        date_end          DateTime?        @db.DateTime(0)
+        polyline          String?          @db.VarChar(2500)
+        total_duration    Float?           @db.Float
+        total_distance    Float?           @db.Float
         stop_initial      Int?
         stop_final        Int?
-        checklist_event   checklist_event[]
-        event             event[]
-        client            client            @relation(fields: [id_client], references: [id_client], onDelete: NoAction, onUpdate: NoAction, map: "fk_route_client1")
-        driver            driver            @relation(fields: [id_driver], references: [id_driver], onDelete: NoAction, onUpdate: NoAction, map: "fk_route_driver1")
-        enterprise        enterprise        @relation(fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_route_enterprise1")
-        route_template    route_template?   @relation(fields: [id_route_template], references: [id_route_template], onDelete: NoAction, onUpdate: NoAction, map: "fk_route_route_template1")
-        vehicle           vehicle           @relation(fields: [id_vehicle], references: [id_vehicle], onDelete: NoAction, onUpdate: NoAction, map: "fk_route_vehicle1")
+        checklist_event   ChecklistEvent[]
+        event             Event[]
+        client            Client           @relation(fields: [id_client], references: [id_client], onDelete: NoAction, onUpdate: NoAction, map: "fk_route_client1")
+        driver            Driver           @relation(fields: [id_driver], references: [id_driver], onDelete: NoAction, onUpdate: NoAction, map: "fk_route_driver1")
+        enterprise        Enterprise       @relation(fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_route_enterprise1")
+        route_template    RouteTemplate?   @relation(fields: [id_route_template], references: [id_route_template], onDelete: NoAction, onUpdate: NoAction, map: "fk_route_route_template1")
+        vehicle           Vehicle          @relation(fields: [id_vehicle], references: [id_vehicle], onDelete: NoAction, onUpdate: NoAction, map: "fk_route_vehicle1")
 
         @@index([id_client], map: "fk_route_client1_idx")
         @@index([id_driver], map: "fk_route_driver1_idx")
         @@index([id_enterprise], map: "fk_route_enterprise1_idx")
         @@index([id_route_template], map: "fk_route_route_template1_idx")
         @@index([id_vehicle], map: "fk_route_vehicle1_idx")
+        @@map("route")
 }
 
-model route_template {
-        id_route_template Int              @id @default(autoincrement())
-        name              String?          @db.VarChar(45)
+model RouteTemplate {
+        id_route_template Int             @id @default(autoincrement())
+        name              String?         @db.VarChar(45)
         id_driver         Int?
-        description       String?          @db.VarChar(45)
-        color             String?          @db.VarChar(45)
-        symbol            String?          @db.VarChar(45)
+        description       String?         @db.VarChar(45)
+        color             String?         @db.VarChar(45)
+        symbol            String?         @db.VarChar(45)
         id_enterprise     Int
         stop_initial      Int?
         stop_final        Int?
-        tag               String?          @db.VarChar(100)
-        event_template    event_template[]
-        route             route[]
-        enterprise        enterprise       @relation(fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_base_route_enterprise1")
-        stop              stop[]
+        tag               String?         @db.VarChar(100)
+        event_template    EventTemplate[]
+        route             Route[]
+        enterprise        Enterprise      @relation(fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_base_route_enterprise1")
+        stop              Stop[]
 
         @@index([id_enterprise], map: "fk_base_route_company1_idx")
+        @@map("route_template")
 }
 
-model stop {
-        id_stop        Int              @id @default(autoincrement())
+model Stop {
+        id_stop        Int             @id @default(autoincrement())
         id_client      Int
         id_base_route  Int?
         type           StopType?
-        title          String?          @db.VarChar(200)
+        title          String?         @db.VarChar(200)
         main           StopMain
-        schedule       String?          @db.VarChar(200)
-        line1          String?          @db.VarChar(200)
-        line2          String?          @db.VarChar(200)
-        zip            String?          @db.VarChar(45)
-        city           String?          @db.VarChar(45)
+        schedule       String?         @db.VarChar(200)
+        line1          String?         @db.VarChar(200)
+        line2          String?         @db.VarChar(200)
+        zip            String?         @db.VarChar(45)
+        city           String?         @db.VarChar(45)
         time_start     Int?
         time_end       Int?
         lat            Float?
         lon            Float?
-        comments       String?          @db.VarChar(200)
-        event          event[]
-        event_template event_template[]
-        route_template route_template?  @relation(fields: [id_base_route], references: [id_route_template], onDelete: NoAction, onUpdate: NoAction, map: "fk_address_base_route1")
-        client         client           @relation(fields: [id_client], references: [id_client], onDelete: NoAction, onUpdate: NoAction, map: "fk_address_client1")
+        comments       String?         @db.VarChar(200)
+        event          Event[]
+        event_template EventTemplate[]
+        route_template RouteTemplate?  @relation(fields: [id_base_route], references: [id_route_template], onDelete: NoAction, onUpdate: NoAction, map: "fk_address_base_route1")
+        client         Client          @relation(fields: [id_client], references: [id_client], onDelete: NoAction, onUpdate: NoAction, map: "fk_address_client1")
 
         @@index([id_base_route], map: "fk_address_base_route1_idx")
         @@index([id_client], map: "fk_address_client1_idx")
+        @@map("stop")
 }
 
-model support_log {
+model SupportLog {
         id_support_log Int               @id @default(autoincrement())
         id_subscriber  Int
         action         String?           @db.VarChar(500)
         created_at     DateTime?         @default(now()) @db.DateTime(0)
         delivery_date  DateTime?         @db.DateTime(0)
         solved         SupportLogSolved?
+
+        @@map("support_log")
 }
 
-model user {
+model User {
         id_user                                   Int          @id @default(autoincrement())
         name                                      String?      @db.VarChar(100)
         last_name                                 String?      @db.VarChar(100)
@@ -301,14 +325,15 @@ model user {
         referral_code                             String?      @db.VarChar(200)
         active                                    UserActive?
         id_enterprise                             Int?
-        driver                                    driver[]
-        enterprise_enterprise_id_ownerTouser      enterprise[] @relation("enterprise_id_ownerTouser")
-        enterprise_user_id_enterpriseToenterprise enterprise?  @relation("user_id_enterpriseToenterprise", fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_enterprise1")
+        driver                                    Driver[]
+        enterprise_enterprise_id_ownerTouser      Enterprise[] @relation("enterprise_id_ownerTouser")
+        enterprise_user_id_enterpriseToenterprise Enterprise?  @relation("user_id_enterpriseToenterprise", fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_enterprise1")
 
         @@index([id_enterprise], map: "fk_user_company1_idx")
+        @@map("user")
 }
 
-model vehicle {
+model Vehicle {
         id_vehicle       Int            @id @default(autoincrement())
         id_enterprise    Int
         name             String?        @db.VarChar(200)
@@ -326,10 +351,11 @@ model vehicle {
         capacity         String?        @db.VarChar(45)
         dimension        String?        @db.VarChar(45)
         comments         String?        @db.VarChar(500)
-        route            route[]
-        enterprise       enterprise     @relation(fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_vehicle_enterprise1")
+        route            Route[]
+        enterprise       Enterprise     @relation(fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_vehicle_enterprise1")
 
         @@index([id_enterprise], map: "fk_vehicle_enterprise1_idx")
+        @@map("vehicle")
 }
 
 enum UserType {

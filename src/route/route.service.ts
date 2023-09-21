@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { route } from '@prisma/client';
+
+import { Route } from '@prisma/client';
 import { DriverRepository } from '../driver/driver.repository';
 import { EnterpriseRepository } from '../enterprise/enterprise.repository';
 import { DirectionsRequestParams } from '../maps/maps.interface';
@@ -19,7 +20,7 @@ export class RouteService {
                 private readonly driverRepository: DriverRepository,
         ) {}
 
-        async generateRoute(data: CreateRouteDto): Promise<route> {
+        async generateRoute(data: CreateRouteDto): Promise<Route> {
                 const params: DirectionsRequestParams = {
                         origin: data.origin,
                         destination: data.destination,
@@ -114,7 +115,7 @@ export class RouteService {
                 }
         }
 
-        async findRouteById(id: number): Promise<route> {
+        async findRouteById(id: number): Promise<Route> {
                 try {
                         return await this.routeRepository.findRouteById(id);
                 } catch (err) {
