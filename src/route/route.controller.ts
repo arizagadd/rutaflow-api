@@ -1,6 +1,6 @@
 import { Body, Controller, InternalServerErrorException, Post } from '@nestjs/common';
-import { ErrorResponse, SuccessResponse } from '../shared/response.dto';
-import { CreateRouteDto } from './route.dto';
+import { ErrorResponse, SuccessResponse } from '../shared/json-response.dto';
+import { CreateRouteDto } from './dtos/route.dto';
 import { RouteService } from './route.service';
 
 @Controller('route')

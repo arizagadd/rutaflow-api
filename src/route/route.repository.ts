@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { route, route_template } from '@prisma/client';
 import { PrismaRepository } from '../prisma/prisma.repository';
-import { RouteData } from './route.interface';
+import { RouteData } from './interfaces/route.interface';
 @Injectable()
 
 //FIXME: after running introspect with prisma and fixing the fields

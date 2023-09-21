@@ -1,5 +1,3 @@
-// response.dto.ts
-
 export class SuccessResponse<T> {
         status: 'success';
         data?: T;

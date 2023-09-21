@@ -5,8 +5,8 @@ import { EnterpriseRepository } from '../enterprise/enterprise.repository';
 import { MapDirectionsParams } from '../maps/maps.interface';
 import { MapsService } from '../maps/maps.service';
 import { VehicleRepository } from '../vehicle/vehicle.repository';
-import { CreateRouteDto } from './route.dto';
-import { RouteData } from './route.interface';
+import { CreateRouteDto } from './dtos/route.dto';
+import { RouteData } from './interfaces/route.interface';
 import { RouteRepository } from './route.repository';
 
 @Injectable()
@@ -74,7 +74,7 @@ export class RouteService {
                                         totalDistance,
                                         totalDuration,
                                         stopInitial: 0,
-                                        stopFinal: 4,
+                                        stopFinal: totalStops,
                                 };
                                 // totalDistance: `${totalDistance / 1000} km`, // convert meters to kilometers
                                 // totalDuration: `${totalDuration / 3600} hours`, // convert seconds to hours
@@ -82,7 +82,6 @@ export class RouteService {
                                 // stopFinal: legPolyline[legPolyline.length - 1],
 
                                 const newRoute = await this.routeRepository.createRoute(rd);
-
                                 return newRoute;
                         }
                 } catch (err) {

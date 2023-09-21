@@ -4,9 +4,6 @@ export interface RouteData {
         driverId: number;
         vehicleId: number;
         routeTemplateId?: number;
-        // origin: string;
-        // destination: string;
-        // waypoints: string[];
         name: string;
         dateStart: Date;
         dateEnd: Date;

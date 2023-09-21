@@ -39,3 +39,5 @@ export class CreateRouteDto {
         @ArrayMinSize(1)
         waypoints: string[];
 }
+
+export class RouteResponseDto {}
