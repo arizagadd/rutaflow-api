@@ -11,14 +11,14 @@ export class EnterpriseRepository {
         async findEnterpriseById(id: number): Promise<Enterprise> {
                 return await this.prismaRepository.enterprise.findFirst({
                         where: {
-                                id_enterprise: id, // 2
+                                id_enterprise: id,
                         },
                 });
         }
         async findClientById(id: number): Promise<Client> {
                 return await this.prismaRepository.client.findFirst({
                         where: {
-                                id_client: id, // 2
+                                id_client: id,
                         },
                 });
         }

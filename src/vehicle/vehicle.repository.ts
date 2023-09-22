@@ -11,7 +11,7 @@ export class VehicleRepository {
         async findVehicleById(id: number): Promise<Vehicle> {
                 return await this.prismaRepository.vehicle.findFirst({
                         where: {
-                                id_vehicle: id, // 2
+                                id_vehicle: id,
                         },
                 });
         }

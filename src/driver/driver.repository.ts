@@ -10,7 +10,7 @@ export class DriverRepository {
         async findDriverById(id: number) {
                 return await this.prismaRepository.driver.findFirst({
                         where: {
-                                id_driver: id, // 2
+                                id_driver: id,
                         },
                 });
         }

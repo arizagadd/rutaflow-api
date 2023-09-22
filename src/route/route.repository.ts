@@ -1,13 +1,9 @@
 import { Injectable } from '@nestjs/common';
-
 import { ChecklistEvent, Event, Route, RouteTemplate } from '@prisma/client';
 import { PrismaRepository } from '../prisma/prisma.repository';
 import { RouteData } from './interfaces/route.interface';
-@Injectable()
 
-//FIXME: after running introspect with prisma and fixing the fields
-// you have to to push to the db of origin in order to reflect the changes
-// this could cause a compatibility issue with the CMS
+@Injectable()
 export class RouteRepository {
         constructor(private readonly prismaRepository: PrismaRepository) {}
 
@@ -53,13 +49,14 @@ export class RouteRepository {
                 try {
                         return await this.prismaRepository.routeTemplate.findFirst({
                                 where: {
-                                        id_route_template: id, // 30
+                                        id_route_template: id,
                                 },
                         });
                 } catch (err) {
                         console.log(err);
                 }
         }
+
         async findAllEvents(): Promise<Event[]> {
                 try {
                         return await this.prismaRepository.event.findMany();
@@ -75,6 +72,7 @@ export class RouteRepository {
                         console.log(e);
                 }
         }
+
         async createChecklistEvent(checklistId: number, routeId: number) {
                 return await this.prismaRepository.checklistEvent.create({
                         data: {
