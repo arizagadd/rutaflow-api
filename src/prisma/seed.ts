@@ -28,6 +28,7 @@
 //  * [] mc_template
 //  * [] support_log
 //  * [] report
+//  */
 
 import {
         DeliveryWeekFinished,
@@ -44,7 +45,6 @@ import {
         VehicleStatus,
 } from '@prisma/client';
 
-//  */
 const prisma = new PrismaClient();
 
 const users = [
