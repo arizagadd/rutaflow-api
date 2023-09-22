@@ -74,7 +74,7 @@ export class PrismaService {
                                 data: users,
                                 // skipDuplicates: true, // This option skips records with duplicate values, e.g., in unique fields like email
                         });
-                        console.log(`Created ${userRes.count}`);
+                        console.log(`Created ${userRes.count} users`);
 
                         const owner = await this.prismaRepository.user.findFirst({
                                 where: {
@@ -1032,7 +1032,7 @@ export class PrismaService {
                         const cmsDataRes = await this.prismaRepository.cMSMenu.createMany({
                                 data: cmsData,
                         });
-                        console.log(`Created CMS menu entities ${cmsDataRes.count}`);
+                        console.log(`Created ${cmsDataRes.count} CMS menu entities `);
                 } catch (err) {
                         console.log(err);
                 }
