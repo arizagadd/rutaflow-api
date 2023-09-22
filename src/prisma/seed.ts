@@ -17,7 +17,7 @@
 //  * [] route_template
 //  * [] event_template
 
-// THESE CAN BE CREATED SEPERATELY WHEN OPERATIONS ARE BEING CONDUCTED - THEY DEPEND ON ROUTE,STOP OR DRIVER
+// THESE CAN BE CREATED SEPARATELY WHEN OPERATIONS ARE BEING CONDUCTED - THEY DEPEND ON ROUTE,STOP OR DRIVER
 //  * [] event
 //  * [] evidence
 
@@ -972,7 +972,7 @@ async function main() {
 ]
  `,
                 },
-                // 13
+                // 14
                 {
                         titulo: 'Vehicle',
                         orden: 14,
