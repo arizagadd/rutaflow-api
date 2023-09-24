@@ -50,16 +50,73 @@ function extractErrorDetails(error: ErrorBase<string, string, string>) {
         };
 }
 
+function prettyPrintStackTrace(error: Error): string {
+        if (!error.stack) {
+                return '';
+        }
+
+        // Split the stack string into individual lines
+        const stackLines = error.stack.split('\n');
+
+        // Filter out unwanted lines, if any (this example filters out lines containing 'node_modules')
+        const filteredStack = stackLines.filter((line) => !line.includes('node_modules'));
+
+        // Map each line to a trimmed version of itself with a prefix (like '-> ')
+        const formattedStack = filteredStack.map((line) => '-> ' + line.trim());
+
+        // Join the lines back together into a single string
+        return formattedStack.join('\n');
+}
+
+function prettyPrintError(errorObj: any): void {
+        // Title
+        console.log();
+        console.error('[ERROR]');
+        console.error('='.repeat(50)); // Separator line
+
+        // Metadata
+        console.error(`Timestamp: ${errorObj.ERROR.timestamp}`);
+        console.error(`Request URL: ${errorObj.ERROR.requestUrl}`);
+        console.error(''); // Empty line for separation
+
+        // Stack Trace
+        console.error('Stack Trace:');
+        console.error(
+                errorObj.ERROR.stack
+                        .split('\n')
+                        .map((line) => '  ' + line)
+                        .join('\n'),
+        ); // Indented stack trace
+        console.error(''); // Empty line for separation
+
+        // Context
+        console.error('Context:');
+        console.error(`  Domain: ${errorObj.ERROR.context.domain}`);
+        console.error(`  Layer: ${errorObj.ERROR.context.layer}`);
+        console.error(`  Message: ${errorObj.ERROR.context.message}`);
+
+        // Nested Cause
+        if (errorObj.ERROR.context.cause) {
+                console.error('Cause:');
+                console.error(`  Domain: ${errorObj.ERROR.context.cause.context.domain}`);
+                console.error(`  Layer: ${errorObj.ERROR.context.cause.context.layer}`);
+                console.error(`  Type: ${errorObj.ERROR.context.cause.context.type}`);
+                console.error(`  Message: ${errorObj.ERROR.context.cause.context.message}`);
+        }
+}
+
 export function logError(error: Error, req: any) {
         if (error instanceof ErrorBase) {
                 const errorDetails = {
                         ERROR: {
                                 timestamp: new Date().toISOString(),
                                 requestUrl: req.originalUrl,
+                                stack: prettyPrintStackTrace(error),
                                 ...extractErrorDetails(error),
                         },
                 };
-                console.error(JSON.stringify(errorDetails, null, 2));
+                // console.error(JSON.stringify(errorDetails, null, 2));
+                prettyPrintError(errorDetails);
                 logger.error(errorDetails);
         } else {
                 // log unexpected error

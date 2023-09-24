@@ -32,7 +32,7 @@ export class RouteRepository {
                 } catch (error) {
                         if (isPrismaError(error)) {
                                 throw new DataBaseError({
-                                        domain: 'DATABASE_DOMAIN',
+                                        domain: 'DATABASE',
                                         layer: 'REPOSITORY',
                                         type: 'PRISMA_ERROR',
                                         message: error.message,
@@ -53,7 +53,7 @@ export class RouteRepository {
 
                         if (!route) {
                                 throw new DataBaseError({
-                                        domain: 'ROUTE_DOMAIN',
+                                        domain: 'ROUTE',
                                         layer: 'REPOSITORY',
                                         type: 'GET_RECORD_ERROR',
                                         message: `Route with id ${id} not found`,
@@ -64,7 +64,7 @@ export class RouteRepository {
                 } catch (error) {
                         if (isPrismaError(error)) {
                                 throw new DataBaseError({
-                                        domain: 'DATABASE_DOMAIN',
+                                        domain: 'DATABASE',
                                         layer: 'REPOSITORY',
                                         type: 'PRISMA_ERROR',
                                         message: error.message,
@@ -86,7 +86,7 @@ export class RouteRepository {
 
                         if (!routeTemplate) {
                                 throw new DataBaseError({
-                                        domain: 'ROUTE_DOMAIN',
+                                        domain: 'ROUTE',
                                         layer: 'REPOSITORY',
                                         type: 'GET_RECORD_ERROR',
                                         message: `RouteTemplate with id ${id} not found`,
@@ -97,7 +97,7 @@ export class RouteRepository {
                 } catch (error) {
                         if (isPrismaError(error)) {
                                 throw new DataBaseError({
-                                        domain: 'DATABASE_DOMAIN',
+                                        domain: 'DATABASE',
                                         layer: 'REPOSITORY',
                                         type: 'PRISMA_ERROR',
                                         message: error.message,
@@ -115,7 +115,7 @@ export class RouteRepository {
                 } catch (error) {
                         if (isPrismaError(error)) {
                                 throw new DataBaseError({
-                                        domain: 'DATABASE_DOMAIN',
+                                        domain: 'DATABASE',
                                         layer: 'REPOSITORY',
                                         type: 'PRISMA_ERROR',
                                         message: error.message,
@@ -133,7 +133,7 @@ export class RouteRepository {
                 } catch (error) {
                         if (isPrismaError(error)) {
                                 throw new DataBaseError({
-                                        domain: 'DATABASE_DOMAIN',
+                                        domain: 'DATABASE',
                                         layer: 'REPOSITORY',
                                         type: 'PRISMA_ERROR',
                                         message: error.message,
@@ -156,7 +156,7 @@ export class RouteRepository {
                 } catch (error) {
                         if (isPrismaError(error)) {
                                 throw new DataBaseError({
-                                        domain: 'DATABASE_DOMAIN',
+                                        domain: 'DATABASE',
                                         layer: 'REPOSITORY',
                                         type: 'PRISMA_ERROR',
                                         message: error.message,

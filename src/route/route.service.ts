@@ -96,10 +96,9 @@ export class RouteService {
                 } catch (error) {
                         if (error instanceof DataBaseError) {
                                 throw new RouteDomainError({
-                                        domain: 'ROUTE_DOMAIN',
+                                        domain: 'ROUTE',
                                         layer: 'SERVICE',
-                                        type: 'ROUTE_ERROR',
-                                        message: 'Unable to generate route',
+                                        message: 'generateRoute: Unable to generate route',
                                         cause: error,
                                 });
                         }
@@ -114,10 +113,10 @@ export class RouteService {
                 } catch (error) {
                         if (error instanceof DataBaseError) {
                                 throw new RouteDomainError({
-                                        domain: 'ROUTE_DOMAIN',
+                                        domain: 'ROUTE',
                                         layer: 'SERVICE',
-                                        type: 'ROUTE_ERROR',
-                                        message: `Unable to find route`,
+                                        message: `findRouteById: Unable to find route`,
+                                        cause: error,
                                 });
                         }
 

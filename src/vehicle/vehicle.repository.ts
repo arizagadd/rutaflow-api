@@ -19,7 +19,7 @@ export class VehicleRepository {
                         });
                         if (!vehicle) {
                                 throw new DataBaseError({
-                                        domain: 'VEHICLE_DOMAIN',
+                                        domain: 'VEHICLE',
                                         layer: 'REPOSITORY',
                                         type: 'GET_RECORD_ERROR',
                                         message: `Vehicle with id ${id} not found`,
@@ -30,7 +30,7 @@ export class VehicleRepository {
                 } catch (error) {
                         if (isPrismaError(error)) {
                                 throw new DataBaseError({
-                                        domain: 'DATABASE_DOMAIN',
+                                        domain: 'DATABASE',
                                         layer: 'REPOSITORY',
                                         type: 'PRISMA_ERROR',
                                         message: error.message,

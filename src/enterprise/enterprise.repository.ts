@@ -19,10 +19,10 @@ export class EnterpriseRepository {
 
                         if (!enterprise) {
                                 throw new DataBaseError({
-                                        domain: 'ENTERPRISE_DOMAIN',
+                                        domain: 'ENTERPRISE',
                                         layer: 'REPOSITORY',
                                         type: 'GET_RECORD_ERROR',
-                                        message: `Enterprise with id ${id} not found`,
+                                        message: `findEnterpriseById: Enterprise with id ${id} not found`,
                                 });
                         }
 
@@ -30,7 +30,7 @@ export class EnterpriseRepository {
                 } catch (error) {
                         if (isPrismaError(error)) {
                                 throw new DataBaseError({
-                                        domain: 'DATABASE_DOMAIN',
+                                        domain: 'DATABASE',
                                         layer: 'REPOSITORY',
                                         type: 'PRISMA_ERROR',
                                         message: error.message,
@@ -51,7 +51,7 @@ export class EnterpriseRepository {
 
                         if (!client) {
                                 throw new DataBaseError({
-                                        domain: 'ENTERPRISE_DOMAIN',
+                                        domain: 'ENTERPRISE',
                                         layer: 'REPOSITORY',
                                         type: 'GET_RECORD_ERROR',
                                         message: `Client with id ${id} not found`,
@@ -62,7 +62,7 @@ export class EnterpriseRepository {
                 } catch (error) {
                         if (isPrismaError(error)) {
                                 throw new DataBaseError({
-                                        domain: 'DATABASE_DOMAIN',
+                                        domain: 'DATABASE',
                                         layer: 'REPOSITORY',
                                         type: 'PRISMA_ERROR',
                                         message: error.message,
@@ -83,7 +83,7 @@ export class EnterpriseRepository {
                 } catch (error) {
                         if (isPrismaError(error)) {
                                 throw new DataBaseError({
-                                        domain: 'DATABASE_DOMAIN',
+                                        domain: 'DATABASE',
                                         layer: 'REPOSITORY',
                                         type: 'PRISMA_ERROR',
                                         message: error.message,

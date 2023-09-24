@@ -17,7 +17,7 @@ export class DriverRepository {
                         });
                         if (!driver) {
                                 throw new DataBaseError({
-                                        domain: 'DRIVER_DOMAIN',
+                                        domain: 'DRIVER',
                                         layer: 'REPOSITORY',
                                         type: 'GET_RECORD_ERROR',
                                         message: `Driver with id ${id} not found`,
@@ -28,7 +28,7 @@ export class DriverRepository {
                 } catch (error) {
                         if (isPrismaError(error)) {
                                 throw new DataBaseError({
-                                        domain: 'DATABASE_DOMAIN',
+                                        domain: 'DATABASE',
                                         layer: 'REPOSITORY',
                                         type: 'PRISMA_ERROR',
                                         message: error.message,
