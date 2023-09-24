@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Checklist, Client, Enterprise } from '@prisma/client';
 import { PrismaRepository } from '../prisma/prisma.repository';
+import { DataBaseError } from '../shared/errors/custom-errors';
+import { isPrismaError } from '../shared/errors/helper-functions';
 
 @Injectable()
 export class EnterpriseRepository {
@@ -9,24 +11,88 @@ export class EnterpriseRepository {
                 return { status: 'ok', data };
         }
         async findEnterpriseById(id: number): Promise<Enterprise> {
-                return await this.prismaRepository.enterprise.findFirst({
-                        where: {
-                                id_enterprise: id,
-                        },
-                });
+                try {
+                        const enterprise = await this.prismaRepository.enterprise.findFirst({
+                                where: {
+                                        id_enterprise: id,
+                                },
+                        });
+
+                        if (!enterprise) {
+                                throw new DataBaseError({
+                                        domain: 'ENTERPRISE_DOMAIN',
+                                        layer: 'REPOSITORY',
+                                        type: 'GET_RECORD_ERROR',
+                                        message: `Enterprise with id ${id} not found`,
+                                });
+                        }
+
+                        return enterprise;
+                } catch (error) {
+                        if (isPrismaError(error)) {
+                                throw new DataBaseError({
+                                        domain: 'DATABASE_DOMAIN',
+                                        layer: 'REPOSITORY',
+                                        type: 'PRISMA_ERROR',
+                                        message: error.message,
+                                        cause: error,
+                                });
+                        }
+
+                        throw error; // re-throw unexpected errors
+                }
         }
         async findClientById(id: number): Promise<Client> {
-                return await this.prismaRepository.client.findFirst({
-                        where: {
-                                id_client: id,
-                        },
-                });
+                try {
+                        const client = await this.prismaRepository.client.findFirst({
+                                where: {
+                                        id_client: id,
+                                },
+                        });
+
+                        if (!client) {
+                                throw new DataBaseError({
+                                        domain: 'ENTERPRISE_DOMAIN',
+                                        layer: 'REPOSITORY',
+                                        type: 'GET_RECORD_ERROR',
+                                        message: `Client with id ${id} not found`,
+                                });
+                        }
+
+                        return client;
+                } catch (error) {
+                        if (isPrismaError(error)) {
+                                throw new DataBaseError({
+                                        domain: 'DATABASE_DOMAIN',
+                                        layer: 'REPOSITORY',
+                                        type: 'PRISMA_ERROR',
+                                        message: error.message,
+                                        cause: error,
+                                });
+                        }
+
+                        throw error; // re-throw unexpected errors
+                }
         }
         async createChecklist(clientId: number): Promise<Checklist> {
-                return await this.prismaRepository.checklist.create({
-                        data: {
-                                id_client: clientId,
-                        },
-                });
+                try {
+                        return await this.prismaRepository.checklist.create({
+                                data: {
+                                        id_client: clientId,
+                                },
+                        });
+                } catch (error) {
+                        if (isPrismaError(error)) {
+                                throw new DataBaseError({
+                                        domain: 'DATABASE_DOMAIN',
+                                        layer: 'REPOSITORY',
+                                        type: 'PRISMA_ERROR',
+                                        message: error.message,
+                                        cause: error,
+                                });
+                        }
+
+                        throw error; // re-throw unexpected errors
+                }
         }
 }

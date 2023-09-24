@@ -5,6 +5,7 @@ import { DriverRepository } from '../driver/driver.repository';
 import { EnterpriseRepository } from '../enterprise/enterprise.repository';
 import { DirectionsRequestParams } from '../maps/maps.interface';
 import { MapsService } from '../maps/maps.service';
+import { DataBaseError, RouteDomainError } from '../shared/errors/custom-errors';
 import { VehicleRepository } from '../vehicle/vehicle.repository';
 import { CreateRouteDto } from './dtos/route.dto';
 import { RouteData } from './interfaces/route.interface';
@@ -55,32 +56,14 @@ export class RouteService {
 
                                 const totalStops = legPolyline.length;
 
-                                const enterprise = await this.enterpriseRepository.findEnterpriseById(data.enterpriseId);
-                                if (!enterprise) {
-                                        throw new Error('record not found');
-                                }
+                                await this.enterpriseRepository.findEnterpriseById(data.enterpriseId);
+                                await this.driverRepository.findDriverById(data.driverId);
+                                await this.vehicleRepository.findVehicleById(data.vehicleId);
+                                await this.routeRepository.findRouteTemplateById(data.routeTemplateId);
 
                                 const client = await this.enterpriseRepository.findClientById(data.clientId);
-                                if (!client) {
-                                        throw new Error('record not found');
-                                }
-
-                                const driver = await this.driverRepository.findDriverById(data.driverId);
-                                if (!driver) {
-                                        throw new Error('record not found');
-                                }
-
-                                const vehicle = await this.vehicleRepository.findVehicleById(data.vehicleId);
-                                if (!vehicle) {
-                                        throw new Error('record not found');
-                                }
-
-                                const routeTemplate = await this.routeRepository.findRouteTemplateById(data.routeTemplateId);
-                                if (!routeTemplate) {
-                                        throw new Error('record not found');
-                                }
-
                                 const checklist = await this.enterpriseRepository.createChecklist(client.id_client);
+
                                 const rd: RouteData = {
                                         enterpriseId: data.enterpriseId,
                                         clientId: data.clientId,
@@ -110,16 +93,26 @@ export class RouteService {
 
                                 return newRoute;
                         }
-                } catch (err) {
-                        throw new Error(err);
+                } catch (error) {
+                        if (error instanceof DataBaseError) {
+                                throw new RouteDomainError({
+                                        domain: 'ROUTE_DOMAIN',
+                                        layer: 'SERVICE',
+                                        type: 'ROUTE_ERROR',
+                                        message: 'Unable to generate route',
+                                        cause: error,
+                                });
+                        }
+
+                        throw error;
                 }
         }
 
         async findRouteById(id: number): Promise<Route> {
                 try {
                         return await this.routeRepository.findRouteById(id);
-                } catch (err) {
-                        console.log(err);
+                } catch (error) {
+                        console.log(error);
                 }
         }
 }

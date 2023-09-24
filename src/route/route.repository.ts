@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ChecklistEvent, Event, Route, RouteTemplate } from '@prisma/client';
 import { PrismaRepository } from '../prisma/prisma.repository';
+import { DataBaseError } from '../shared/errors/custom-errors';
+import { isPrismaError } from '../shared/errors/helper-functions';
 import { RouteData } from './interfaces/route.interface';
 
 @Injectable()
@@ -29,56 +31,141 @@ export class RouteRepository {
                                 },
                         });
                 } catch (error) {
-                        console.log(error);
+                        if (isPrismaError(error)) {
+                                throw new DataBaseError({
+                                        domain: 'DATABASE_DOMAIN',
+                                        layer: 'REPOSITORY',
+                                        type: 'PRISMA_ERROR',
+                                        message: error.message,
+                                        cause: error,
+                                });
+                        }
+                        throw error; // re-throw unexpected errors
                 }
         }
 
         async findRouteById(id: number): Promise<Route> {
                 try {
-                        return await this.prismaRepository.route.findFirst({
+                        const route = await this.prismaRepository.route.findFirst({
                                 where: {
                                         id_route: id,
                                 },
                         });
-                } catch (err) {
-                        console.log(err);
+
+                        if (!route) {
+                                throw new DataBaseError({
+                                        domain: 'ROUTE_DOMAIN',
+                                        layer: 'REPOSITORY',
+                                        type: 'GET_RECORD_ERROR',
+                                        message: `Route with id ${id} not found`,
+                                });
+                        }
+
+                        return route;
+                } catch (error) {
+                        if (isPrismaError(error)) {
+                                throw new DataBaseError({
+                                        domain: 'DATABASE_DOMAIN',
+                                        layer: 'REPOSITORY',
+                                        type: 'PRISMA_ERROR',
+                                        message: error.message,
+                                        cause: error,
+                                });
+                        }
+
+                        throw error; // re-throw unexpected errors
                 }
         }
 
         async findRouteTemplateById(id: number): Promise<RouteTemplate> {
                 try {
-                        return await this.prismaRepository.routeTemplate.findFirst({
+                        const routeTemplate = await this.prismaRepository.routeTemplate.findFirst({
                                 where: {
                                         id_route_template: id,
                                 },
                         });
-                } catch (err) {
-                        console.log(err);
+
+                        if (!routeTemplate) {
+                                throw new DataBaseError({
+                                        domain: 'ROUTE_DOMAIN',
+                                        layer: 'REPOSITORY',
+                                        type: 'GET_RECORD_ERROR',
+                                        message: `RouteTemplate with id ${id} not found`,
+                                });
+                        }
+
+                        return routeTemplate;
+                } catch (error) {
+                        if (isPrismaError(error)) {
+                                throw new DataBaseError({
+                                        domain: 'DATABASE_DOMAIN',
+                                        layer: 'REPOSITORY',
+                                        type: 'PRISMA_ERROR',
+                                        message: error.message,
+                                        cause: error,
+                                });
+                        }
+
+                        throw error; // re-throw unexpected errors
                 }
         }
 
         async findAllEvents(): Promise<Event[]> {
                 try {
                         return await this.prismaRepository.event.findMany();
-                } catch (e) {
-                        console.log(e);
+                } catch (error) {
+                        if (isPrismaError(error)) {
+                                throw new DataBaseError({
+                                        domain: 'DATABASE_DOMAIN',
+                                        layer: 'REPOSITORY',
+                                        type: 'PRISMA_ERROR',
+                                        message: error.message,
+                                        cause: error,
+                                });
+                        }
+
+                        throw error; // re-throw unexpected errors
                 }
         }
-
+        // TODO: Move these to enterprise module
         async findAllChecklistEvents(): Promise<ChecklistEvent[]> {
                 try {
                         return await this.prismaRepository.checklistEvent.findMany();
-                } catch (e) {
-                        console.log(e);
+                } catch (error) {
+                        if (isPrismaError(error)) {
+                                throw new DataBaseError({
+                                        domain: 'DATABASE_DOMAIN',
+                                        layer: 'REPOSITORY',
+                                        type: 'PRISMA_ERROR',
+                                        message: error.message,
+                                        cause: error,
+                                });
+                        }
+
+                        throw error; // re-throw unexpected errors
                 }
         }
 
         async createChecklistEvent(checklistId: number, routeId: number) {
-                return await this.prismaRepository.checklistEvent.create({
-                        data: {
-                                id_checklist: checklistId,
-                                id_route: routeId,
-                        },
-                });
+                try {
+                        return await this.prismaRepository.checklistEvent.create({
+                                data: {
+                                        id_checklist: checklistId,
+                                        id_route: routeId,
+                                },
+                        });
+                } catch (error) {
+                        if (isPrismaError(error)) {
+                                throw new DataBaseError({
+                                        domain: 'DATABASE_DOMAIN',
+                                        layer: 'REPOSITORY',
+                                        type: 'PRISMA_ERROR',
+                                        message: error.message,
+                                        cause: error,
+                                });
+                        }
+
+                        throw error; // re-throw unexpected errors
+                }
         }
 }

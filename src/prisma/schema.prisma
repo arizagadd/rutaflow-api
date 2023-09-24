@@ -320,7 +320,7 @@ model User {
         type                                      UserType?
         email                                     String?      @db.VarChar(45)
         user                                      String?      @db.VarChar(45)
-        pass                                      String?      @db.VarChar(45)
+        pass                                      String?      @db.VarChar(255)
         token                                     String?      @db.VarChar(45)
         phone                                     String?      @db.VarChar(45)
         referral_code                             String?      @db.VarChar(200)
