@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ChecklistEvent, Event, Route, RouteTemplate } from '@prisma/client';
 import { PrismaRepository } from '../prisma/prisma.repository';
-import { DataBaseError } from '../shared/errors/custom-errors';
-import { isPrismaError } from '../shared/errors/helper-functions';
+import { DataBaseError, isPrismaError } from '../shared/errors/custom-errors';
 import { RouteData } from './interfaces/route.interface';
 
 @Injectable()

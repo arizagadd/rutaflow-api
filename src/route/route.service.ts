@@ -112,7 +112,16 @@ export class RouteService {
                 try {
                         return await this.routeRepository.findRouteById(id);
                 } catch (error) {
-                        console.log(error);
+                        if (error instanceof DataBaseError) {
+                                throw new RouteDomainError({
+                                        domain: 'ROUTE_DOMAIN',
+                                        layer: 'SERVICE',
+                                        type: 'ROUTE_ERROR',
+                                        message: `Unable to find route`,
+                                });
+                        }
+
+                        throw error;
                 }
         }
 }

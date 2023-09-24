@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Checklist, Client, Enterprise } from '@prisma/client';
 import { PrismaRepository } from '../prisma/prisma.repository';
-import { DataBaseError } from '../shared/errors/custom-errors';
-import { isPrismaError } from '../shared/errors/helper-functions';
+import { DataBaseError, isPrismaError } from '../shared/errors/custom-errors';
 
 @Injectable()
 export class EnterpriseRepository {
