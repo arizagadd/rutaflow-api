@@ -2,7 +2,7 @@ import { ErrorBase } from './base-error';
 
 type AppLayer = 'CONTROLLER' | 'SERVICE' | 'REPOSITORY';
 
-type Domain = 'USER' | 'ENTERPRISE' | 'DRIVER' | 'VEHICLE' | 'STOP' | 'ROUTE' | 'MAP' | 'DATABASE';
+type Domain = 'USER' | 'ENTERPRISE' | 'DRIVER' | 'VEHICLE' | 'STOP' | 'ROUTE' | 'MAP' | 'DATABASE' | 'PRISMA';
 export class DomainError extends ErrorBase<Domain, AppLayer> {}
 
 type UnexpectedErrorType = 'UNEXPECTED_ERROR';

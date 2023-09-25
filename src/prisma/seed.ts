@@ -40,6 +40,8 @@ import {
         DriverTravelAvailability,
         EnterpriseObjective,
         PrismaClient,
+        StopMain,
+        StopType,
         UserActive,
         UserType,
         VehicleStatus,
@@ -98,6 +100,34 @@ const users = [
         },
 ];
 
+const citiesCoordinates = [
+        { city: 'Guadalajara, JAL', lat: 20.6597, lng: -103.3496 },
+        { city: 'Tijuana, BCN', lat: 32.5149, lng: -117.0382 },
+        { city: 'Mexicali, BCN', lat: 32.6245, lng: -115.4523 },
+        { city: 'San Luis Río Colorado, SON', lat: 32.4638, lng: -114.7718 },
+        { city: 'Caborca, SON', lat: 30.7117, lng: -112.1643 },
+        { city: 'Hermosillo, SON', lat: 29.072967, lng: -110.955919 },
+        { city: 'Los Mochis, SIN', lat: 25.790465, lng: -108.985882 },
+        { city: 'Mazatlán, SIN', lat: 23.249415, lng: -106.411142 },
+        { city: 'Durango, DGO', lat: 24.02772, lng: -104.653176 },
+        { city: 'Saltillo, COAH', lat: 25.438255, lng: -100.973665 },
+        { city: 'Monterrey, NL', lat: 25.686614, lng: -100.316113 },
+        { city: 'Matehuala, SLP', lat: 23.6524, lng: -100.6458 },
+        { city: 'San Luis Potosí, SLP', lat: 22.1565, lng: -100.9855 },
+        { city: 'Aguascalientes, AGS', lat: 21.8853, lng: -102.2916 },
+        { city: 'Zacatecas, ZAC', lat: 22.7709, lng: -102.5832 },
+        { city: 'San Juan del Río, QRO', lat: 20.3873, lng: -99.7832 },
+        { city: 'Querétaro, QRO', lat: 20.5888, lng: -100.3899 },
+        { city: 'Morelia, MICH', lat: 19.7008, lng: -101.1844 },
+        { city: 'Toluca, MEX', lat: 19.2826, lng: -99.6557 },
+        { city: 'Valle de Bravo, MEX', lat: 19.1914, lng: -100.1347 },
+        { city: 'Ixtapan de la Sal, MEX', lat: 18.8471, lng: -99.7765 },
+        { city: 'Taxco, GRO', lat: 18.5563, lng: -99.6051 },
+        { city: 'Iguala, GRO', lat: 18.3442, lng: -99.5411 },
+        { city: 'Chilpancingo, GRO', lat: 17.5515, lng: -99.5006 },
+        { city: 'Acapulco, GRO', lat: 16.8531, lng: -99.8237 },
+];
+
 async function main() {
         const userRes = await prisma.user.createMany({
                 data: users,
@@ -132,7 +162,7 @@ async function main() {
         });
         console.log('DeliveryWeek created');
 
-        await prisma.client.create({
+        const client = await prisma.client.create({
                 data: {
                         id_enterprise: enterprise.id_enterprise,
                         name: 'Papas el Pepe',
@@ -148,6 +178,165 @@ async function main() {
                         id_user: 4,
                 },
         });
+
+        // const client = await prisma.client.findFirst({
+        //         where: {
+        //                 id_client: 1,
+        //         },
+        // });
+
+        //stop objects
+        const stops = [
+                {
+                        id_client: client.id_client,
+                        type: StopType.CEDIS,
+                        title: 'CEDIS 1',
+                        main: StopMain.FALSE,
+                        // schedule: '',
+                        // line1: 'line 1',
+                        // line2: 'line 2',
+                        // zip: '90210',
+                        city: 'Guadalajara',
+                        // time_start: 848484
+                        // time_end: 989898
+                        lat: citiesCoordinates[0].lat,
+                        lon: citiesCoordinates[0].lng,
+                        // comments: 'everything worked out fine'
+                },
+                {
+                        id_client: client.id_client,
+                        type: StopType.CEDIS,
+                        title: 'CEDIS 2',
+                        main: StopMain.FALSE,
+                        // schedule: '',
+                        // line1: 'line 1',
+                        // line2: 'line 2',
+                        // zip: '90210',
+                        city: 'Tijuana',
+                        // time_start: 848484
+                        // time_end: 989898
+                        lat: citiesCoordinates[1].lat,
+                        lon: citiesCoordinates[1].lng,
+                        // comments: 'everything worked out fine'
+                },
+                {
+                        id_client: client.id_client,
+                        type: StopType.CEDIS,
+                        title: 'CEDIS 6',
+                        main: StopMain.FALSE,
+                        // schedule: '',
+                        // line1: 'line 1',
+                        // line2: 'line 2',
+                        // zip: '90210',
+                        city: 'Hermosillo',
+                        // time_start: 848484
+                        // time_end: 989898
+                        lat: citiesCoordinates[6].lat,
+                        lon: citiesCoordinates[6].lng,
+                        // comments: 'everything worked out fine'
+                },
+                {
+                        id_client: client.id_client,
+                        type: StopType.CEDIS,
+                        title: 'CEDIS 7',
+                        main: StopMain.FALSE,
+                        // schedule: '',
+                        // line1: 'line 1',
+                        // line2: 'line 2',
+                        // zip: '90210',
+                        city: 'Mazatlan',
+                        // time_start: 848484
+                        // time_end: 989898
+                        lat: citiesCoordinates[7].lat,
+                        lon: citiesCoordinates[7].lng,
+                        // comments: 'everything worked out fine'
+                },
+                {
+                        id_client: client.id_client,
+                        type: StopType.CEDIS,
+                        title: 'CEDIS 8',
+                        main: StopMain.FALSE,
+                        // schedule: '',
+                        // line1: 'line 1',
+                        // line2: 'line 2',
+                        // zip: '90210',
+                        city: 'Durango',
+                        // time_start: 848484
+                        // time_end: 989898
+                        lat: citiesCoordinates[8].lat,
+                        lon: citiesCoordinates[8].lng,
+                        // comments: 'everything worked out fine'
+                },
+                {
+                        id_client: client.id_client,
+                        type: StopType.CEDIS,
+                        title: 'CEDIS 9',
+                        main: StopMain.FALSE,
+                        // schedule: '',
+                        // line1: 'line 1',
+                        // line2: 'line 2',
+                        // zip: '90210',
+                        city: 'Saltillo',
+                        // time_start: 848484
+                        // time_end: 989898
+                        lat: citiesCoordinates[9].lat,
+                        lon: citiesCoordinates[9].lng,
+                        // comments: 'everything worked out fine'
+                },
+                {
+                        id_client: client.id_client,
+                        type: StopType.CEDIS,
+                        title: 'CEDIS 13',
+                        main: StopMain.FALSE,
+                        // schedule: '',
+                        // line1: 'line 1',
+                        // line2: 'line 2',
+                        // zip: '90210',
+                        city: 'AguasCalientes',
+                        // time_start: 848484
+                        // time_end: 989898
+                        lat: citiesCoordinates[13].lat,
+                        lon: citiesCoordinates[13].lng,
+                        // comments: 'everything worked out fine'
+                },
+                {
+                        id_client: client.id_client,
+                        type: StopType.CEDIS,
+                        title: 'CEDIS 16',
+                        main: StopMain.FALSE,
+                        // schedule: '',
+                        // line1: 'line 1',
+                        // line2: 'line 2',
+                        // zip: '90210',
+                        city: 'Queretaro',
+                        // time_start: 848484
+                        // time_end: 989898
+                        lat: citiesCoordinates[16].lat,
+                        lon: citiesCoordinates[16].lng,
+                        // comments: 'everything worked out fine'
+                },
+                {
+                        id_client: client.id_client,
+                        type: StopType.CEDIS,
+                        title: 'CEDIS 18',
+                        main: StopMain.FALSE,
+                        // schedule: '',
+                        // line1: 'line 1',
+                        // line2: 'line 2',
+                        // zip: '90210',
+                        city: 'Toluca',
+                        // time_start: 848484
+                        // time_end: 989898
+                        lat: citiesCoordinates[18].lat,
+                        lon: citiesCoordinates[18].lng,
+                        // comments: 'everything worked out fine'
+                },
+        ];
+        const stopsRes = await prisma.stop.createMany({
+                data: stops,
+        });
+        console.log(`Created ${stopsRes.count} stops`);
+
         await prisma.driver.create({
                 data: {
                         id_enterprise: enterprise.id_enterprise,
@@ -205,55 +394,55 @@ async function main() {
                         tipo: 'catalogo',
                         listado: 'name,type,id_user',
                         campos: `[
-    {
-        "campo": "name"
-    },
-    {
-        "titulo": "Last name",
-        "campo": "last_name"
-    },
-    {
-        "campo": "email"
-    },
-    {
-        "titulo": "User name",
-        "campo": "user"
-    },
-    {
-        "titulo": "Password",
-        "campo": "pass"
-    },
-    {
-        "campo": "phone"
-    },
-    {
-        "campo": "type",
-        "tipo": "combo",
-        "enum": [
-            "super",
-            "admin",
-            "driver",
-            "manager",
-            "logistics",
-            "external"
-        ]
-    },
-    {
-        "titulo": "Enterprise",
-        "campo": "id_enterprise",
-        "label": "enterprise_name",
-        "listado": "combo_sin_enterprise",
-        "tabla": "enterprise",
-        "tipo": "combo",
-        "title": "enterprise_name",
-        "titulo": "Enterprise",
-        "value": "id_enterprise"
-    },
-    {
-        "campo": "active",
-        "tipo": "check"
-    }
-]`,
+            {
+                "campo": "name"
+            },
+            {
+                "titulo": "Last name",
+                "campo": "last_name"
+            },
+            {
+                "campo": "email"
+            },
+            {
+                "titulo": "User name",
+                "campo": "user"
+            },
+            {
+                "titulo": "Password",
+                "campo": "pass"
+            },
+            {
+                "campo": "phone"
+            },
+            {
+                "campo": "type",
+                "tipo": "combo",
+                "enum": [
+                    "super",
+                    "admin",
+                    "driver",
+                    "manager",
+                    "logistics",
+                    "external"
+                ]
+            },
+            {
+                "titulo": "Enterprise",
+                "campo": "id_enterprise",
+                "label": "enterprise_name",
+                "listado": "combo_sin_enterprise",
+                "tabla": "enterprise",
+                "tipo": "combo",
+                "title": "enterprise_name",
+                "titulo": "Enterprise",
+                "value": "id_enterprise"
+            },
+            {
+                "campo": "active",
+                "tipo": "check"
+            }
+        ]`,
                 },
                 // 2
                 {
@@ -266,21 +455,21 @@ async function main() {
                         tipo: 'catalogo',
                         listado: 'item,client_name,id_checklist',
                         campos: `[
-    {
-        "campo": "item"
-    },
-    {
-        "campo": "id_client",
-        "label": "client_name",
-        "listado": "combo_client",
-        "tabla": "client",
-        "tipo": "combo",
-        "title": "client_name",
-        "titulo": "client",
-        "value": "id_client"
-    }
-]
-`,
+            {
+                "campo": "item"
+            },
+            {
+                "campo": "id_client",
+                "label": "client_name",
+                "listado": "combo_client",
+                "tabla": "client",
+                "tipo": "combo",
+                "title": "client_name",
+                "titulo": "client",
+                "value": "id_client"
+            }
+        ]
+        `,
                 },
 
                 // 3
@@ -294,33 +483,33 @@ async function main() {
                         tipo: 'catalogo',
                         listado: 'checklist_item,route_name,id_checklist_event',
                         campos: `[
-    {
-        "campo": "id_checklist",
-        "label": "checklist_item",
-        "listado": "combo_checklist",
-        "tabla": "checklist",
-        "tipo": "combo",
-        "title": "checklist_item",
-        "titulo": "checklist",
-        "value": "id_checklist"
-    },
-    {
-        "campo": "id_route",
-        "label": "route_name",
-        "listado": "combo_route",
-        "tabla": "route",
-        "tipo": "combo",
-        "title": "route_name",
-        "titulo": "route",
-        "value": "id_route"
-    },
-    {
-        "campo": "img",
-        "titulo": "Image",
-        "tipo": "file"
-    }
-]
-`,
+            {
+                "campo": "id_checklist",
+                "label": "checklist_item",
+                "listado": "combo_checklist",
+                "tabla": "checklist",
+                "tipo": "combo",
+                "title": "checklist_item",
+                "titulo": "checklist",
+                "value": "id_checklist"
+            },
+            {
+                "campo": "id_route",
+                "label": "route_name",
+                "listado": "combo_route",
+                "tabla": "route",
+                "tipo": "combo",
+                "title": "route_name",
+                "titulo": "route",
+                "value": "id_route"
+            },
+            {
+                "campo": "img",
+                "titulo": "Image",
+                "tipo": "file"
+            }
+        ]
+        `,
                 },
                 // 4
                 {
@@ -333,35 +522,35 @@ async function main() {
                         tipo: 'catalogo',
                         listado: 'name,enterprise_name,id_client',
                         campos: `[
-    {
-        "campo": "name"
-    },
-    {
-        "campo": "contract_description",
-        "titulo": "Contract description",
-        "tipo": "editor"
-    },
-    {
-        "campo": "pickup_time",
-        "titulo": "Pickup time"
-    },
-    {
-        "campo": "delivery_time",
-        "titulo": "Delivery time",
-        "tipo": "date"
-    },
-    {
-        "campo": "id_enterprise",
-        "label": "enterprise_name",
-        "listado": "combo_enterprise",
-        "tabla": "enterprise",
-        "tipo": "combo",
-        "title": "enterprise_name",
-        "titulo": "Enterprise",
-        "value": "id_enterprise"
-    }
-]
-`,
+            {
+                "campo": "name"
+            },
+            {
+                "campo": "contract_description",
+                "titulo": "Contract description",
+                "tipo": "editor"
+            },
+            {
+                "campo": "pickup_time",
+                "titulo": "Pickup time"
+            },
+            {
+                "campo": "delivery_time",
+                "titulo": "Delivery time",
+                "tipo": "date"
+            },
+            {
+                "campo": "id_enterprise",
+                "label": "enterprise_name",
+                "listado": "combo_enterprise",
+                "tabla": "enterprise",
+                "tipo": "combo",
+                "title": "enterprise_name",
+                "titulo": "Enterprise",
+                "value": "id_enterprise"
+            }
+        ]
+        `,
                 },
                 // 5
                 {
@@ -374,29 +563,29 @@ async function main() {
                         tipo: 'catalogo',
                         listado: 'enterprise_name,week_start,id_delivery_week',
                         campos: `[
-  {
-    "campo": "week_start",
-    "tipo": "date",
-    "titulo": "Week start"
-  },
-  {
-    "campo": "notes"
-  },
-  {
-    "campo": "finished",
-    "tipo": "check"
-  },
-  {
-    "campo": "id_company",
-    "label": "enterprise_name",
-    "listado": "combo_enterprise",
-    "tabla": "enterprise",
-    "tipo": "combo",
-    "title": "enterprise_name",
-    "titulo": "enterprise",
-    "value": "id_enterprise"
-  }
-] `,
+          {
+            "campo": "week_start",
+            "tipo": "date",
+            "titulo": "Week start"
+          },
+          {
+            "campo": "notes"
+          },
+          {
+            "campo": "finished",
+            "tipo": "check"
+          },
+          {
+            "campo": "id_company",
+            "label": "enterprise_name",
+            "listado": "combo_enterprise",
+            "tabla": "enterprise",
+            "tipo": "combo",
+            "title": "enterprise_name",
+            "titulo": "enterprise",
+            "value": "id_enterprise"
+          }
+        ] `,
                 },
                 // 6
                 {
@@ -409,98 +598,98 @@ async function main() {
                         tipo: 'catalogo',
                         listado: 'driver_name,status,id_driver',
                         campos: `[
-    {
-        "campo": "id_user",
-        "label": "name",
-        "listado": "combo_user",
-        "tabla": "user",
-        "tipo": "combo",
-        "title": "user_name",
-        "titulo": "user",
-        "value": "id_user"
-    },
-    {
-        "campo": "id_enterprise",
-        "label": "enterprise_name",
-        "listado": "combo_enterprise",
-        "tabla": "enterprise",
-        "tipo": "combo",
-        "title": "enterprise_name",
-        "titulo": "Enterprise",
-        "value": "id_enterprise"
-    },
-	{
-        "titulo": "Date of birth",
-        "campo": "date_of_birth",
-        "tipo": "date"
-    },
-    {
-        "campo": "alias"
-    },
-    {
-        "campo": "img",
-        "titulo": "Image",
-        "tipo": "file"
-    },
-    {
-        "campo": "status",
-        "tipo": "combo",
-        "enum": [
-            "available",
-            "nodocs",
-            "unavailable"
-        ]
-    },
-    {
-        "titulo": "INE expiration",
-        "campo": "ine_exp_date",
-        "tipo": "date"
-    },
-    {
-        "titulo": "License expiration",
-        "campo": "license_exp_date",
-        "tipo": "date"
-    },
-    {
-        "titulo": "Insurance",
-        "campo": "insurance_status",
-        "tipo": "check"
-    },
-    {
-        "titulo": "Insurance number",
-        "campo": "insurance_number"
-    },
-    {
-        "titulo": "Emergency contact",
-        "campo": "emergency_contact"
-    },
-    {
-        "titulo": "Operator type",
-        "campo": "operator_type"
-    },
-    {
-        "campo": "certification",
-        "tipo": "check"
-    },
-    {
-        "campo": "courses",
-        "tipo": "check"
-    },
-    {
-        "titulo": "Entry date",
-        "campo": "entry_date",
-        "tipo": "date"
-    },
-    {
-        "titulo": "Travel availability",
-        "campo": "travel_availability",
-        "tipo": "check"
-    },
-    {
-        "campo": "maneuvers",
-        "tipo": "check"
-    }
-] `,
+            {
+                "campo": "id_user",
+                "label": "name",
+                "listado": "combo_user",
+                "tabla": "user",
+                "tipo": "combo",
+                "title": "user_name",
+                "titulo": "user",
+                "value": "id_user"
+            },
+            {
+                "campo": "id_enterprise",
+                "label": "enterprise_name",
+                "listado": "combo_enterprise",
+                "tabla": "enterprise",
+                "tipo": "combo",
+                "title": "enterprise_name",
+                "titulo": "Enterprise",
+                "value": "id_enterprise"
+            },
+        	{
+                "titulo": "Date of birth",
+                "campo": "date_of_birth",
+                "tipo": "date"
+            },
+            {
+                "campo": "alias"
+            },
+            {
+                "campo": "img",
+                "titulo": "Image",
+                "tipo": "file"
+            },
+            {
+                "campo": "status",
+                "tipo": "combo",
+                "enum": [
+                    "available",
+                    "nodocs",
+                    "unavailable"
+                ]
+            },
+            {
+                "titulo": "INE expiration",
+                "campo": "ine_exp_date",
+                "tipo": "date"
+            },
+            {
+                "titulo": "License expiration",
+                "campo": "license_exp_date",
+                "tipo": "date"
+            },
+            {
+                "titulo": "Insurance",
+                "campo": "insurance_status",
+                "tipo": "check"
+            },
+            {
+                "titulo": "Insurance number",
+                "campo": "insurance_number"
+            },
+            {
+                "titulo": "Emergency contact",
+                "campo": "emergency_contact"
+            },
+            {
+                "titulo": "Operator type",
+                "campo": "operator_type"
+            },
+            {
+                "campo": "certification",
+                "tipo": "check"
+            },
+            {
+                "campo": "courses",
+                "tipo": "check"
+            },
+            {
+                "titulo": "Entry date",
+                "campo": "entry_date",
+                "tipo": "date"
+            },
+            {
+                "titulo": "Travel availability",
+                "campo": "travel_availability",
+                "tipo": "check"
+            },
+            {
+                "campo": "maneuvers",
+                "tipo": "check"
+            }
+        ] `,
                 },
                 // 7
                 {
@@ -513,41 +702,41 @@ async function main() {
                         tipo: 'catalogo',
                         listado: 'name,user_name,id_enterprise',
                         campos: `[
-    {
-        "campo": "name"
-    },
-    {
-        "campo": "id_owner",
-        "label": "name",
-        "listado": "combo_user",
-        "tabla": "user",
-        "tipo": "combo",
-        "title": "user_name",
-        "titulo": "Owner",
-        "value": "id_user"
-    },
-    {
-        "campo": "components"
-    },
-    {
-        "campo": "description"
-    },
-    {
-        "campo": "objective",
-        "tipo": "combo",
-        "enum": [
-            "subscription",
-            "logistics",
-            "ecommerce",
-            "complete"
+            {
+                "campo": "name"
+            },
+            {
+                "campo": "id_owner",
+                "label": "name",
+                "listado": "combo_user",
+                "tabla": "user",
+                "tipo": "combo",
+                "title": "user_name",
+                "titulo": "Owner",
+                "value": "id_user"
+            },
+            {
+                "campo": "components"
+            },
+            {
+                "campo": "description"
+            },
+            {
+                "campo": "objective",
+                "tipo": "combo",
+                "enum": [
+                    "subscription",
+                    "logistics",
+                    "ecommerce",
+                    "complete"
+                ]
+            },
+            {
+                "campo": "settings",
+                "tipo": "editor"
+            }
         ]
-    },
-    {
-        "campo": "settings",
-        "tipo": "editor"
-    }
-]
- `,
+         `,
                 },
                 // 8
                 {
@@ -560,99 +749,99 @@ async function main() {
                         tipo: 'catalogo',
                         listado: 'route_name,driver_name,status',
                         campos: `[
-    {
-        "campo": "id_route",
-        "label": "route_name",
-        "listado": "combo_route",
-        "tabla": "route",
-        "tipo": "combo",
-        "title": "route_name",
-        "titulo": "route",
-        "value": "id_route"
-    },
-    {
-        "campo": "id_stop",
-        "label": "stop_title",
-        "listado": "combo_stop",
-        "tabla": "stop",
-        "tipo": "combo",
-        "title": "stop_title",
-        "titulo": "stop",
-        "value": "id_stop"
-    },
-    {
-        "campo": "status",
-        "tipo": "combo",
-        "enum": [
-            "pending",
-            "route",
-            "issue",
-            "service",
-            "completed"
+            {
+                "campo": "id_route",
+                "label": "route_name",
+                "listado": "combo_route",
+                "tabla": "route",
+                "tipo": "combo",
+                "title": "route_name",
+                "titulo": "route",
+                "value": "id_route"
+            },
+            {
+                "campo": "id_stop",
+                "label": "stop_title",
+                "listado": "combo_stop",
+                "tabla": "stop",
+                "tipo": "combo",
+                "title": "stop_title",
+                "titulo": "stop",
+                "value": "id_stop"
+            },
+            {
+                "campo": "status",
+                "tipo": "combo",
+                "enum": [
+                    "pending",
+                    "route",
+                    "issue",
+                    "service",
+                    "completed"
+                ]
+            },
+            {
+                "campo": "date_route",
+                "titulo": "date route",
+        	"tipo": "date"
+            },
+            {
+                "campo": "date_service",
+                "titulo": "date service",
+        	"tipo": "date"
+            },
+            {
+                "campo": "date_completed",
+                "titulo": "date completed",
+        	"tipo": "date"
+            },
+            {
+                "campo": "service_time",
+                "titulo": "service time"
+            },
+            {
+                "campo": "driver_comments",
+                "titulo": "driver comments"
+            },
+            {
+                "campo": "eta"
+            },
+            {
+                "campo": "id_driver",
+                "label": "driver_name",
+                "listado": "combo_driver",
+                "tabla": "driver",
+                "tipo": "combo",
+                "title": "driver_name",
+                "titulo": "driver",
+                "value": "id_driver"
+            },
+            {
+                "campo": "priority_status",
+        	"titulo": "priority status",
+                "tipo": "combo",
+                "enum": [
+                    "urgent",
+                    "normal",
+                    "noturgent"
+                ]
+            },
+            {
+                "campo": "order"
+            },
+            {
+                "campo": "km"
+            },
+            {
+                "campo": "logistic_comments",
+                "titulo": "logistic comments",
+                "tipo": "editor"
+            },
+            {
+                "campo": "pos"
+            }
         ]
-    },
-    {
-        "campo": "date_route",
-        "titulo": "date route",
-	"tipo": "date"
-    },
-    {
-        "campo": "date_service",
-        "titulo": "date service",
-	"tipo": "date"
-    },
-    {
-        "campo": "date_completed",
-        "titulo": "date completed",
-	"tipo": "date"
-    },
-    {
-        "campo": "service_time",
-        "titulo": "service time"
-    },
-    {
-        "campo": "driver_comments",
-        "titulo": "driver comments"
-    },
-    {
-        "campo": "eta"
-    },
-    {
-        "campo": "id_driver",
-        "label": "driver_name",
-        "listado": "combo_driver",
-        "tabla": "driver",
-        "tipo": "combo",
-        "title": "driver_name",
-        "titulo": "driver",
-        "value": "id_driver"
-    },
-    {
-        "campo": "priority_status",
-	"titulo": "priority status",
-        "tipo": "combo",
-        "enum": [
-            "urgent",
-            "normal",
-            "noturgent"
-        ]
-    },
-    {
-        "campo": "order"
-    },
-    {
-        "campo": "km"
-    },
-    {
-        "campo": "logistic_comments",
-        "titulo": "logistic comments",
-        "tipo": "editor"
-    },
-    {
-        "campo": "pos"
-    }
-]
- `,
+         `,
                 },
                 // 9
                 {
@@ -665,32 +854,32 @@ async function main() {
                         tipo: 'catalogo',
                         listado: 'route_template_name,stop_title,id_event_template',
                         campos: `[
-    {
-        "campo": "id_route_template",
-        "label": "route_template_name",
-        "listado": "combo_route_template",
-        "tabla": "route_template",
-        "tipo": "combo",
-        "title": "route_template_name",
-        "titulo": "route template",
-        "value": "id_route_template"
-    },
-    {
-        "campo": "id_stop",
-        "label": "stop_title",
-        "listado": "combo_stop",
-        "tabla": "stop",
-        "tipo": "combo",
-        "title": "stop_title",
-        "titulo": "stop",
-        "value": "id_stop"
-    },
-    {
-        "campo": "pos"
-    }
-]
+            {
+                "campo": "id_route_template",
+                "label": "route_template_name",
+                "listado": "combo_route_template",
+                "tabla": "route_template",
+                "tipo": "combo",
+                "title": "route_template_name",
+                "titulo": "route template",
+                "value": "id_route_template"
+            },
+            {
+                "campo": "id_stop",
+                "label": "stop_title",
+                "listado": "combo_stop",
+                "tabla": "stop",
+                "tipo": "combo",
+                "title": "stop_title",
+                "titulo": "stop",
+                "value": "id_stop"
+            },
+            {
+                "campo": "pos"
+            }
+        ]
 
- `,
+         `,
                 },
                 // 10
                 {
@@ -703,30 +892,30 @@ async function main() {
                         tipo: 'catalogo',
                         listado: 'event_details,type,id_evidence',
                         campos: `[
-    {
-        "campo": "id_event",
-        "label": "event_details",
-        "listado": "combo_event",
-        "tabla": "event",
-        "tipo": "combo",
-        "title": "event_details",
-        "titulo": "event",
-        "value": "id_event"
-    },
-    {
-        "campo": "img",
-        "titulo": "image",
-        "tipo": "file"
-    },
-    {
-        "campo": "type"
-    },
-    {
-        "campo": "approved",
-        "tipo": "check"
-    }
-]
- `,
+            {
+                "campo": "id_event",
+                "label": "event_details",
+                "listado": "combo_event",
+                "tabla": "event",
+                "tipo": "combo",
+                "title": "event_details",
+                "titulo": "event",
+                "value": "id_event"
+            },
+            {
+                "campo": "img",
+                "titulo": "image",
+                "tipo": "file"
+            },
+            {
+                "campo": "type"
+            },
+            {
+                "campo": "approved",
+                "tipo": "check"
+            }
+        ]
+         `,
                 },
                 // 11
                 {
@@ -739,91 +928,91 @@ async function main() {
                         tipo: 'catalogo',
                         listado: 'name,driver_name,id_route',
                         campos: `[
-    {
-        "campo": "id_enterprise",
-        "label": "enterprise_name",
-        "listado": "combo_enterprise",
-        "tabla": "enterprise",
-        "tipo": "combo",
-        "title": "enterprise_name",
-        "titulo": "Enterprise",
-        "value": "id_enterprise"
-    },
-    {
-        "campo": "id_client",
-        "label": "client_name",
-        "listado": "combo_client",
-        "tabla": "client",
-        "tipo": "combo",
-        "title": "client_name",
-        "titulo": "client",
-        "value": "id_client"
-    },
-    {
-        "campo": "id_vehicle",
-        "label": "vehicle_name",
-        "listado": "combo_vehicle",
-        "tabla": "vehicle",
-        "tipo": "combo",
-        "title": "vehicle_name",
-        "titulo": "vehicle",
-        "value": "id_vehicle"
-    },
-    {
-        "campo": "id_driver",
-        "label": "driver_name",
-        "listado": "combo_driver",
-        "tabla": "driver",
-        "tipo": "combo",
-        "title": "driver_name",
-        "titulo": "driver",
-        "value": "id_driver"
-    },
-    {
-        "campo": "id_route_template",
-        "label": "route_template_name",
-        "listado": "combo_route_template",
-        "tabla": "route_template",
-        "tipo": "combo",
-        "title": "route_template_name",
-        "titulo": "route template",
-        "value": "id_route_template"
-    },
-    {
-        "campo": "name"
-    },
-    {
-        "campo": "date_start",
-        "titulo": "date start",
-        "tipo": "date"
-    },
-    {
-        "campo": "date_end",
-        "titulo": "date end",
-        "tipo": "date"
-    },
-    {
-        "campo": "polyline",
-        "tipo": "editor"
-    },
-    {
-        "campo": "total_duration",
-        "titulo": "total duration"
-    },
-    {
-        "campo": "total_distance",
-        "titulo": "total distance"
-    },
-    {
-        "campo": "stop_initial",
-        "titulo": "stop initial"
-    },
-    {
-        "campo": "stop_final",
-        "titulo": "stop final"
-    }
-]
- `,
+            {
+                "campo": "id_enterprise",
+                "label": "enterprise_name",
+                "listado": "combo_enterprise",
+                "tabla": "enterprise",
+                "tipo": "combo",
+                "title": "enterprise_name",
+                "titulo": "Enterprise",
+                "value": "id_enterprise"
+            },
+            {
+                "campo": "id_client",
+                "label": "client_name",
+                "listado": "combo_client",
+                "tabla": "client",
+                "tipo": "combo",
+                "title": "client_name",
+                "titulo": "client",
+                "value": "id_client"
+            },
+            {
+                "campo": "id_vehicle",
+                "label": "vehicle_name",
+                "listado": "combo_vehicle",
+                "tabla": "vehicle",
+                "tipo": "combo",
+                "title": "vehicle_name",
+                "titulo": "vehicle",
+                "value": "id_vehicle"
+            },
+            {
+                "campo": "id_driver",
+                "label": "driver_name",
+                "listado": "combo_driver",
+                "tabla": "driver",
+                "tipo": "combo",
+                "title": "driver_name",
+                "titulo": "driver",
+                "value": "id_driver"
+            },
+            {
+                "campo": "id_route_template",
+                "label": "route_template_name",
+                "listado": "combo_route_template",
+                "tabla": "route_template",
+                "tipo": "combo",
+                "title": "route_template_name",
+                "titulo": "route template",
+                "value": "id_route_template"
+            },
+            {
+                "campo": "name"
+            },
+            {
+                "campo": "date_start",
+                "titulo": "date start",
+                "tipo": "date"
+            },
+            {
+                "campo": "date_end",
+                "titulo": "date end",
+                "tipo": "date"
+            },
+            {
+                "campo": "polyline",
+                "tipo": "editor"
+            },
+            {
+                "campo": "total_duration",
+                "titulo": "total duration"
+            },
+            {
+                "campo": "total_distance",
+                "titulo": "total distance"
+            },
+            {
+                "campo": "stop_initial",
+                "titulo": "stop initial"
+            },
+            {
+                "campo": "stop_final",
+                "titulo": "stop final"
+            }
+        ]
+         `,
                 },
                 // 12
                 {
@@ -836,52 +1025,52 @@ async function main() {
                         tipo: 'catalogo',
                         listado: 'name,driver_name,id_route_template',
                         campos: `[
-    {
-        "campo": "name"
-    },
-    {
-        "campo": "id_driver",
-        "label": "driver_name",
-        "listado": "combo_driver",
-        "tabla": "driver",
-        "tipo": "combo",
-        "title": "driver_name",
-        "titulo": "driver",
-        "value": "id_driver"
-    },
-    {
-        "campo": "description",
-        "tipo": "editor"
-    },
-    {
-        "campo": "color"
-    },
-    {
-        "campo": "symbol"
-    },
-    {
-        "campo": "id_enterprise",
-        "label": "enterprise_name",
-        "listado": "combo_enterprise",
-        "tabla": "enterprise",
-        "tipo": "combo",
-        "title": "enterprise_name",
-        "titulo": "Enterprise",
-        "value": "id_enterprise"
-    },
-    {
-        "campo": "stop_initial",
-        "titulo": "stop initial"
-    },
-    {
-        "campo": "stop_final",
-        "titulo": "stop final"
-    },
-    {
-        "campo": "tag"
-    }
-]
- `,
+            {
+                "campo": "name"
+            },
+            {
+                "campo": "id_driver",
+                "label": "driver_name",
+                "listado": "combo_driver",
+                "tabla": "driver",
+                "tipo": "combo",
+                "title": "driver_name",
+                "titulo": "driver",
+                "value": "id_driver"
+            },
+            {
+                "campo": "description",
+                "tipo": "editor"
+            },
+            {
+                "campo": "color"
+            },
+            {
+                "campo": "symbol"
+            },
+            {
+                "campo": "id_enterprise",
+                "label": "enterprise_name",
+                "listado": "combo_enterprise",
+                "tabla": "enterprise",
+                "tipo": "combo",
+                "title": "enterprise_name",
+                "titulo": "Enterprise",
+                "value": "id_enterprise"
+            },
+            {
+                "campo": "stop_initial",
+                "titulo": "stop initial"
+            },
+            {
+                "campo": "stop_final",
+                "titulo": "stop final"
+            },
+            {
+                "campo": "tag"
+            }
+        ]
+         `,
                 },
                 // 13
                 {
@@ -894,83 +1083,83 @@ async function main() {
                         tipo: 'catalogo',
                         listado: 'title,schedule,id_stop',
                         campos: `[
-    {
-        "campo": "id_client",
-        "label": "client_name",
-        "listado": "combo_client",
-        "tabla": "client",
-        "tipo": "combo",
-        "title": "client_name",
-        "titulo": "client",
-        "value": "id_client"
-    },
-    {
-        "campo": "id_base_route",
-        "label": "route_template_name",
-        "listado": "combo_route_template",
-        "tabla": "route_template",
-        "tipo": "combo",
-        "title": "route_template_name",
-        "titulo": "route template",
-        "value": "id_route_template"
-    },
-    {
-        "campo": "type",
-        "tipo": "combo",
-        "enum": [
-            "visit",
-            "gas",
-            "parking",
-            "cedis",
-            "main",
-            "workshop"
+            {
+                "campo": "id_client",
+                "label": "client_name",
+                "listado": "combo_client",
+                "tabla": "client",
+                "tipo": "combo",
+                "title": "client_name",
+                "titulo": "client",
+                "value": "id_client"
+            },
+            {
+                "campo": "id_base_route",
+                "label": "route_template_name",
+                "listado": "combo_route_template",
+                "tabla": "route_template",
+                "tipo": "combo",
+                "title": "route_template_name",
+                "titulo": "route template",
+                "value": "id_route_template"
+            },
+            {
+                "campo": "type",
+                "tipo": "combo",
+                "enum": [
+                    "visit",
+                    "gas",
+                    "parking",
+                    "cedis",
+                    "main",
+                    "workshop"
+                ]
+            },
+            {
+                "campo": "title"
+            },
+            {
+                "campo": "main",
+                "tipo": "check"
+            },
+            {
+                "campo": "schedule"
+            },
+            {
+                "campo": "line1",
+                "titulo": "line 1"
+            },
+            {
+                "campo": "line2",
+                "titulo": "line 2"
+            },
+            {
+                "campo": "zip",
+                "titulo": "zip code"
+            },
+            {
+                "campo": "city"
+            },
+            {
+                "titulo": "time start",
+                "campo": "time_start"
+            },
+            {
+                "titulo": "time end",
+                "campo": "time_end"
+            },
+            {
+                "campo": "lat"
+            },
+            {
+                "campo": "lon"
+            },
+            {
+                "campo": "comments",
+                "tipo": "editor"
+            }
         ]
-    },
-    {
-        "campo": "title"
-    },
-    {
-        "campo": "main",
-        "tipo": "check"
-    },
-    {
-        "campo": "schedule"
-    },
-    {
-        "campo": "line1",
-        "titulo": "line 1"
-    },
-    {
-        "campo": "line2",
-        "titulo": "line 2"
-    },
-    {
-        "campo": "zip",
-        "titulo": "zip code"
-    },
-    {
-        "campo": "city"
-    },
-    {
-        "titulo": "time start",
-        "campo": "time_start"
-    },
-    {
-        "titulo": "time end",
-        "campo": "time_end"
-    },
-    {
-        "campo": "lat"
-    },
-    {
-        "campo": "lon"
-    },
-    {
-        "campo": "comments",
-        "tipo": "editor"
-    }
-]
- `,
+         `,
                 },
                 // 14
                 {
@@ -983,78 +1172,78 @@ async function main() {
                         tipo: 'catalogo',
                         listado: 'name,status,id_vehicle',
                         campos: `
-    {
-        "campo": "id_enterprise",
-        "label": "enterprise_name",
-        "listado": "combo_enterprise",
-        "tabla": "enterprise",
-        "tipo": "combo",
-        "title": "enterprise_name",
-        "titulo": "Enterprise",
-        "value": "id_enterprise"
-    },
-    {
-        "campo": "name"
-    },
-    {
-        "campo": "img",
-        "titulo": "image",
-        "tipo": "file"
-    },
-    {
-        "campo": "status",
-        "tipo": "combo",
-        "enum": [
-            "available",
-            "workshop",
-            "route",
-            "unavailable"
+            {
+                "campo": "id_enterprise",
+                "label": "enterprise_name",
+                "listado": "combo_enterprise",
+                "tabla": "enterprise",
+                "tipo": "combo",
+                "title": "enterprise_name",
+                "titulo": "Enterprise",
+                "value": "id_enterprise"
+            },
+            {
+                "campo": "name"
+            },
+            {
+                "campo": "img",
+                "titulo": "image",
+                "tipo": "file"
+            },
+            {
+                "campo": "status",
+                "tipo": "combo",
+                "enum": [
+                    "available",
+                    "workshop",
+                    "route",
+                    "unavailable"
+                ]
+            },
+            {
+                "campo": "brand"
+            },
+            {
+                "campo": "model"
+            },
+            {
+                "campo": "year"
+            },
+            {
+                "campo": "color",
+        		"tipo": "color"
+            },
+            {
+                "campo": "motor"
+            },
+            {
+                "titulo": "Serial number",
+                "campo": "serial_number"
+            },
+            {
+                "titulo": "Insurance number",
+                "campo": "insurance_number"
+            },
+            {
+                "titulo": "Fuel type",
+                "campo": "fuel_type"
+            },
+            {
+                "titulo": "Plate number",
+                "campo": "plate_number"
+            },
+            {
+                "campo": "capacity"
+            },
+            {
+                "campo": "dimension"
+            },
+            {
+                "campo": "comments",
+                "tipo": "editor"
+            }
         ]
-    },
-    {
-        "campo": "brand"
-    },
-    {
-        "campo": "model"
-    },
-    {
-        "campo": "year"
-    },
-    {
-        "campo": "color",
-		"tipo": "color"
-    },
-    {
-        "campo": "motor"
-    },
-    {
-        "titulo": "Serial number",
-        "campo": "serial_number"
-    },
-    {
-        "titulo": "Insurance number",
-        "campo": "insurance_number"
-    },
-    {
-        "titulo": "Fuel type",
-        "campo": "fuel_type"
-    },
-    {
-        "titulo": "Plate number",
-        "campo": "plate_number"
-    },
-    {
-        "campo": "capacity"
-    },
-    {
-        "campo": "dimension"
-    },
-    {
-        "campo": "comments",
-        "tipo": "editor"
-    }
-]
- `,
+         `,
                 },
         ];
 

@@ -8,10 +8,13 @@ import {
         DriverStatus,
         DriverTravelAvailability,
         EnterpriseObjective,
+        StopMain,
+        StopType,
         UserActive,
         UserType,
         VehicleStatus,
 } from '@prisma/client';
+import { UnexpectedError } from '../shared/errors/custom-errors';
 import { PrismaRepository } from './prisma.repository';
 
 @Injectable()
@@ -69,6 +72,33 @@ export class PrismaService {
                                         active: UserActive.TRUE,
                                 },
                         ];
+                        const citiesCoordinates = [
+                                { city: 'Guadalajara, JAL', lat: 20.6597, lng: -103.3496 },
+                                { city: 'Tijuana, BCN', lat: 32.5149, lng: -117.0382 },
+                                { city: 'Mexicali, BCN', lat: 32.6245, lng: -115.4523 },
+                                { city: 'San Luis Río Colorado, SON', lat: 32.4638, lng: -114.7718 },
+                                { city: 'Caborca, SON', lat: 30.7117, lng: -112.1643 },
+                                { city: 'Hermosillo, SON', lat: 29.072967, lng: -110.955919 },
+                                { city: 'Los Mochis, SIN', lat: 25.790465, lng: -108.985882 },
+                                { city: 'Mazatlán, SIN', lat: 23.249415, lng: -106.411142 },
+                                { city: 'Durango, DGO', lat: 24.02772, lng: -104.653176 },
+                                { city: 'Saltillo, COAH', lat: 25.438255, lng: -100.973665 },
+                                { city: 'Monterrey, NL', lat: 25.686614, lng: -100.316113 },
+                                { city: 'Matehuala, SLP', lat: 23.6524, lng: -100.6458 },
+                                { city: 'San Luis Potosí, SLP', lat: 22.1565, lng: -100.9855 },
+                                { city: 'Aguascalientes, AGS', lat: 21.8853, lng: -102.2916 },
+                                { city: 'Zacatecas, ZAC', lat: 22.7709, lng: -102.5832 },
+                                { city: 'San Juan del Río, QRO', lat: 20.3873, lng: -99.7832 },
+                                { city: 'Querétaro, QRO', lat: 20.5888, lng: -100.3899 },
+                                { city: 'Morelia, MICH', lat: 19.7008, lng: -101.1844 },
+                                { city: 'Toluca, MEX', lat: 19.2826, lng: -99.6557 },
+                                { city: 'Valle de Bravo, MEX', lat: 19.1914, lng: -100.1347 },
+                                { city: 'Ixtapan de la Sal, MEX', lat: 18.8471, lng: -99.7765 },
+                                { city: 'Taxco, GRO', lat: 18.5563, lng: -99.6051 },
+                                { city: 'Iguala, GRO', lat: 18.3442, lng: -99.5411 },
+                                { city: 'Chilpancingo, GRO', lat: 17.5515, lng: -99.5006 },
+                                { city: 'Acapulco, GRO', lat: 16.8531, lng: -99.8237 },
+                        ];
 
                         const userRes = await this.prismaRepository.user.createMany({
                                 data: users,
@@ -83,7 +113,7 @@ export class PrismaService {
                         });
                         const enterprise = await this.prismaRepository.enterprise.create({
                                 data: {
-                                        name: 'RutitaFlow',
+                                        name: 'Aztec Logistics',
                                         id_owner: owner.id_user,
                                         components: 'components',
                                         description: 'descripton example bla bla',
@@ -103,16 +133,167 @@ export class PrismaService {
                         });
                         console.log('DeliveryWeek created');
 
-                        await this.prismaRepository.client.create({
+                        const client = await this.prismaRepository.client.create({
                                 data: {
                                         id_enterprise: enterprise.id_enterprise,
-                                        name: 'Papas el Pepe',
+                                        name: 'Coca Cola',
                                         contract_description: 'lorim episum',
                                         pickup_time: 4444,
                                         delivery_time: 423,
                                 },
                         });
                         console.log('Client created');
+
+                        const stops = [
+                                {
+                                        id_client: client.id_client,
+                                        type: StopType.CEDIS,
+                                        title: 'CEDIS 1',
+                                        main: StopMain.FALSE,
+                                        // schedule: '',
+                                        // line1: 'line 1',
+                                        // line2: 'line 2',
+                                        // zip: '90210',
+                                        city: 'Guadalajara',
+                                        // time_start: 848484
+                                        // time_end: 989898
+                                        lat: citiesCoordinates[0].lat,
+                                        lon: citiesCoordinates[0].lng,
+                                        // comments: 'everything worked out fine'
+                                },
+                                {
+                                        id_client: client.id_client,
+                                        type: StopType.CEDIS,
+                                        title: 'CEDIS 2',
+                                        main: StopMain.FALSE,
+                                        // schedule: '',
+                                        // line1: 'line 1',
+                                        // line2: 'line 2',
+                                        // zip: '90210',
+                                        city: 'Tijuana',
+                                        // time_start: 848484
+                                        // time_end: 989898
+                                        lat: citiesCoordinates[1].lat,
+                                        lon: citiesCoordinates[1].lng,
+                                        // comments: 'everything worked out fine'
+                                },
+                                {
+                                        id_client: client.id_client,
+                                        type: StopType.CEDIS,
+                                        title: 'CEDIS 6',
+                                        main: StopMain.FALSE,
+                                        // schedule: '',
+                                        // line1: 'line 1',
+                                        // line2: 'line 2',
+                                        // zip: '90210',
+                                        city: 'Hermosillo',
+                                        // time_start: 848484
+                                        // time_end: 989898
+                                        lat: citiesCoordinates[6].lat,
+                                        lon: citiesCoordinates[6].lng,
+                                        // comments: 'everything worked out fine'
+                                },
+                                {
+                                        id_client: client.id_client,
+                                        type: StopType.CEDIS,
+                                        title: 'CEDIS 7',
+                                        main: StopMain.FALSE,
+                                        // schedule: '',
+                                        // line1: 'line 1',
+                                        // line2: 'line 2',
+                                        // zip: '90210',
+                                        city: 'Mazatlan',
+                                        // time_start: 848484
+                                        // time_end: 989898
+                                        lat: citiesCoordinates[7].lat,
+                                        lon: citiesCoordinates[7].lng,
+                                        // comments: 'everything worked out fine'
+                                },
+                                {
+                                        id_client: client.id_client,
+                                        type: StopType.CEDIS,
+                                        title: 'CEDIS 8',
+                                        main: StopMain.FALSE,
+                                        // schedule: '',
+                                        // line1: 'line 1',
+                                        // line2: 'line 2',
+                                        // zip: '90210',
+                                        city: 'Durango',
+                                        // time_start: 848484
+                                        // time_end: 989898
+                                        lat: citiesCoordinates[8].lat,
+                                        lon: citiesCoordinates[8].lng,
+                                        // comments: 'everything worked out fine'
+                                },
+                                {
+                                        id_client: client.id_client,
+                                        type: StopType.CEDIS,
+                                        title: 'CEDIS 9',
+                                        main: StopMain.FALSE,
+                                        // schedule: '',
+                                        // line1: 'line 1',
+                                        // line2: 'line 2',
+                                        // zip: '90210',
+                                        city: 'Saltillo',
+                                        // time_start: 848484
+                                        // time_end: 989898
+                                        lat: citiesCoordinates[9].lat,
+                                        lon: citiesCoordinates[9].lng,
+                                        // comments: 'everything worked out fine'
+                                },
+                                {
+                                        id_client: client.id_client,
+                                        type: StopType.CEDIS,
+                                        title: 'CEDIS 13',
+                                        main: StopMain.FALSE,
+                                        // schedule: '',
+                                        // line1: 'line 1',
+                                        // line2: 'line 2',
+                                        // zip: '90210',
+                                        city: 'AguasCalientes',
+                                        // time_start: 848484
+                                        // time_end: 989898
+                                        lat: citiesCoordinates[13].lat,
+                                        lon: citiesCoordinates[13].lng,
+                                        // comments: 'everything worked out fine'
+                                },
+                                {
+                                        id_client: client.id_client,
+                                        type: StopType.CEDIS,
+                                        title: 'CEDIS 16',
+                                        main: StopMain.FALSE,
+                                        // schedule: '',
+                                        // line1: 'line 1',
+                                        // line2: 'line 2',
+                                        // zip: '90210',
+                                        city: 'Queretaro',
+                                        // time_start: 848484
+                                        // time_end: 989898
+                                        lat: citiesCoordinates[16].lat,
+                                        lon: citiesCoordinates[16].lng,
+                                        // comments: 'everything worked out fine'
+                                },
+                                {
+                                        id_client: client.id_client,
+                                        type: StopType.CEDIS,
+                                        title: 'CEDIS 18',
+                                        main: StopMain.FALSE,
+                                        // schedule: '',
+                                        // line1: 'line 1',
+                                        // line2: 'line 2',
+                                        // zip: '90210',
+                                        city: 'Toluca',
+                                        // time_start: 848484
+                                        // time_end: 989898
+                                        lat: citiesCoordinates[18].lat,
+                                        lon: citiesCoordinates[18].lng,
+                                        // comments: 'everything worked out fine'
+                                },
+                        ];
+                        const stopsRes = await this.prismaRepository.stop.createMany({
+                                data: stops,
+                        });
+                        console.log(`Created ${stopsRes.count} stops`);
 
                         const driver = await this.prismaRepository.user.findFirst({
                                 where: {
@@ -1033,8 +1214,14 @@ export class PrismaService {
                                 data: cmsData,
                         });
                         console.log(`Created ${cmsDataRes.count} CMS menu entities `);
-                } catch (err) {
-                        console.log(err);
+                } catch (error) {
+                        throw new UnexpectedError({
+                                domain: 'PRISMA',
+                                layer: 'SERVICE',
+                                type: 'UNEXPECTED_ERROR',
+                                message: error.message,
+                                cause: error,
+                        });
                 }
                 return 'ok';
         }
