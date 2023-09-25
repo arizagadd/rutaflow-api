@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-
 import { Route } from '@prisma/client';
 import { DriverRepository } from '../driver/driver.repository';
 import { EnterpriseRepository } from '../enterprise/enterprise.repository';
