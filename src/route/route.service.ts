@@ -130,7 +130,7 @@ export class RouteService {
                                 throw new DomainError({
                                         domain: 'ROUTE',
                                         layer: 'SERVICE',
-                                        message: `findRouteById: Unable to find route`,
+                                        message: `getRoute: Unable to get route`,
                                         cause: error,
                                 });
                         }
