@@ -41,6 +41,9 @@ dependencies:
   jsonwebtoken:
     specifier: ^9.0.2
     version: 9.0.2
+  prisma:
+    specifier: ^5.3.1
+    version: 5.3.1
   reflect-metadata:
     specifier: ^0.1.13
     version: 0.1.13
@@ -97,9 +100,6 @@ devDependencies:
   prettier:
     specifier: ^3.0.0
     version: 3.0.3
-  prisma:
-    specifier: ^5.3.1
-    version: 5.3.1
   source-map-support:
     specifier: ^0.5.21
     version: 0.5.21
@@ -1168,6 +1168,7 @@ packages:
   /@prisma/engines@5.3.1:
     resolution: {integrity: sha512-6QkILNyfeeN67BNEPEtkgh3Xo2tm6D7V+UhrkBbRHqKw9CTaz/vvTP/ROwYSP/3JT2MtIutZm/EnhxUiuOPVDA==}
     requiresBuild: true
+    dev: false
 
   /@sinclair/typebox@0.27.8:
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
@@ -4704,6 +4705,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@prisma/engines': 5.3.1
+    dev: false
 
   /process-nextick-args@2.0.1:
     resolution: {integrity: sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==}
