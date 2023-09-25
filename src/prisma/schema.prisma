@@ -236,6 +236,7 @@ model Route {
         polyline          String?          @db.VarChar(2500)
         total_duration    Float?           @db.Float
         total_distance    Float?           @db.Float
+        total_stops       Int?
         stop_initial      Int?
         stop_final        Int?
         checklist_event   ChecklistEvent[]
@@ -256,12 +257,16 @@ model Route {
 
 model RouteTemplate {
         id_route_template Int             @id @default(autoincrement())
-        name              String?         @db.VarChar(45)
+        id_enterprise     Int
         id_driver         Int?
+        name              String?         @db.VarChar(45)
+        polyline          String?         @db.VarChar(2500)
+        total_duration    Float?          @db.Float
+        total_distance    Float?          @db.Float
         description       String?         @db.VarChar(45)
         color             String?         @db.VarChar(45)
         symbol            String?         @db.VarChar(45)
-        id_enterprise     Int
+        total_stops       Int?
         stop_initial      Int?
         stop_final        Int?
         tag               String?         @db.VarChar(100)
