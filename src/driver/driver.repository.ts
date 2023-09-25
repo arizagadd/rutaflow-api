@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaRepository } from '../prisma/prisma.repository';
-import { DataBaseError, isPrismaError } from '../shared/errors/custom-errors';
+import { DataBaseError, UnexpectedError } from '../shared/errors/custom-errors';
 
 @Injectable()
 export class DriverRepository {
         constructor(private readonly prismaRepository: PrismaRepository) {}
-        async create(data: any) {
+        async createDriverRecord(data: any) {
                 return { status: 'ok', data };
         }
         async findDriverById(id: number) {
@@ -20,23 +20,23 @@ export class DriverRepository {
                                         domain: 'DRIVER',
                                         layer: 'REPOSITORY',
                                         type: 'GET_RECORD_ERROR',
-                                        message: `Driver with id ${id} not found`,
+                                        message: `findDriverById: Driver with id ${id} not found`,
                                 });
                         }
 
                         return driver;
                 } catch (error) {
-                        if (isPrismaError(error)) {
-                                throw new DataBaseError({
-                                        domain: 'DATABASE',
+                        if (error instanceof DataBaseError) {
+                                throw error;
+                        } else {
+                                throw new UnexpectedError({
+                                        domain: 'DRIVER',
                                         layer: 'REPOSITORY',
-                                        type: 'PRISMA_ERROR',
+                                        type: 'UNEXPECTED_ERROR',
                                         message: error.message,
                                         cause: error,
                                 });
                         }
-
-                        throw error; // re-throw unexpected errors
                 }
         }
 }

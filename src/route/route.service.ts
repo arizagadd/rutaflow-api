@@ -5,7 +5,7 @@ import { DriverRepository } from '../driver/driver.repository';
 import { EnterpriseRepository } from '../enterprise/enterprise.repository';
 import { DirectionsRequestParams } from '../maps/maps.interface';
 import { MapsService } from '../maps/maps.service';
-import { DataBaseError, RouteDomainError } from '../shared/errors/custom-errors';
+import { DataBaseError, DomainError, UnexpectedError } from '../shared/errors/custom-errors';
 import { VehicleRepository } from '../vehicle/vehicle.repository';
 import { CreateRouteDto } from './dtos/route.dto';
 import { RouteData } from './interfaces/route.interface';
@@ -62,9 +62,9 @@ export class RouteService {
                                 await this.routeRepository.findRouteTemplateById(data.routeTemplateId);
 
                                 const client = await this.enterpriseRepository.findClientById(data.clientId);
-                                const checklist = await this.enterpriseRepository.createChecklist(client.id_client);
+                                const checklist = await this.enterpriseRepository.createChecklistRecord(client.id_client);
 
-                                const rd: RouteData = {
+                                const route: RouteData = {
                                         enterpriseId: data.enterpriseId,
                                         clientId: data.clientId,
                                         vehicleId: data.vehicleId,
@@ -79,10 +79,10 @@ export class RouteService {
                                         stopInitial: 0,
                                         stopFinal: totalStops,
                                 };
-                                const newRoute = await this.routeRepository.createRoute(rd);
+                                const routeRecord = await this.routeRepository.createRouteRecord(route);
 
                                 // create checklist_event
-                                await this.routeRepository.createChecklistEvent(checklist.id_checklist, newRoute.id_route);
+                                await this.enterpriseRepository.createChecklistEventRecord(checklist.id_checklist, routeRecord.id_route);
 
                                 // TODO: create a an event for the route but you need to also create stops
 
@@ -91,28 +91,43 @@ export class RouteService {
                                 // stopInitial: legPolyline[0],
                                 // stopFinal: legPolyline[legPolyline.length - 1],
 
-                                return newRoute;
+                                return routeRecord;
                         }
                 } catch (error) {
+                        // Domain specific error not related to DB operations
+                        if (error instanceof DomainError) {
+                                throw error;
+                        }
+                        // Database specific error
                         if (error instanceof DataBaseError) {
-                                throw new RouteDomainError({
+                                throw new DomainError({
                                         domain: 'ROUTE',
                                         layer: 'SERVICE',
                                         message: 'generateRoute: Unable to generate route',
                                         cause: error,
                                 });
                         }
-
-                        throw error;
+                        // Otherwise throw Unexpected error
+                        throw new UnexpectedError({
+                                domain: 'ROUTE',
+                                layer: 'SERVICE',
+                                type: 'UNEXPECTED_ERROR',
+                                message: error.message,
+                                cause: error,
+                        });
                 }
         }
 
-        async findRouteById(id: number): Promise<Route> {
+        async getRoute(id: number): Promise<Route> {
                 try {
                         return await this.routeRepository.findRouteById(id);
                 } catch (error) {
+                        if (error instanceof DomainError) {
+                                throw error;
+                        }
+
                         if (error instanceof DataBaseError) {
-                                throw new RouteDomainError({
+                                throw new DomainError({
                                         domain: 'ROUTE',
                                         layer: 'SERVICE',
                                         message: `findRouteById: Unable to find route`,
@@ -120,7 +135,13 @@ export class RouteService {
                                 });
                         }
 
-                        throw error;
+                        throw new UnexpectedError({
+                                domain: 'ROUTE',
+                                layer: 'SERVICE',
+                                type: 'UNEXPECTED_ERROR',
+                                message: error.message,
+                                cause: error,
+                        });
                 }
         }
 }

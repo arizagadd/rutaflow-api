@@ -1,14 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { Checklist, Client, Enterprise } from '@prisma/client';
+import { Checklist, ChecklistEvent, Client, Enterprise, Event } from '@prisma/client';
 import { PrismaRepository } from '../prisma/prisma.repository';
-import { DataBaseError, isPrismaError } from '../shared/errors/custom-errors';
+import { DataBaseError, UnexpectedError } from '../shared/errors/custom-errors';
 
 @Injectable()
 export class EnterpriseRepository {
         constructor(private readonly prismaRepository: PrismaRepository) {}
-        async createEnterprise(data: any) {
+        async createEnterpriseRecord(data: any) {
                 return { status: 'ok', data };
         }
+
         async findEnterpriseById(id: number): Promise<Enterprise> {
                 try {
                         const enterprise = await this.prismaRepository.enterprise.findFirst({
@@ -28,19 +29,20 @@ export class EnterpriseRepository {
 
                         return enterprise;
                 } catch (error) {
-                        if (isPrismaError(error)) {
-                                throw new DataBaseError({
-                                        domain: 'DATABASE',
+                        if (error instanceof DataBaseError) {
+                                throw error; // Throw the specific database error.
+                        } else {
+                                throw new UnexpectedError({
+                                        domain: 'ENTERPRISE',
                                         layer: 'REPOSITORY',
-                                        type: 'PRISMA_ERROR',
+                                        type: 'UNEXPECTED_ERROR',
                                         message: error.message,
                                         cause: error,
                                 });
                         }
-
-                        throw error; // re-throw unexpected errors
                 }
         }
+
         async findClientById(id: number): Promise<Client> {
                 try {
                         const client = await this.prismaRepository.client.findFirst({
@@ -54,44 +56,115 @@ export class EnterpriseRepository {
                                         domain: 'ENTERPRISE',
                                         layer: 'REPOSITORY',
                                         type: 'GET_RECORD_ERROR',
-                                        message: `Client with id ${id} not found`,
+                                        message: `findClientById: Client with id ${id} not found`,
                                 });
                         }
 
                         return client;
                 } catch (error) {
-                        if (isPrismaError(error)) {
-                                throw new DataBaseError({
-                                        domain: 'DATABASE',
+                        if (error instanceof DataBaseError) {
+                                throw error;
+                        } else {
+                                throw new UnexpectedError({
+                                        domain: 'ENTERPRISE',
                                         layer: 'REPOSITORY',
-                                        type: 'PRISMA_ERROR',
+                                        type: 'UNEXPECTED_ERROR',
                                         message: error.message,
                                         cause: error,
                                 });
                         }
-
-                        throw error; // re-throw unexpected errors
                 }
         }
-        async createChecklist(clientId: number): Promise<Checklist> {
+
+        async createChecklistRecord(clientId: number): Promise<Checklist> {
                 try {
-                        return await this.prismaRepository.checklist.create({
+                        const checklist = await this.prismaRepository.checklist.create({
                                 data: {
                                         id_client: clientId,
                                 },
                         });
-                } catch (error) {
-                        if (isPrismaError(error)) {
+
+                        if (!checklist) {
                                 throw new DataBaseError({
-                                        domain: 'DATABASE',
+                                        domain: 'ENTERPRISE',
                                         layer: 'REPOSITORY',
-                                        type: 'PRISMA_ERROR',
+                                        type: 'CREATE_RECORD_ERROR',
+                                        message: `createChecklistRecord: Unable to create checklist`,
+                                });
+                        }
+
+                        return checklist;
+                } catch (error) {
+                        if (error instanceof DataBaseError) {
+                                throw error;
+                        } else {
+                                throw new UnexpectedError({
+                                        domain: 'ENTERPRISE',
+                                        layer: 'REPOSITORY',
+                                        type: 'UNEXPECTED_ERROR',
                                         message: error.message,
                                         cause: error,
                                 });
                         }
+                }
+        }
 
-                        throw error; // re-throw unexpected errors
+        async fetchAllEventRecords(): Promise<Event[]> {
+                try {
+                        return await this.prismaRepository.event.findMany();
+                } catch (error) {
+                        throw new UnexpectedError({
+                                domain: 'ENTERPRISE',
+                                layer: 'REPOSITORY',
+                                type: 'UNEXPECTED_ERROR',
+                                message: error.message,
+                                cause: error,
+                        });
+                }
+        }
+
+        async fetchAllChecklistEventRecords(): Promise<ChecklistEvent[]> {
+                try {
+                        return await this.prismaRepository.checklistEvent.findMany();
+                } catch (error) {
+                        throw new UnexpectedError({
+                                domain: 'ENTERPRISE',
+                                layer: 'REPOSITORY',
+                                type: 'UNEXPECTED_ERROR',
+                                message: error.message,
+                                cause: error,
+                        });
+                }
+        }
+
+        async createChecklistEventRecord(checklistId: number, routeId: number) {
+                try {
+                        const checklistEvent = await this.prismaRepository.checklistEvent.create({
+                                data: {
+                                        id_checklist: checklistId,
+                                        id_route: routeId,
+                                },
+                        });
+                        if (!checklistEvent) {
+                                throw new DataBaseError({
+                                        domain: 'ENTERPRISE',
+                                        layer: 'REPOSITORY',
+                                        type: 'CREATE_RECORD_ERROR',
+                                        message: 'createChecklistEventRecord: Unable to create route',
+                                });
+                        }
+                } catch (error) {
+                        if (error instanceof DataBaseError) {
+                                throw error;
+                        } else {
+                                throw new UnexpectedError({
+                                        domain: 'ENTERPRISE',
+                                        layer: 'REPOSITORY',
+                                        type: 'UNEXPECTED_ERROR',
+                                        message: error.message,
+                                        cause: error,
+                                });
+                        }
                 }
         }
 }

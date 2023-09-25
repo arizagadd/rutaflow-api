@@ -1,6 +1,7 @@
 import { Client, DirectionsResponse, LatLng, TravelMode } from '@googlemaps/google-maps-services-js';
 import { geocode } from '@googlemaps/google-maps-services-js/dist/geocode/geocode';
 import { Injectable } from '@nestjs/common';
+import { DomainError, UnexpectedError } from '../shared/errors/custom-errors';
 import { DirectionsRequestParams } from './maps.interface';
 
 @Injectable()
@@ -29,13 +30,18 @@ export class MapsService {
                                 },
                         });
                 } catch (error) {
-                        console.log(error);
-                }
-        }
+                        if (error instanceof DomainError) {
+                                throw error;
+                        }
 
-        public isLatLngFormat(location: string): boolean {
-                const latLngRegex = /^-?\d+(\.\d+)?,\s*-?\d+(\.\d+)?$/;
-                return latLngRegex.test(location);
+                        throw new UnexpectedError({
+                                domain: 'MAP',
+                                layer: 'SERVICE',
+                                type: 'UNEXPECTED_ERROR',
+                                message: error.message,
+                                cause: error,
+                        });
+                }
         }
 
         public async convertLocationToLatLng(location: string): Promise<LatLng> {
@@ -52,8 +58,17 @@ export class MapsService {
                                 longitude: response.data.results[0].geometry.location.lng,
                         };
                 } else {
-                        throw new Error(`Cannot convert location "${location}" to latitude and longitude.`);
+                        throw new DomainError({
+                                domain: 'MAP',
+                                layer: 'SERVICE',
+                                message: `convertLocationToLatLang: Cannot convert location "${location}" to latitude and longitude.`,
+                        });
                 }
+        }
+
+        public isLatLngFormat(location: string): boolean {
+                const latLngRegex = /^-?\d+(\.\d+)?,\s*-?\d+(\.\d+)?$/;
+                return latLngRegex.test(location);
         }
 
         public async convertLocationsToLatLng(locations: string[]): Promise<LatLng[]> {

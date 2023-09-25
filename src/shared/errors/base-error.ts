@@ -1,4 +1,4 @@
-export class ErrorBase<T extends string, U extends string, V = undefined> extends Error {
+export class ErrorBase<T extends string, U extends string, V = any> extends Error {
         domain: T;
         layer: U;
         type?: V;

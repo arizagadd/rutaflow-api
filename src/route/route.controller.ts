@@ -12,7 +12,7 @@ export class RouteController {
         async generate(@Req() req: Request, @Body() data: CreateRouteDto): Promise<SuccessResponse<string> | ErrorResponse> {
                 try {
                         const newRoute = await this.routeService.generateRoute(data);
-                        await this.routeService.findRouteById(newRoute.id_route);
+                        await this.routeService.getRoute(newRoute.id_route);
                 } catch (error) {
                         logError(error, req);
                         throw new InternalServerErrorException({
