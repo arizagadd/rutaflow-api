@@ -180,7 +180,7 @@ export class PrismaService {
                                 {
                                         id_client: client.id_client,
                                         type: StopType.CEDIS,
-                                        title: 'CEDIS 6',
+                                        title: 'CEDIS 5',
                                         main: StopMain.FALSE,
                                         // schedule: '',
                                         // line1: 'line 1',
@@ -189,8 +189,8 @@ export class PrismaService {
                                         city: 'Hermosillo',
                                         // time_start: 848484
                                         // time_end: 989898
-                                        lat: citiesCoordinates[6].lat,
-                                        lon: citiesCoordinates[6].lng,
+                                        lat: citiesCoordinates[5].lat,
+                                        lon: citiesCoordinates[5].lng,
                                         // comments: 'everything worked out fine'
                                 },
                                 {

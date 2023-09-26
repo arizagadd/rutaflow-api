@@ -26,6 +26,7 @@ export class MapsService {
                                         destination,
                                         mode: TravelMode.driving,
                                         waypoints,
+                                        optimize: true,
                                         key: this.apiKey,
                                 },
                         });
