@@ -268,15 +268,16 @@ export class RouteRepository {
                                                 });
 
                                                 if (correspondingEventTemplate) {
+                                                        const posValue = this.indexToPosString(index);
                                                         // Update the pos field of the eventTemplate
                                                         await this.prismaRepository.eventTemplate.update({
                                                                 where: { id_event_template: correspondingEventTemplate.id_event_template },
-                                                                data: { pos: String(index + 1) },
+                                                                data: { pos: posValue },
                                                         });
 
                                                         return {
                                                                 leg,
-                                                                pos: String(index + 1),
+                                                                pos: this.indexToPosString(index),
                                                         };
                                                 }
                                         }
@@ -299,6 +300,14 @@ export class RouteRepository {
                                         cause: error,
                                 });
                         }
+                }
+        }
+
+        indexToPosString(index: number): string {
+                if (index === 0) {
+                        return String(index);
+                } else {
+                        return String(index - 1);
                 }
         }
 

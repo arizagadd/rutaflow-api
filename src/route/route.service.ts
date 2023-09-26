@@ -215,7 +215,7 @@ export class RouteService {
                         return leg.steps.map((step) => step.polyline.points).join('');
                 });
 
-                const totalStops = legPolyline.length;
+                const totalStops = legPolyline.length - 2; // we don't take into account point of origin and we also remove index 0 from counter
 
                 return {
                         polyline,
