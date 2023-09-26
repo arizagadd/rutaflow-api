@@ -236,40 +236,57 @@ export class RouteRepository {
 
         async matchLegsToEventTemplates(directions: DirectionsResponse, routeTemplateId: number) {
                 try {
-                        // This function assumes you have already obtained all related EventTemplates and the corresponding Stops for your RouteTemplate
-                        const eventTemplates = await this.prismaRepository.eventTemplate.findMany({
-                                where: {
-                                        id_route_template: routeTemplateId,
-                                },
-                                include: {
-                                        stop: true,
-                                },
-                        });
-
                         const legs = directions.data.routes[0].legs;
 
-                        const mappedLegs = legs.map((leg) => {
-                                // Find the matching eventTemplate based on the start_location of the leg
-                                const matchingEventTemplate = eventTemplates.find((eventTemplate) =>
-                                        this.areCoordinatesCloseEnough(
-                                                leg.start_location.lat,
-                                                leg.start_location.lng,
-                                                eventTemplate.stop.lat,
-                                                eventTemplate.stop.lon,
-                                        ),
-                                );
+                        const mappedLegs = await Promise.all(
+                                legs.map(async (leg, index) => {
+                                        // Round to the 3rd decimal place
+                                        const latRounded = parseFloat(leg.start_location.lat.toFixed(3));
+                                        const lonRounded = parseFloat(leg.start_location.lng.toFixed(3));
 
-                                if (matchingEventTemplate) {
-                                        return {
-                                                leg,
-                                                pos: String(matchingEventTemplate.pos), // Convert pos to string
-                                        };
-                                } else {
+                                        // Query for the stop with matching lat and lon coordinates up to 3rd decimal place
+                                        const matchingStop = await this.prismaRepository.stop.findFirst({
+                                                where: {
+                                                        lat: {
+                                                                gte: latRounded - 0.0005,
+                                                                lte: latRounded + 0.0005,
+                                                        },
+                                                        lon: {
+                                                                gte: lonRounded - 0.0005,
+                                                                lte: lonRounded + 0.0005,
+                                                        },
+                                                },
+                                        });
+
+                                        if (matchingStop) {
+                                                // Get the eventTemplate that corresponds to this stop
+                                                const correspondingEventTemplate = await this.prismaRepository.eventTemplate.findFirst({
+                                                        where: {
+                                                                id_stop: matchingStop.id_stop,
+                                                                id_route_template: routeTemplateId,
+                                                        },
+                                                });
+
+                                                if (correspondingEventTemplate) {
+                                                        // Update the pos field of the eventTemplate
+                                                        await this.prismaRepository.eventTemplate.update({
+                                                                where: { id_event_template: correspondingEventTemplate.id_event_template },
+                                                                data: { pos: String(index + 1) },
+                                                        });
+
+                                                        return {
+                                                                leg,
+                                                                pos: String(index + 1),
+                                                        };
+                                                }
+                                        }
+
                                         return null;
-                                }
-                        });
+                                }),
+                        );
 
-                        return mappedLegs.filter((item) => item !== null);
+                        const result = mappedLegs.filter((item) => item !== null);
+                        return result;
                 } catch (error) {
                         if (error instanceof DataBaseError) {
                                 throw error;
@@ -285,9 +302,9 @@ export class RouteRepository {
                 }
         }
 
-        // Helper function to determine if two sets of coordinates are close enough to be considered a match.
-        // This might be necessary because floating point precision could cause minor discrepancies.
-        areCoordinatesCloseEnough(lat1, lon1, lat2, lon2, threshold = 0.0001) {
-                return Math.abs(lat1 - lat2) <= threshold && Math.abs(lon1 - lon2) <= threshold;
-        }
+        // // Helper function to determine if two sets of coordinates are close enough to be considered a match.
+        // // This might be necessary because floating point precision could cause minor discrepancies.
+        // areCoordinatesCloseEnough(lat1, lon1, lat2, lon2, threshold = 0.0001) {
+        //         return Math.abs(lat1 - lat2) <= threshold && Math.abs(lon1 - lon2) <= threshold;
+        // }
 }
