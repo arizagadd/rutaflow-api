@@ -14,7 +14,7 @@ export class MapsService {
                 this.googleMapsClient = new Client({});
         }
 
-        public async getDirections(data: DirectionsRequestParams): Promise<DirectionsResponse> {
+        async getDirections(data: DirectionsRequestParams): Promise<DirectionsResponse> {
                 try {
                         const origin = await this.convertLocationToLatLng(data.origin);
                         const destination = await this.convertLocationToLatLng(data.destination);
@@ -33,18 +33,27 @@ export class MapsService {
                         if (error instanceof DomainError) {
                                 throw error;
                         }
+                        if (error.response && error.response.data && error.response.data.error_message) {
+                                throw new UnexpectedError({
+                                        domain: 'MAP',
+                                        layer: 'SERVICE',
+                                        type: 'UNEXPECTED_ERROR',
+                                        message: `getDirections: Google Maps API error: ${error.response.data.error_message} `,
+                                        cause: error,
+                                });
+                        }
 
                         throw new UnexpectedError({
                                 domain: 'MAP',
                                 layer: 'SERVICE',
                                 type: 'UNEXPECTED_ERROR',
-                                message: error.message,
+                                message: error,
                                 cause: error,
                         });
                 }
         }
 
-        public async convertLocationToLatLng(location: string): Promise<LatLng> {
+        async convertLocationToLatLng(location: string): Promise<LatLng> {
                 const params = {
                         address: location,
                         key: this.apiKey,
@@ -66,12 +75,12 @@ export class MapsService {
                 }
         }
 
-        public isLatLngFormat(location: string): boolean {
+        isLatLngFormat(location: string): boolean {
                 const latLngRegex = /^-?\d+(\.\d+)?,\s*-?\d+(\.\d+)?$/;
                 return latLngRegex.test(location);
         }
 
-        public async convertLocationsToLatLng(locations: string[]): Promise<LatLng[]> {
+        async convertLocationsToLatLng(locations: string[]): Promise<LatLng[]> {
                 const convertedLocations: Promise<LatLng>[] = locations.map(async (location) => {
                         if (this.isLatLngFormat(location)) {
                                 const [latStr, lngStr] = location.split(',').map((str) => str.trim());

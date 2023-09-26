@@ -29,4 +29,26 @@ export class RouteController {
                         message: 'Route created successfully.',
                 };
         }
+
+        @Post('generate/from-template')
+        async generateFromTemplate(@Req() req: Request, @Body() data: CreateRouteDto): Promise<SuccessResponse<string> | ErrorResponse> {
+                try {
+                        const newRoute = await this.routeService.generateRoute(data);
+                        await this.routeService.getRoute(newRoute.id_route);
+                } catch (error) {
+                        logError(error, req);
+                        throw new InternalServerErrorException({
+                                status: 'error',
+                                error: {
+                                        code: 500,
+                                        message: 'Route could not be created.',
+                                },
+                        });
+                }
+
+                return {
+                        status: 'success',
+                        message: 'Route created successfully.',
+                };
+        }
 }

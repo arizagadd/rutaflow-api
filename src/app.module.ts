@@ -9,6 +9,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { RouteModule } from './route/route.module';
 import { UserModule } from './user/user.module';
 import { VehicleModule } from './vehicle/vehicle.module';
+import { StopModule } from './stop/stop.module';
 
 @Module({
         imports: [
@@ -22,6 +23,7 @@ import { VehicleModule } from './vehicle/vehicle.module';
                 DriverModule,
                 RouteModule,
                 EnterpriseModule,
+                StopModule,
         ],
         controllers: [AppController],
         providers: [AppService],

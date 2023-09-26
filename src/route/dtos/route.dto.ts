@@ -2,7 +2,8 @@ import { ArrayMinSize, IsArray, IsNotEmpty, IsNumber, IsOptional, IsString } fro
 
 export class CreateRouteDto {
         @IsString()
-        @IsNotEmpty()
+        // @IsNotEmpty()
+        @IsOptional()
         name: string;
 
         @IsNumber()
@@ -13,10 +14,12 @@ export class CreateRouteDto {
         @IsNotEmpty()
         clientId: number;
 
+        @IsOptional()
         @IsNumber()
         @IsNotEmpty()
         driverId: number;
 
+        @IsOptional()
         @IsNumber()
         @IsNotEmpty()
         vehicleId: number;
@@ -26,14 +29,17 @@ export class CreateRouteDto {
         @IsOptional()
         routeTemplateId?: number;
 
+        @IsOptional()
         @IsString()
         @IsNotEmpty()
         origin: string;
 
+        @IsOptional()
         @IsString()
         @IsNotEmpty()
         destination: string;
 
+        @IsOptional()
         @IsArray()
         @IsString({ each: true })
         @ArrayMinSize(1)
