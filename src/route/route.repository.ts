@@ -24,8 +24,9 @@ export class RouteRepository {
                                         polyline: data.polyline,
                                         total_duration: data.totalDuration,
                                         total_distance: data.totalDistance,
-                                        stop_initial: 0,
+                                        stop_initial: data.stopInitial,
                                         stop_final: data.stopFinal,
+                                        total_stops: data.totalStops,
                                         // checklist_event[] TODO: might have to extract these to a function at the service level or controller level
                                         //event[] TODO:  might have to extract these to a function at the service level or controller level
                                 },
@@ -205,9 +206,9 @@ export class RouteRepository {
                         }
                 }
         }
-        async updateRouteTemplateRecord(routeTemplateId: number, data: PopulateRouteTemplateData): Promise<void> {
+        async updateRouteTemplateRecord(routeTemplateId: number, data: PopulateRouteTemplateData): Promise<RouteTemplate> {
                 try {
-                        await this.prismaRepository.routeTemplate.update({
+                        return await this.prismaRepository.routeTemplate.update({
                                 where: {
                                         id_route_template: routeTemplateId,
                                 },
@@ -218,7 +219,6 @@ export class RouteRepository {
                                         total_stops: data.totalStops,
                                 },
                         });
-                        console.log('RouteTemplate updated successfully.');
                 } catch (error) {
                         if (error instanceof DataBaseError) {
                                 throw error;
@@ -268,7 +268,7 @@ export class RouteRepository {
                                                 });
 
                                                 if (correspondingEventTemplate) {
-                                                        const posValue = this.indexToPosString(index);
+                                                        const posValue = this.formatIndexForPos(index);
                                                         // Update the pos field of the eventTemplate
                                                         await this.prismaRepository.eventTemplate.update({
                                                                 where: { id_event_template: correspondingEventTemplate.id_event_template },
@@ -277,7 +277,7 @@ export class RouteRepository {
 
                                                         return {
                                                                 leg,
-                                                                pos: this.indexToPosString(index),
+                                                                pos: this.formatIndexForPos(index),
                                                         };
                                                 }
                                         }
@@ -303,11 +303,43 @@ export class RouteRepository {
                 }
         }
 
-        indexToPosString(index: number): string {
+        formatIndexForPos(index: number): number {
                 if (index === 0) {
-                        return String(index);
+                        return index;
                 } else {
-                        return String(index - 1);
+                        return index - 1;
+                }
+        }
+
+        async createEventFromEventTemplate(routeTemplateId: number, routeId: number) {
+                try {
+                        const eventTemplates = await this.prismaRepository.eventTemplate.findMany({
+                                where: { id_route_template: routeTemplateId },
+                        });
+
+                        await Promise.all(
+                                eventTemplates.map(async (template) => {
+                                        return this.prismaRepository.event.create({
+                                                data: {
+                                                        id_route: routeId,
+                                                        id_stop: template.id_stop,
+                                                        pos: template.pos,
+                                                },
+                                        });
+                                }),
+                        );
+                } catch (error) {
+                        if (error instanceof DataBaseError) {
+                                throw error;
+                        } else {
+                                throw new UnexpectedError({
+                                        domain: 'ROUTE',
+                                        layer: 'REPOSITORY',
+                                        type: 'UNEXPECTED_ERROR',
+                                        message: error.message,
+                                        cause: error,
+                                });
+                        }
                 }
         }
 

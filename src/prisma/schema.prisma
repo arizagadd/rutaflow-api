@@ -159,7 +159,7 @@ model EventTemplate {
         id_event_template Int           @id @default(autoincrement())
         id_route_template Int
         id_stop           Int
-        pos               String?       @db.VarChar(45)
+        pos               Int?
         route_template    RouteTemplate @relation(fields: [id_route_template], references: [id_route_template], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_template_route_template1")
         stop              Stop          @relation(fields: [id_stop], references: [id_stop], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_template_stop1")
 

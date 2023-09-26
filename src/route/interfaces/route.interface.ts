@@ -10,6 +10,7 @@ export interface RouteData {
         polyline: string;
         totalDistance: number;
         totalDuration: number;
+        totalStops: number;
         stopInitial: number;
         stopFinal: number;
 }
