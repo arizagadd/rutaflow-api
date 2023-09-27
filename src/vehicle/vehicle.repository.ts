@@ -5,40 +5,40 @@ import { DataBaseError, UnexpectedError } from '../shared/errors/custom-errors';
 
 @Injectable()
 export class VehicleRepository {
-        constructor(private readonly prismaRepository: PrismaRepository) {}
-        async createVehicleRecord(data: any) {
-                return { status: 'ok', data };
-        }
+    constructor(private readonly prismaRepository: PrismaRepository) {}
+    async createVehicleRecord(data: any) {
+        return { status: 'ok', data };
+    }
 
-        async findVehicleRecordById(id: number): Promise<Vehicle> {
-                try {
-                        const vehicle = await this.prismaRepository.vehicle.findFirst({
-                                where: {
-                                        id_vehicle: id,
-                                },
-                        });
-                        if (!vehicle) {
-                                throw new DataBaseError({
-                                        domain: 'VEHICLE',
-                                        layer: 'REPOSITORY',
-                                        type: 'GET_RECORD_ERROR',
-                                        message: `findVehicleRecordById: Vehicle with id ${id} not found`,
-                                });
-                        }
+    async findVehicleRecordById(id: number): Promise<Vehicle> {
+        try {
+            const vehicle = await this.prismaRepository.vehicle.findFirst({
+                where: {
+                    id_vehicle: id,
+                },
+            });
+            if (!vehicle) {
+                throw new DataBaseError({
+                    domain: 'VEHICLE',
+                    layer: 'REPOSITORY',
+                    type: 'GET_RECORD_ERROR',
+                    message: `findVehicleRecordById: Vehicle with id ${id} not found`,
+                });
+            }
 
-                        return vehicle;
-                } catch (error) {
-                        if (error instanceof DataBaseError) {
-                                throw error;
-                        } else {
-                                throw new UnexpectedError({
-                                        domain: 'VEHICLE',
-                                        layer: 'REPOSITORY',
-                                        type: 'UNEXPECTED_ERROR',
-                                        message: `findVehicleRecordById: Error:${error.message}`,
-                                        cause: error,
-                                });
-                        }
-                }
+            return vehicle;
+        } catch (error) {
+            if (error instanceof DataBaseError) {
+                throw error;
+            } else {
+                throw new UnexpectedError({
+                    domain: 'VEHICLE',
+                    layer: 'REPOSITORY',
+                    type: 'UNEXPECTED_ERROR',
+                    message: `findVehicleRecordById: Error:${error.message}`,
+                    cause: error,
+                });
+            }
         }
+    }
 }

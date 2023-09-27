@@ -1,5 +1,5 @@
 export interface DirectionsRequestParams {
-        origin: string;
-        destination: string;
-        waypoints: string[];
+    origin: string;
+    destination: string;
+    waypoints: string[];
 }

@@ -4,8 +4,8 @@ import { DriverRepository } from './driver.repository';
 import { DriverService } from './driver.service';
 
 @Module({
-        imports: [PrismaModule],
-        providers: [DriverService, DriverRepository],
-        exports: [DriverService, DriverRepository],
+    imports: [PrismaModule],
+    providers: [DriverService, DriverRepository],
+    exports: [DriverService, DriverRepository],
 })
 export class DriverModule {}

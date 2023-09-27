@@ -5,166 +5,166 @@ import { DataBaseError, UnexpectedError } from '../shared/errors/custom-errors';
 
 @Injectable()
 export class EnterpriseRepository {
-        constructor(private readonly prismaRepository: PrismaRepository) {}
-        async createEnterpriseRecord(data: any) {
-                return { status: 'ok', data };
+    constructor(private readonly prismaRepository: PrismaRepository) {}
+    async createEnterpriseRecord(data: any) {
+        return { status: 'ok', data };
+    }
+
+    async findEnterpriseRecordById(id: number): Promise<Enterprise> {
+        try {
+            const enterprise = await this.prismaRepository.enterprise.findFirst({
+                where: {
+                    id_enterprise: id,
+                },
+            });
+
+            if (!enterprise) {
+                throw new DataBaseError({
+                    domain: 'ENTERPRISE',
+                    layer: 'REPOSITORY',
+                    type: 'GET_RECORD_ERROR',
+                    message: `findEnterpriseRecordById: Enterprise with id ${id} not found`,
+                });
+            }
+
+            return enterprise;
+        } catch (error) {
+            if (error instanceof DataBaseError) {
+                throw error; // Throw the specific database error.
+            } else {
+                throw new UnexpectedError({
+                    domain: 'ENTERPRISE',
+                    layer: 'REPOSITORY',
+                    type: 'UNEXPECTED_ERROR',
+                    message: `findEnterpriseRecordById: Error:${error.message}`,
+                    cause: error,
+                });
+            }
         }
+    }
 
-        async findEnterpriseRecordById(id: number): Promise<Enterprise> {
-                try {
-                        const enterprise = await this.prismaRepository.enterprise.findFirst({
-                                where: {
-                                        id_enterprise: id,
-                                },
-                        });
+    async findClientRecordById(id: number): Promise<Client> {
+        try {
+            const client = await this.prismaRepository.client.findFirst({
+                where: {
+                    id_client: id,
+                },
+            });
 
-                        if (!enterprise) {
-                                throw new DataBaseError({
-                                        domain: 'ENTERPRISE',
-                                        layer: 'REPOSITORY',
-                                        type: 'GET_RECORD_ERROR',
-                                        message: `findEnterpriseRecordById: Enterprise with id ${id} not found`,
-                                });
-                        }
+            if (!client) {
+                throw new DataBaseError({
+                    domain: 'ENTERPRISE',
+                    layer: 'REPOSITORY',
+                    type: 'GET_RECORD_ERROR',
+                    message: `findClientRecordById: Client with id ${id} not found`,
+                });
+            }
 
-                        return enterprise;
-                } catch (error) {
-                        if (error instanceof DataBaseError) {
-                                throw error; // Throw the specific database error.
-                        } else {
-                                throw new UnexpectedError({
-                                        domain: 'ENTERPRISE',
-                                        layer: 'REPOSITORY',
-                                        type: 'UNEXPECTED_ERROR',
-                                        message: `findEnterpriseRecordById: Error:${error.message}`,
-                                        cause: error,
-                                });
-                        }
-                }
+            return client;
+        } catch (error) {
+            if (error instanceof DataBaseError) {
+                throw error;
+            } else {
+                throw new UnexpectedError({
+                    domain: 'ENTERPRISE',
+                    layer: 'REPOSITORY',
+                    type: 'UNEXPECTED_ERROR',
+                    message: `findClientRecordById: Error:${error.message}`,
+                    cause: error,
+                });
+            }
         }
+    }
 
-        async findClientRecordById(id: number): Promise<Client> {
-                try {
-                        const client = await this.prismaRepository.client.findFirst({
-                                where: {
-                                        id_client: id,
-                                },
-                        });
+    async createChecklistRecord(clientId: number): Promise<Checklist> {
+        try {
+            const checklist = await this.prismaRepository.checklist.create({
+                data: {
+                    id_client: clientId,
+                },
+            });
 
-                        if (!client) {
-                                throw new DataBaseError({
-                                        domain: 'ENTERPRISE',
-                                        layer: 'REPOSITORY',
-                                        type: 'GET_RECORD_ERROR',
-                                        message: `findClientRecordById: Client with id ${id} not found`,
-                                });
-                        }
+            if (!checklist) {
+                throw new DataBaseError({
+                    domain: 'ENTERPRISE',
+                    layer: 'REPOSITORY',
+                    type: 'CREATE_RECORD_ERROR',
+                    message: `createChecklistRecord: Unable to create checklist`,
+                });
+            }
 
-                        return client;
-                } catch (error) {
-                        if (error instanceof DataBaseError) {
-                                throw error;
-                        } else {
-                                throw new UnexpectedError({
-                                        domain: 'ENTERPRISE',
-                                        layer: 'REPOSITORY',
-                                        type: 'UNEXPECTED_ERROR',
-                                        message: `findClientRecordById: Error:${error.message}`,
-                                        cause: error,
-                                });
-                        }
-                }
+            return checklist;
+        } catch (error) {
+            if (error instanceof DataBaseError) {
+                throw error;
+            } else {
+                throw new UnexpectedError({
+                    domain: 'ENTERPRISE',
+                    layer: 'REPOSITORY',
+                    type: 'UNEXPECTED_ERROR',
+                    message: `createChecklistRecord: Error:${error.message}`,
+                    cause: error,
+                });
+            }
         }
+    }
 
-        async createChecklistRecord(clientId: number): Promise<Checklist> {
-                try {
-                        const checklist = await this.prismaRepository.checklist.create({
-                                data: {
-                                        id_client: clientId,
-                                },
-                        });
-
-                        if (!checklist) {
-                                throw new DataBaseError({
-                                        domain: 'ENTERPRISE',
-                                        layer: 'REPOSITORY',
-                                        type: 'CREATE_RECORD_ERROR',
-                                        message: `createChecklistRecord: Unable to create checklist`,
-                                });
-                        }
-
-                        return checklist;
-                } catch (error) {
-                        if (error instanceof DataBaseError) {
-                                throw error;
-                        } else {
-                                throw new UnexpectedError({
-                                        domain: 'ENTERPRISE',
-                                        layer: 'REPOSITORY',
-                                        type: 'UNEXPECTED_ERROR',
-                                        message: `createChecklistRecord: Error:${error.message}`,
-                                        cause: error,
-                                });
-                        }
-                }
+    async fetchAllEventRecords(): Promise<Event[]> {
+        try {
+            return await this.prismaRepository.event.findMany();
+        } catch (error) {
+            throw new UnexpectedError({
+                domain: 'ENTERPRISE',
+                layer: 'REPOSITORY',
+                type: 'UNEXPECTED_ERROR',
+                message: `fetchAllEventRecords: Error:${error.message}`,
+                cause: error,
+            });
         }
+    }
 
-        async fetchAllEventRecords(): Promise<Event[]> {
-                try {
-                        return await this.prismaRepository.event.findMany();
-                } catch (error) {
-                        throw new UnexpectedError({
-                                domain: 'ENTERPRISE',
-                                layer: 'REPOSITORY',
-                                type: 'UNEXPECTED_ERROR',
-                                message: `fetchAllEventRecords: Error:${error.message}`,
-                                cause: error,
-                        });
-                }
+    async fetchAllChecklistEventRecords(): Promise<ChecklistEvent[]> {
+        try {
+            return await this.prismaRepository.checklistEvent.findMany();
+        } catch (error) {
+            throw new UnexpectedError({
+                domain: 'ENTERPRISE',
+                layer: 'REPOSITORY',
+                type: 'UNEXPECTED_ERROR',
+                message: `fetchAllChecklistEventRecords: Error:${error.message}`,
+                cause: error,
+            });
         }
+    }
 
-        async fetchAllChecklistEventRecords(): Promise<ChecklistEvent[]> {
-                try {
-                        return await this.prismaRepository.checklistEvent.findMany();
-                } catch (error) {
-                        throw new UnexpectedError({
-                                domain: 'ENTERPRISE',
-                                layer: 'REPOSITORY',
-                                type: 'UNEXPECTED_ERROR',
-                                message: `fetchAllChecklistEventRecords: Error:${error.message}`,
-                                cause: error,
-                        });
-                }
+    async createChecklistEventRecord(checklistId: number, routeId: number) {
+        try {
+            const checklistEvent = await this.prismaRepository.checklistEvent.create({
+                data: {
+                    id_checklist: checklistId,
+                    id_route: routeId,
+                },
+            });
+            if (!checklistEvent) {
+                throw new DataBaseError({
+                    domain: 'ENTERPRISE',
+                    layer: 'REPOSITORY',
+                    type: 'CREATE_RECORD_ERROR',
+                    message: 'createChecklistEventRecord: Unable to create route',
+                });
+            }
+        } catch (error) {
+            if (error instanceof DataBaseError) {
+                throw error;
+            } else {
+                throw new UnexpectedError({
+                    domain: 'ENTERPRISE',
+                    layer: 'REPOSITORY',
+                    type: 'UNEXPECTED_ERROR',
+                    message: `createChecklistEventRecord: Error:${error.message}`,
+                    cause: error,
+                });
+            }
         }
-
-        async createChecklistEventRecord(checklistId: number, routeId: number) {
-                try {
-                        const checklistEvent = await this.prismaRepository.checklistEvent.create({
-                                data: {
-                                        id_checklist: checklistId,
-                                        id_route: routeId,
-                                },
-                        });
-                        if (!checklistEvent) {
-                                throw new DataBaseError({
-                                        domain: 'ENTERPRISE',
-                                        layer: 'REPOSITORY',
-                                        type: 'CREATE_RECORD_ERROR',
-                                        message: 'createChecklistEventRecord: Unable to create route',
-                                });
-                        }
-                } catch (error) {
-                        if (error instanceof DataBaseError) {
-                                throw error;
-                        } else {
-                                throw new UnexpectedError({
-                                        domain: 'ENTERPRISE',
-                                        layer: 'REPOSITORY',
-                                        type: 'UNEXPECTED_ERROR',
-                                        message: `createChecklistEventRecord: Error:${error.message}`,
-                                        cause: error,
-                                });
-                        }
-                }
-        }
+    }
 }

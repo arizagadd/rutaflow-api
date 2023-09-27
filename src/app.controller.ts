@@ -3,21 +3,21 @@ import { AppService } from './app.service';
 import { UserRepository } from './user/user.repository';
 @Controller()
 export class AppController {
-        constructor(
-                private readonly appService: AppService,
-                private readonly userRepository: UserRepository,
-        ) {}
+    constructor(
+        private readonly appService: AppService,
+        private readonly userRepository: UserRepository,
+    ) {}
 
-        // @Get()
-        // getHello(): string {
-        //         const user = {
-        //                 name: 'example',
-        //                 email: 'example',
-        //                 pass: 'example',
-        //         };
+    // @Get()
+    // getHello(): string {
+    //         const user = {
+    //                 name: 'example',
+    //                 email: 'example',
+    //                 pass: 'example',
+    //         };
 
-        //         this.userRepository.create(user);
+    //         this.userRepository.create(user);
 
-        //         return this.appService.getHello();
-        // }
+    //         return this.appService.getHello();
+    // }
 }

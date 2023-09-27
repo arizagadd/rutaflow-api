@@ -9,8 +9,8 @@ import { RouteRepository } from './route.repository';
 import { RouteService } from './route.service';
 
 @Module({
-        imports: [MapsModule, PrismaModule, EnterpriseModule, VehicleModule, DriverModule],
-        providers: [RouteService, RouteRepository],
-        controllers: [RouteController],
+    imports: [MapsModule, PrismaModule, EnterpriseModule, VehicleModule, DriverModule],
+    providers: [RouteService, RouteRepository],
+    controllers: [RouteController],
 })
 export class RouteModule {}

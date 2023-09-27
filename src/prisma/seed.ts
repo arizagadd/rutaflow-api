@@ -31,369 +31,369 @@
 //  */
 
 import {
-        DeliveryWeekFinished,
-        DriverCertification,
-        DriverCourses,
-        DriverInsuranceStatus,
-        DriverManeuvers,
-        DriverStatus,
-        DriverTravelAvailability,
-        EnterpriseObjective,
-        PrismaClient,
-        StopMain,
-        StopType,
-        UserActive,
-        UserType,
-        VehicleStatus,
+    DeliveryWeekFinished,
+    DriverCertification,
+    DriverCourses,
+    DriverInsuranceStatus,
+    DriverManeuvers,
+    DriverStatus,
+    DriverTravelAvailability,
+    EnterpriseObjective,
+    PrismaClient,
+    StopMain,
+    StopType,
+    UserActive,
+    UserType,
+    VehicleStatus,
 } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 const users = [
-        {
-                name: 'Roberto',
-                last_name: 'Hernandez',
-                date_of_birth: new Date(),
-                type: UserType.SUPER,
-                email: 'roberto@gmail.com',
-                pass: 'mypassword',
-                token: 'djhfjdfjdhfjdh',
-                phone: '+1 777 666 3434',
-                referral_code: 'idjfhdjhf',
-                active: UserActive.TRUE,
-        },
-        {
-                name: 'Agustin',
-                last_name: 'Miramontes',
-                date_of_birth: new Date(),
-                type: UserType.ADMIN,
-                email: 'agus@gmail.com',
-                pass: 'mypassword',
-                token: 'djhfjdfjdhfjdh',
-                phone: '+1 766 655 9797',
-                referral_code: 'idjfhdjhf',
-                active: UserActive.TRUE,
-        },
-        {
-                name: 'Juan',
-                last_name: 'Dolores',
-                date_of_birth: new Date(),
-                type: UserType.MANAGER,
-                email: 'juane@gmail.com',
-                pass: 'mypassword',
-                token: 'djhfjdfjdhfjdh',
-                phone: '+1 777 666 2431',
-                referral_code: 'idjfhdjhf',
-                active: UserActive.TRUE,
-        },
-        {
-                name: 'Oscar',
-                last_name: 'Villa',
-                date_of_birth: new Date(),
-                type: UserType.DRIVER,
-                email: 'oscar@gmail.com',
-                pass: 'mypassword',
-                token: 'djhfjdfjdhfjdh',
-                phone: '+1 777 798 5209',
-                referral_code: 'idjfhdjhf',
-                active: UserActive.TRUE,
-        },
+    {
+        name: 'Roberto',
+        last_name: 'Hernandez',
+        date_of_birth: new Date(),
+        type: UserType.SUPER,
+        email: 'roberto@gmail.com',
+        pass: 'mypassword',
+        token: 'djhfjdfjdhfjdh',
+        phone: '+1 777 666 3434',
+        referral_code: 'idjfhdjhf',
+        active: UserActive.TRUE,
+    },
+    {
+        name: 'Agustin',
+        last_name: 'Miramontes',
+        date_of_birth: new Date(),
+        type: UserType.ADMIN,
+        email: 'agus@gmail.com',
+        pass: 'mypassword',
+        token: 'djhfjdfjdhfjdh',
+        phone: '+1 766 655 9797',
+        referral_code: 'idjfhdjhf',
+        active: UserActive.TRUE,
+    },
+    {
+        name: 'Juan',
+        last_name: 'Dolores',
+        date_of_birth: new Date(),
+        type: UserType.MANAGER,
+        email: 'juane@gmail.com',
+        pass: 'mypassword',
+        token: 'djhfjdfjdhfjdh',
+        phone: '+1 777 666 2431',
+        referral_code: 'idjfhdjhf',
+        active: UserActive.TRUE,
+    },
+    {
+        name: 'Oscar',
+        last_name: 'Villa',
+        date_of_birth: new Date(),
+        type: UserType.DRIVER,
+        email: 'oscar@gmail.com',
+        pass: 'mypassword',
+        token: 'djhfjdfjdhfjdh',
+        phone: '+1 777 798 5209',
+        referral_code: 'idjfhdjhf',
+        active: UserActive.TRUE,
+    },
 ];
 
 const citiesCoordinates = [
-        { city: 'Guadalajara, JAL', lat: 20.6597, lng: -103.3496 },
-        { city: 'Tijuana, BCN', lat: 32.5149, lng: -117.0382 },
-        { city: 'Mexicali, BCN', lat: 32.6245, lng: -115.4523 },
-        { city: 'San Luis Río Colorado, SON', lat: 32.4638, lng: -114.7718 },
-        { city: 'Caborca, SON', lat: 30.7117, lng: -112.1643 },
-        { city: 'Hermosillo, SON', lat: 29.072967, lng: -110.955919 },
-        { city: 'Los Mochis, SIN', lat: 25.790465, lng: -108.985882 },
-        { city: 'Mazatlán, SIN', lat: 23.249415, lng: -106.411142 },
-        { city: 'Durango, DGO', lat: 24.02772, lng: -104.653176 },
-        { city: 'Saltillo, COAH', lat: 25.438255, lng: -100.973665 },
-        { city: 'Monterrey, NL', lat: 25.686614, lng: -100.316113 },
-        { city: 'Matehuala, SLP', lat: 23.6524, lng: -100.6458 },
-        { city: 'San Luis Potosí, SLP', lat: 22.1565, lng: -100.9855 },
-        { city: 'Aguascalientes, AGS', lat: 21.8853, lng: -102.2916 },
-        { city: 'Zacatecas, ZAC', lat: 22.7709, lng: -102.5832 },
-        { city: 'San Juan del Río, QRO', lat: 20.3873, lng: -99.7832 },
-        { city: 'Querétaro, QRO', lat: 20.5888, lng: -100.3899 },
-        { city: 'Morelia, MICH', lat: 19.7008, lng: -101.1844 },
-        { city: 'Toluca, MEX', lat: 19.2826, lng: -99.6557 },
-        { city: 'Valle de Bravo, MEX', lat: 19.1914, lng: -100.1347 },
-        { city: 'Ixtapan de la Sal, MEX', lat: 18.8471, lng: -99.7765 },
-        { city: 'Taxco, GRO', lat: 18.5563, lng: -99.6051 },
-        { city: 'Iguala, GRO', lat: 18.3442, lng: -99.5411 },
-        { city: 'Chilpancingo, GRO', lat: 17.5515, lng: -99.5006 },
-        { city: 'Acapulco, GRO', lat: 16.8531, lng: -99.8237 },
+    { city: 'Guadalajara, JAL', lat: 20.6597, lng: -103.3496 },
+    { city: 'Tijuana, BCN', lat: 32.5149, lng: -117.0382 },
+    { city: 'Mexicali, BCN', lat: 32.6245, lng: -115.4523 },
+    { city: 'San Luis Río Colorado, SON', lat: 32.4638, lng: -114.7718 },
+    { city: 'Caborca, SON', lat: 30.7117, lng: -112.1643 },
+    { city: 'Hermosillo, SON', lat: 29.072967, lng: -110.955919 },
+    { city: 'Los Mochis, SIN', lat: 25.790465, lng: -108.985882 },
+    { city: 'Mazatlán, SIN', lat: 23.249415, lng: -106.411142 },
+    { city: 'Durango, DGO', lat: 24.02772, lng: -104.653176 },
+    { city: 'Saltillo, COAH', lat: 25.438255, lng: -100.973665 },
+    { city: 'Monterrey, NL', lat: 25.686614, lng: -100.316113 },
+    { city: 'Matehuala, SLP', lat: 23.6524, lng: -100.6458 },
+    { city: 'San Luis Potosí, SLP', lat: 22.1565, lng: -100.9855 },
+    { city: 'Aguascalientes, AGS', lat: 21.8853, lng: -102.2916 },
+    { city: 'Zacatecas, ZAC', lat: 22.7709, lng: -102.5832 },
+    { city: 'San Juan del Río, QRO', lat: 20.3873, lng: -99.7832 },
+    { city: 'Querétaro, QRO', lat: 20.5888, lng: -100.3899 },
+    { city: 'Morelia, MICH', lat: 19.7008, lng: -101.1844 },
+    { city: 'Toluca, MEX', lat: 19.2826, lng: -99.6557 },
+    { city: 'Valle de Bravo, MEX', lat: 19.1914, lng: -100.1347 },
+    { city: 'Ixtapan de la Sal, MEX', lat: 18.8471, lng: -99.7765 },
+    { city: 'Taxco, GRO', lat: 18.5563, lng: -99.6051 },
+    { city: 'Iguala, GRO', lat: 18.3442, lng: -99.5411 },
+    { city: 'Chilpancingo, GRO', lat: 17.5515, lng: -99.5006 },
+    { city: 'Acapulco, GRO', lat: 16.8531, lng: -99.8237 },
 ];
 
 async function main() {
-        const userRes = await prisma.user.createMany({
-                data: users,
-                // skipDuplicates: true, // This option skips records with duplicate values, e.g., in unique fields like email
-        });
-        console.log(`Created ${userRes.count}`);
+    const userRes = await prisma.user.createMany({
+        data: users,
+        // skipDuplicates: true, // This option skips records with duplicate values, e.g., in unique fields like email
+    });
+    console.log(`Created ${userRes.count}`);
 
-        const owner = await prisma.user.findFirst({
-                where: {
-                        id_user: 1,
-                },
-        });
-        const enterprise = await prisma.enterprise.create({
-                data: {
-                        name: 'RutitaFlow',
-                        id_owner: owner.id_user,
-                        components: 'components',
-                        description: 'descripton example bla bla',
-                        objective: EnterpriseObjective.LOGISTICS,
-                        settings: 'test settings',
-                },
-        });
-        console.log(`Created enterprise:  ${enterprise.name}`);
+    const owner = await prisma.user.findFirst({
+        where: {
+            id_user: 1,
+        },
+    });
+    const enterprise = await prisma.enterprise.create({
+        data: {
+            name: 'RutitaFlow',
+            id_owner: owner.id_user,
+            components: 'components',
+            description: 'descripton example bla bla',
+            objective: EnterpriseObjective.LOGISTICS,
+            settings: 'test settings',
+        },
+    });
+    console.log(`Created enterprise:  ${enterprise.name}`);
 
-        await prisma.deliveryWeek.create({
-                data: {
-                        week_start: new Date(),
-                        notes: 'will start the week soon',
-                        finished: DeliveryWeekFinished.FALSE,
-                        id_enterprise: enterprise.id_enterprise,
-                },
-        });
-        console.log('DeliveryWeek created');
+    await prisma.deliveryWeek.create({
+        data: {
+            week_start: new Date(),
+            notes: 'will start the week soon',
+            finished: DeliveryWeekFinished.FALSE,
+            id_enterprise: enterprise.id_enterprise,
+        },
+    });
+    console.log('DeliveryWeek created');
 
-        const client = await prisma.client.create({
-                data: {
-                        id_enterprise: enterprise.id_enterprise,
-                        name: 'Papas el Pepe',
-                        contract_description: 'lorim episum',
-                        pickup_time: 4444,
-                        delivery_time: 423,
-                },
-        });
-        console.log('Client created');
+    const client = await prisma.client.create({
+        data: {
+            id_enterprise: enterprise.id_enterprise,
+            name: 'Papas el Pepe',
+            contract_description: 'lorim episum',
+            pickup_time: 4444,
+            delivery_time: 423,
+        },
+    });
+    console.log('Client created');
 
-        const driver = await prisma.user.findFirst({
-                where: {
-                        id_user: 4,
-                },
-        });
+    const driver = await prisma.user.findFirst({
+        where: {
+            id_user: 4,
+        },
+    });
 
-        // const client = await prisma.client.findFirst({
-        //         where: {
-        //                 id_client: 1,
-        //         },
-        // });
+    // const client = await prisma.client.findFirst({
+    //         where: {
+    //                 id_client: 1,
+    //         },
+    // });
 
-        //stop objects
-        const stops = [
-                {
-                        id_client: client.id_client,
-                        type: StopType.CEDIS,
-                        title: 'CEDIS 1',
-                        main: StopMain.FALSE,
-                        // schedule: '',
-                        // line1: 'line 1',
-                        // line2: 'line 2',
-                        // zip: '90210',
-                        city: 'Guadalajara',
-                        // time_start: 848484
-                        // time_end: 989898
-                        lat: citiesCoordinates[0].lat,
-                        lon: citiesCoordinates[0].lng,
-                        // comments: 'everything worked out fine'
-                },
-                {
-                        id_client: client.id_client,
-                        type: StopType.CEDIS,
-                        title: 'CEDIS 2',
-                        main: StopMain.FALSE,
-                        // schedule: '',
-                        // line1: 'line 1',
-                        // line2: 'line 2',
-                        // zip: '90210',
-                        city: 'Tijuana',
-                        // time_start: 848484
-                        // time_end: 989898
-                        lat: citiesCoordinates[1].lat,
-                        lon: citiesCoordinates[1].lng,
-                        // comments: 'everything worked out fine'
-                },
-                {
-                        id_client: client.id_client,
-                        type: StopType.CEDIS,
-                        title: 'CEDIS 5',
-                        main: StopMain.FALSE,
-                        // schedule: '',
-                        // line1: 'line 1',
-                        // line2: 'line 2',
-                        // zip: '90210',
-                        city: 'Hermosillo',
-                        // time_start: 848484
-                        // time_end: 989898
-                        lat: citiesCoordinates[5].lat,
-                        lon: citiesCoordinates[5].lng,
-                        // comments: 'everything worked out fine'
-                },
-                {
-                        id_client: client.id_client,
-                        type: StopType.CEDIS,
-                        title: 'CEDIS 7',
-                        main: StopMain.FALSE,
-                        // schedule: '',
-                        // line1: 'line 1',
-                        // line2: 'line 2',
-                        // zip: '90210',
-                        city: 'Mazatlan',
-                        // time_start: 848484
-                        // time_end: 989898
-                        lat: citiesCoordinates[7].lat,
-                        lon: citiesCoordinates[7].lng,
-                        // comments: 'everything worked out fine'
-                },
-                {
-                        id_client: client.id_client,
-                        type: StopType.CEDIS,
-                        title: 'CEDIS 8',
-                        main: StopMain.FALSE,
-                        // schedule: '',
-                        // line1: 'line 1',
-                        // line2: 'line 2',
-                        // zip: '90210',
-                        city: 'Durango',
-                        // time_start: 848484
-                        // time_end: 989898
-                        lat: citiesCoordinates[8].lat,
-                        lon: citiesCoordinates[8].lng,
-                        // comments: 'everything worked out fine'
-                },
-                {
-                        id_client: client.id_client,
-                        type: StopType.CEDIS,
-                        title: 'CEDIS 9',
-                        main: StopMain.FALSE,
-                        // schedule: '',
-                        // line1: 'line 1',
-                        // line2: 'line 2',
-                        // zip: '90210',
-                        city: 'Saltillo',
-                        // time_start: 848484
-                        // time_end: 989898
-                        lat: citiesCoordinates[9].lat,
-                        lon: citiesCoordinates[9].lng,
-                        // comments: 'everything worked out fine'
-                },
-                {
-                        id_client: client.id_client,
-                        type: StopType.CEDIS,
-                        title: 'CEDIS 13',
-                        main: StopMain.FALSE,
-                        // schedule: '',
-                        // line1: 'line 1',
-                        // line2: 'line 2',
-                        // zip: '90210',
-                        city: 'AguasCalientes',
-                        // time_start: 848484
-                        // time_end: 989898
-                        lat: citiesCoordinates[13].lat,
-                        lon: citiesCoordinates[13].lng,
-                        // comments: 'everything worked out fine'
-                },
-                {
-                        id_client: client.id_client,
-                        type: StopType.CEDIS,
-                        title: 'CEDIS 16',
-                        main: StopMain.FALSE,
-                        // schedule: '',
-                        // line1: 'line 1',
-                        // line2: 'line 2',
-                        // zip: '90210',
-                        city: 'Queretaro',
-                        // time_start: 848484
-                        // time_end: 989898
-                        lat: citiesCoordinates[16].lat,
-                        lon: citiesCoordinates[16].lng,
-                        // comments: 'everything worked out fine'
-                },
-                {
-                        id_client: client.id_client,
-                        type: StopType.CEDIS,
-                        title: 'CEDIS 18',
-                        main: StopMain.FALSE,
-                        // schedule: '',
-                        // line1: 'line 1',
-                        // line2: 'line 2',
-                        // zip: '90210',
-                        city: 'Toluca',
-                        // time_start: 848484
-                        // time_end: 989898
-                        lat: citiesCoordinates[18].lat,
-                        lon: citiesCoordinates[18].lng,
-                        // comments: 'everything worked out fine'
-                },
-        ];
-        const stopsRes = await prisma.stop.createMany({
-                data: stops,
-        });
-        console.log(`Created ${stopsRes.count} stops`);
+    //stop objects
+    const stops = [
+        {
+            id_client: client.id_client,
+            type: StopType.CEDIS,
+            title: 'CEDIS 1',
+            main: StopMain.FALSE,
+            // schedule: '',
+            // line1: 'line 1',
+            // line2: 'line 2',
+            // zip: '90210',
+            city: 'Guadalajara',
+            // time_start: 848484
+            // time_end: 989898
+            lat: citiesCoordinates[0].lat,
+            lon: citiesCoordinates[0].lng,
+            // comments: 'everything worked out fine'
+        },
+        {
+            id_client: client.id_client,
+            type: StopType.CEDIS,
+            title: 'CEDIS 2',
+            main: StopMain.FALSE,
+            // schedule: '',
+            // line1: 'line 1',
+            // line2: 'line 2',
+            // zip: '90210',
+            city: 'Tijuana',
+            // time_start: 848484
+            // time_end: 989898
+            lat: citiesCoordinates[1].lat,
+            lon: citiesCoordinates[1].lng,
+            // comments: 'everything worked out fine'
+        },
+        {
+            id_client: client.id_client,
+            type: StopType.CEDIS,
+            title: 'CEDIS 5',
+            main: StopMain.FALSE,
+            // schedule: '',
+            // line1: 'line 1',
+            // line2: 'line 2',
+            // zip: '90210',
+            city: 'Hermosillo',
+            // time_start: 848484
+            // time_end: 989898
+            lat: citiesCoordinates[5].lat,
+            lon: citiesCoordinates[5].lng,
+            // comments: 'everything worked out fine'
+        },
+        {
+            id_client: client.id_client,
+            type: StopType.CEDIS,
+            title: 'CEDIS 7',
+            main: StopMain.FALSE,
+            // schedule: '',
+            // line1: 'line 1',
+            // line2: 'line 2',
+            // zip: '90210',
+            city: 'Mazatlan',
+            // time_start: 848484
+            // time_end: 989898
+            lat: citiesCoordinates[7].lat,
+            lon: citiesCoordinates[7].lng,
+            // comments: 'everything worked out fine'
+        },
+        {
+            id_client: client.id_client,
+            type: StopType.CEDIS,
+            title: 'CEDIS 8',
+            main: StopMain.FALSE,
+            // schedule: '',
+            // line1: 'line 1',
+            // line2: 'line 2',
+            // zip: '90210',
+            city: 'Durango',
+            // time_start: 848484
+            // time_end: 989898
+            lat: citiesCoordinates[8].lat,
+            lon: citiesCoordinates[8].lng,
+            // comments: 'everything worked out fine'
+        },
+        {
+            id_client: client.id_client,
+            type: StopType.CEDIS,
+            title: 'CEDIS 9',
+            main: StopMain.FALSE,
+            // schedule: '',
+            // line1: 'line 1',
+            // line2: 'line 2',
+            // zip: '90210',
+            city: 'Saltillo',
+            // time_start: 848484
+            // time_end: 989898
+            lat: citiesCoordinates[9].lat,
+            lon: citiesCoordinates[9].lng,
+            // comments: 'everything worked out fine'
+        },
+        {
+            id_client: client.id_client,
+            type: StopType.CEDIS,
+            title: 'CEDIS 13',
+            main: StopMain.FALSE,
+            // schedule: '',
+            // line1: 'line 1',
+            // line2: 'line 2',
+            // zip: '90210',
+            city: 'AguasCalientes',
+            // time_start: 848484
+            // time_end: 989898
+            lat: citiesCoordinates[13].lat,
+            lon: citiesCoordinates[13].lng,
+            // comments: 'everything worked out fine'
+        },
+        {
+            id_client: client.id_client,
+            type: StopType.CEDIS,
+            title: 'CEDIS 16',
+            main: StopMain.FALSE,
+            // schedule: '',
+            // line1: 'line 1',
+            // line2: 'line 2',
+            // zip: '90210',
+            city: 'Queretaro',
+            // time_start: 848484
+            // time_end: 989898
+            lat: citiesCoordinates[16].lat,
+            lon: citiesCoordinates[16].lng,
+            // comments: 'everything worked out fine'
+        },
+        {
+            id_client: client.id_client,
+            type: StopType.CEDIS,
+            title: 'CEDIS 18',
+            main: StopMain.FALSE,
+            // schedule: '',
+            // line1: 'line 1',
+            // line2: 'line 2',
+            // zip: '90210',
+            city: 'Toluca',
+            // time_start: 848484
+            // time_end: 989898
+            lat: citiesCoordinates[18].lat,
+            lon: citiesCoordinates[18].lng,
+            // comments: 'everything worked out fine'
+        },
+    ];
+    const stopsRes = await prisma.stop.createMany({
+        data: stops,
+    });
+    console.log(`Created ${stopsRes.count} stops`);
 
-        await prisma.driver.create({
-                data: {
-                        id_enterprise: enterprise.id_enterprise,
-                        id_user: driver.id_user,
-                        date_of_birth: new Date(),
-                        alias: 'toreto',
-                        img: 'selfie',
-                        status: DriverStatus.AVAILABLE,
-                        ine_exp_date: new Date(),
-                        license_exp_date: new Date(),
-                        insurance_status: DriverInsuranceStatus.TRUE,
-                        insurance_number: 'skd0dfd00--fdfdf',
-                        emergency_contact: 'mom',
-                        operator_type: 'everthing',
-                        certification: DriverCertification.TRUE,
-                        courses: DriverCourses.TRUE,
-                        entry_date: new Date(),
-                        travel_availability: DriverTravelAvailability.TRUE,
-                        maneuvers: DriverManeuvers.TRUE,
-                },
-        });
-        console.log('Driver created');
+    await prisma.driver.create({
+        data: {
+            id_enterprise: enterprise.id_enterprise,
+            id_user: driver.id_user,
+            date_of_birth: new Date(),
+            alias: 'toreto',
+            img: 'selfie',
+            status: DriverStatus.AVAILABLE,
+            ine_exp_date: new Date(),
+            license_exp_date: new Date(),
+            insurance_status: DriverInsuranceStatus.TRUE,
+            insurance_number: 'skd0dfd00--fdfdf',
+            emergency_contact: 'mom',
+            operator_type: 'everthing',
+            certification: DriverCertification.TRUE,
+            courses: DriverCourses.TRUE,
+            entry_date: new Date(),
+            travel_availability: DriverTravelAvailability.TRUE,
+            maneuvers: DriverManeuvers.TRUE,
+        },
+    });
+    console.log('Driver created');
 
-        await prisma.vehicle.create({
-                data: {
-                        id_enterprise: enterprise.id_enterprise,
-                        name: 'La Oxidada',
-                        img: 'Selfie with la Oxidada',
-                        status: VehicleStatus.AVAILABLE,
-                        brand: 'Volvo',
-                        model: 'FM',
-                        year: 2010,
-                        color: 'Pink',
-                        motor: 'Lots of Cilinders',
-                        serial_number: '38783-eiie0-ff',
-                        fuel_type: 'Diesel',
-                        plate_number: 'I-AM-SPEED',
-                        capacity: '5 tons',
-                        dimension: 'very big truck',
-                        comments: 'she aint pretty, but she is the best',
-                },
-        });
-        console.log('Vehicle created');
+    await prisma.vehicle.create({
+        data: {
+            id_enterprise: enterprise.id_enterprise,
+            name: 'La Oxidada',
+            img: 'Selfie with la Oxidada',
+            status: VehicleStatus.AVAILABLE,
+            brand: 'Volvo',
+            model: 'FM',
+            year: 2010,
+            color: 'Pink',
+            motor: 'Lots of Cilinders',
+            serial_number: '38783-eiie0-ff',
+            fuel_type: 'Diesel',
+            plate_number: 'I-AM-SPEED',
+            capacity: '5 tons',
+            dimension: 'very big truck',
+            comments: 'she aint pretty, but she is the best',
+        },
+    });
+    console.log('Vehicle created');
 
-        //CMS
-        const cmsData = [
-                // 1
-                {
-                        titulo: 'Users',
-                        orden: 1,
-                        tabla: 'user',
-                        grupo: 'admin',
-                        icon: 'icon-user',
-                        descripcion: 'Users administration',
-                        tipo: 'catalogo',
-                        listado: 'name,type,id_user',
-                        campos: `[
+    //CMS
+    const cmsData = [
+        // 1
+        {
+            titulo: 'Users',
+            orden: 1,
+            tabla: 'user',
+            grupo: 'admin',
+            icon: 'icon-user',
+            descripcion: 'Users administration',
+            tipo: 'catalogo',
+            listado: 'name,type,id_user',
+            campos: `[
             {
                 "campo": "name"
             },
@@ -443,18 +443,18 @@ async function main() {
                 "tipo": "check"
             }
         ]`,
-                },
-                // 2
-                {
-                        titulo: 'Checklist',
-                        orden: 2,
-                        tabla: 'checklist',
-                        grupo: 'admin',
-                        icon: 'icon-check',
-                        descripcion: 'Checklist administration',
-                        tipo: 'catalogo',
-                        listado: 'item,client_name,id_checklist',
-                        campos: `[
+        },
+        // 2
+        {
+            titulo: 'Checklist',
+            orden: 2,
+            tabla: 'checklist',
+            grupo: 'admin',
+            icon: 'icon-check',
+            descripcion: 'Checklist administration',
+            tipo: 'catalogo',
+            listado: 'item,client_name,id_checklist',
+            campos: `[
             {
                 "campo": "item"
             },
@@ -470,19 +470,19 @@ async function main() {
             }
         ]
         `,
-                },
+        },
 
-                // 3
-                {
-                        titulo: 'Checklist Event',
-                        orden: 3,
-                        tabla: 'checklist_event',
-                        grupo: 'admin',
-                        icon: 'icon-notebook',
-                        descripcion: 'Checklist event administrationn',
-                        tipo: 'catalogo',
-                        listado: 'checklist_item,route_name,id_checklist_event',
-                        campos: `[
+        // 3
+        {
+            titulo: 'Checklist Event',
+            orden: 3,
+            tabla: 'checklist_event',
+            grupo: 'admin',
+            icon: 'icon-notebook',
+            descripcion: 'Checklist event administrationn',
+            tipo: 'catalogo',
+            listado: 'checklist_item,route_name,id_checklist_event',
+            campos: `[
             {
                 "campo": "id_checklist",
                 "label": "checklist_item",
@@ -510,18 +510,18 @@ async function main() {
             }
         ]
         `,
-                },
-                // 4
-                {
-                        titulo: 'Client',
-                        orden: 4,
-                        tabla: 'client',
-                        grupo: 'admin',
-                        icon: 'icon-user-following',
-                        descripcion: 'Client administration',
-                        tipo: 'catalogo',
-                        listado: 'name,enterprise_name,id_client',
-                        campos: `[
+        },
+        // 4
+        {
+            titulo: 'Client',
+            orden: 4,
+            tabla: 'client',
+            grupo: 'admin',
+            icon: 'icon-user-following',
+            descripcion: 'Client administration',
+            tipo: 'catalogo',
+            listado: 'name,enterprise_name,id_client',
+            campos: `[
             {
                 "campo": "name"
             },
@@ -551,18 +551,18 @@ async function main() {
             }
         ]
         `,
-                },
-                // 5
-                {
-                        titulo: 'Delivery Week',
-                        orden: 5,
-                        tabla: 'delivery_week',
-                        grupo: 'admin',
-                        icon: 'icon-list',
-                        descripcion: 'Delivery week administration ',
-                        tipo: 'catalogo',
-                        listado: 'enterprise_name,week_start,id_delivery_week',
-                        campos: `[
+        },
+        // 5
+        {
+            titulo: 'Delivery Week',
+            orden: 5,
+            tabla: 'delivery_week',
+            grupo: 'admin',
+            icon: 'icon-list',
+            descripcion: 'Delivery week administration ',
+            tipo: 'catalogo',
+            listado: 'enterprise_name,week_start,id_delivery_week',
+            campos: `[
           {
             "campo": "week_start",
             "tipo": "date",
@@ -586,18 +586,18 @@ async function main() {
             "value": "id_enterprise"
           }
         ] `,
-                },
-                // 6
-                {
-                        titulo: 'Driver',
-                        orden: 6,
-                        tabla: 'driver',
-                        grupo: 'admin',
-                        icon: 'icon-key',
-                        descripcion: 'Driver administration ',
-                        tipo: 'catalogo',
-                        listado: 'driver_name,status,id_driver',
-                        campos: `[
+        },
+        // 6
+        {
+            titulo: 'Driver',
+            orden: 6,
+            tabla: 'driver',
+            grupo: 'admin',
+            icon: 'icon-key',
+            descripcion: 'Driver administration ',
+            tipo: 'catalogo',
+            listado: 'driver_name,status,id_driver',
+            campos: `[
             {
                 "campo": "id_user",
                 "label": "name",
@@ -690,18 +690,18 @@ async function main() {
                 "tipo": "check"
             }
         ] `,
-                },
-                // 7
-                {
-                        titulo: 'Enterprise',
-                        orden: 7,
-                        tabla: 'enterprise',
-                        grupo: 'admin',
-                        icon: 'icon-users',
-                        descripcion: 'Enterprise administration ',
-                        tipo: 'catalogo',
-                        listado: 'name,user_name,id_enterprise',
-                        campos: `[
+        },
+        // 7
+        {
+            titulo: 'Enterprise',
+            orden: 7,
+            tabla: 'enterprise',
+            grupo: 'admin',
+            icon: 'icon-users',
+            descripcion: 'Enterprise administration ',
+            tipo: 'catalogo',
+            listado: 'name,user_name,id_enterprise',
+            campos: `[
             {
                 "campo": "name"
             },
@@ -737,18 +737,18 @@ async function main() {
             }
         ]
          `,
-                },
-                // 8
-                {
-                        titulo: 'Event',
-                        orden: 8,
-                        tabla: 'event',
-                        grupo: 'admin',
-                        icon: 'icon-pin',
-                        descripcion: 'Event administration',
-                        tipo: 'catalogo',
-                        listado: 'route_name,driver_name,status',
-                        campos: `[
+        },
+        // 8
+        {
+            titulo: 'Event',
+            orden: 8,
+            tabla: 'event',
+            grupo: 'admin',
+            icon: 'icon-pin',
+            descripcion: 'Event administration',
+            tipo: 'catalogo',
+            listado: 'route_name,driver_name,status',
+            campos: `[
             {
                 "campo": "id_route",
                 "label": "route_name",
@@ -842,18 +842,18 @@ async function main() {
             }
         ]
          `,
-                },
-                // 9
-                {
-                        titulo: 'Event Template',
-                        orden: 9,
-                        tabla: 'event_template',
-                        grupo: 'admin',
-                        icon: 'icon-globe',
-                        descripcion: 'Event template administration',
-                        tipo: 'catalogo',
-                        listado: 'route_template_name,stop_title,id_event_template',
-                        campos: `[
+        },
+        // 9
+        {
+            titulo: 'Event Template',
+            orden: 9,
+            tabla: 'event_template',
+            grupo: 'admin',
+            icon: 'icon-globe',
+            descripcion: 'Event template administration',
+            tipo: 'catalogo',
+            listado: 'route_template_name,stop_title,id_event_template',
+            campos: `[
             {
                 "campo": "id_route_template",
                 "label": "route_template_name",
@@ -880,18 +880,18 @@ async function main() {
         ]
 
          `,
-                },
-                // 10
-                {
-                        titulo: 'Evidence',
-                        orden: 10,
-                        tabla: 'evidence',
-                        grupo: 'admin',
-                        icon: 'icon-globe-alt',
-                        descripcion: 'Evidence administration',
-                        tipo: 'catalogo',
-                        listado: 'event_details,type,id_evidence',
-                        campos: `[
+        },
+        // 10
+        {
+            titulo: 'Evidence',
+            orden: 10,
+            tabla: 'evidence',
+            grupo: 'admin',
+            icon: 'icon-globe-alt',
+            descripcion: 'Evidence administration',
+            tipo: 'catalogo',
+            listado: 'event_details,type,id_evidence',
+            campos: `[
             {
                 "campo": "id_event",
                 "label": "event_details",
@@ -916,18 +916,18 @@ async function main() {
             }
         ]
          `,
-                },
-                // 11
-                {
-                        titulo: 'Route',
-                        orden: 11,
-                        tabla: 'route',
-                        grupo: 'admin',
-                        icon: 'icon-map',
-                        descripcion: 'Route administration',
-                        tipo: 'catalogo',
-                        listado: 'name,driver_name,id_route',
-                        campos: `[
+        },
+        // 11
+        {
+            titulo: 'Route',
+            orden: 11,
+            tabla: 'route',
+            grupo: 'admin',
+            icon: 'icon-map',
+            descripcion: 'Route administration',
+            tipo: 'catalogo',
+            listado: 'name,driver_name,id_route',
+            campos: `[
             {
                 "campo": "id_enterprise",
                 "label": "enterprise_name",
@@ -1013,18 +1013,18 @@ async function main() {
             }
         ]
          `,
-                },
-                // 12
-                {
-                        titulo: 'Route Template',
-                        orden: 12,
-                        tabla: 'route_template',
-                        grupo: 'admin',
-                        icon: 'icon-directions',
-                        descripcion: 'Route template administration',
-                        tipo: 'catalogo',
-                        listado: 'name,driver_name,id_route_template',
-                        campos: `[
+        },
+        // 12
+        {
+            titulo: 'Route Template',
+            orden: 12,
+            tabla: 'route_template',
+            grupo: 'admin',
+            icon: 'icon-directions',
+            descripcion: 'Route template administration',
+            tipo: 'catalogo',
+            listado: 'name,driver_name,id_route_template',
+            campos: `[
             {
                 "campo": "name"
             },
@@ -1071,18 +1071,18 @@ async function main() {
             }
         ]
          `,
-                },
-                // 13
-                {
-                        titulo: 'Stop',
-                        orden: 13,
-                        tabla: 'stop',
-                        grupo: 'admin',
-                        icon: 'icon-target',
-                        descripcion: 'Stop administration',
-                        tipo: 'catalogo',
-                        listado: 'title,schedule,id_stop',
-                        campos: `[
+        },
+        // 13
+        {
+            titulo: 'Stop',
+            orden: 13,
+            tabla: 'stop',
+            grupo: 'admin',
+            icon: 'icon-target',
+            descripcion: 'Stop administration',
+            tipo: 'catalogo',
+            listado: 'title,schedule,id_stop',
+            campos: `[
             {
                 "campo": "id_client",
                 "label": "client_name",
@@ -1160,18 +1160,18 @@ async function main() {
             }
         ]
          `,
-                },
-                // 14
-                {
-                        titulo: 'Vehicle',
-                        orden: 14,
-                        tabla: 'vehicle',
-                        grupo: 'admin',
-                        icon: 'iicon-speedometer',
-                        descripcion: 'Vehicle administration',
-                        tipo: 'catalogo',
-                        listado: 'name,status,id_vehicle',
-                        campos: `
+        },
+        // 14
+        {
+            titulo: 'Vehicle',
+            orden: 14,
+            tabla: 'vehicle',
+            grupo: 'admin',
+            icon: 'iicon-speedometer',
+            descripcion: 'Vehicle administration',
+            tipo: 'catalogo',
+            listado: 'name,status,id_vehicle',
+            campos: `
             {
                 "campo": "id_enterprise",
                 "label": "enterprise_name",
@@ -1244,19 +1244,19 @@ async function main() {
             }
         ]
          `,
-                },
-        ];
+        },
+    ];
 
-        await prisma.cMSMenu.createMany({
-                data: cmsData,
-        });
+    await prisma.cMSMenu.createMany({
+        data: cmsData,
+    });
 }
 
 main()
-        .catch((e) => {
-                console.error(e);
-                process.exit(1);
-        })
-        .finally(async () => {
-                await prisma.$disconnect();
-        });
+    .catch((e) => {
+        console.error(e);
+        process.exit(1);
+    })
+    .finally(async () => {
+        await prisma.$disconnect();
+    });
