@@ -51,7 +51,7 @@ export class RouteService {
                 }
             }
 
-            const enterprise = await this.enterpriseRepository.findEnterpriseRecordById(body.enterpriseId);
+            const enterprise = await this.enterpriseRepository.findEnterpriseRecordById(routeTemplate.id_enterprise);
             const driver = await this.driverRepository.findDriverRecordById(body.driverId);
             const vehicle = await this.vehicleRepository.findVehicleRecordById(body.vehicleId);
             const client = await this.enterpriseRepository.findClientRecordById(body.clientId);
