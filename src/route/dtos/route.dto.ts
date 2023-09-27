@@ -8,10 +8,6 @@ export class CreateRouteDto {
 
     @IsNumber()
     @IsNotEmpty()
-    enterpriseId: number;
-
-    @IsNumber()
-    @IsNotEmpty()
     clientId: number;
 
     @IsOptional()
