@@ -97,7 +97,7 @@ export class RouteService {
                 domain: 'ROUTE',
                 layer: 'SERVICE',
                 type: 'UNEXPECTED_ERROR',
-                message: error.message,
+                message: `generateRoute: Error:${error.message}`,
                 cause: error,
             });
         }
@@ -124,7 +124,7 @@ export class RouteService {
                 domain: 'ROUTE',
                 layer: 'SERVICE',
                 type: 'UNEXPECTED_ERROR',
-                message: error.message,
+                message: `getRoute: Error:${error.message}`,
                 cause: error,
             });
         }
@@ -170,7 +170,7 @@ export class RouteService {
                 domain: 'ROUTE',
                 layer: 'SERVICE',
                 type: 'UNEXPECTED_ERROR',
-                message: error.message,
+                message: `updateRouteTemplateDirections: Error:${error.message}`,
                 cause: error,
             });
         }
