@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { EventTemplate, Route, RouteTemplate } from '@prisma/client';
 import { PrismaRepository } from '../prisma/prisma.repository';
 import { DataBaseError, UnexpectedError } from '../shared/errors/custom-errors';
-import { CreateRouteParams, UpdateRouteTemplateParams } from './interfaces/route.interface';
+import { CreateRouteParams, UpdateRouteTemplateParams } from './types/route.type';
 
 @Injectable()
 export class RouteRepository {

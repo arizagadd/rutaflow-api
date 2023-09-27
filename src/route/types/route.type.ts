@@ -1,6 +1,6 @@
 import { RouteLeg } from '@googlemaps/google-maps-services-js';
 
-export interface CreateRouteParams {
+export type CreateRouteParams = {
     enterpriseId: number;
     clientId: number;
     driverId: number;
@@ -15,9 +15,9 @@ export interface CreateRouteParams {
     totalStops: number;
     stopInitial: number;
     stopFinal: number;
-}
+};
 
-export interface UpdateRouteTemplateParams {
+export type UpdateRouteTemplateParams = {
     enterpriseId?: number;
     driverId?: number;
     name?: string;
@@ -31,13 +31,13 @@ export interface UpdateRouteTemplateParams {
     stopInitial?: number;
     stopFinal?: number;
     tag?: string;
-}
+};
 
-export interface FilteredDirectionsData {
+export type FilteredDirectionsData = {
     polyline: string;
     legPolyline: string[];
     legs: RouteLeg[];
     totalDistance: number;
     totalDuration: number;
     totalStops: number;
-}
+};

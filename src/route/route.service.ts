@@ -3,13 +3,13 @@ import { Injectable } from '@nestjs/common';
 import { Route, RouteTemplate } from '@prisma/client';
 import { DriverRepository } from '../driver/driver.repository';
 import { EnterpriseRepository } from '../enterprise/enterprise.repository';
-import { DirectionsRequestParams } from '../maps/maps.interface';
 import { MapsService } from '../maps/maps.service';
+import { DirectionsRequestParams } from '../maps/maps.type';
 import { DataBaseError, DomainError, UnexpectedError } from '../shared/errors/custom-errors';
 import { VehicleRepository } from '../vehicle/vehicle.repository';
 import { CreateRouteDto } from './dtos/route.dto';
-import { CreateRouteParams, FilteredDirectionsData, UpdateRouteTemplateParams } from './interfaces/route.interface';
 import { RouteRepository } from './route.repository';
+import { CreateRouteParams, FilteredDirectionsData, UpdateRouteTemplateParams } from './types/route.type';
 
 @Injectable()
 export class RouteService {

@@ -2,7 +2,7 @@ import { Client, DirectionsResponse, LatLng, TravelMode } from '@googlemaps/goog
 import { geocode } from '@googlemaps/google-maps-services-js/dist/geocode/geocode';
 import { Injectable } from '@nestjs/common';
 import { DomainError, UnexpectedError } from '../shared/errors/custom-errors';
-import { DirectionsRequestParams } from './maps.interface';
+import { DirectionsRequestParams } from './maps.type';
 
 @Injectable()
 export class MapsService {
