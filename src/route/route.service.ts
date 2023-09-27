@@ -6,6 +6,7 @@ import { EnterpriseRepository } from '../enterprise/enterprise.repository';
 import { MapsService } from '../maps/maps.service';
 import { DirectionsRequestParams } from '../maps/maps.type';
 import { DataBaseError, DomainError, UnexpectedError } from '../shared/errors/custom-errors';
+import { StopRepository } from '../stop/stop.repository';
 import { VehicleRepository } from '../vehicle/vehicle.repository';
 import { CreateRouteDto } from './dtos/route.dto';
 import { RouteRepository } from './route.repository';
@@ -19,16 +20,19 @@ export class RouteService {
         private readonly enterpriseRepository: EnterpriseRepository,
         private readonly vehicleRepository: VehicleRepository,
         private readonly driverRepository: DriverRepository,
+        private readonly stopRepository: StopRepository,
     ) {}
     // this generates the route that the driver will follow to complete a journey
     async generateRoute(body: CreateRouteDto): Promise<Route> {
         try {
             // origen = stop_initial, destination = stop_final which should already exist in the database upon creation of route template
             let routeTemplate = await this.routeRepository.findRouteTemplateRecordById(body.routeTemplateId);
+            const stopInitial = await this.stopRepository.findStopRecordById(routeTemplate.stop_initial);
+            const stopFinal = await this.stopRepository.findStopRecordById(routeTemplate.stop_final);
 
-            const origin = await this.routeRepository.getStopCoordinatesFromEventTemplateRecord(routeTemplate.stop_initial);
-            const destination = await this.routeRepository.getStopCoordinatesFromEventTemplateRecord(routeTemplate.stop_final);
-            const waypoints = await this.routeRepository.getStopCoordinatesFromManyEventTemplateRecords(routeTemplate.id_route_template);
+            const origin = await this.routeRepository.getCoordinatesFromStopRecord(stopInitial);
+            const destination = await this.routeRepository.getCoordinatesFromStopRecord(stopFinal);
+            const waypoints = await this.routeRepository.getWaypointsForRouteTemplate(routeTemplate.id_route_template);
 
             // if there is no polyline this means the RoutTemplate doesn't have a predefined set of directions for completing the route yet
             // therefore a route must be generated and the data must be updated in the RouteTemplate record
@@ -200,7 +204,7 @@ export class RouteService {
             return leg.steps.map((step) => step.polyline.points).join('');
         });
 
-        const totalStops = legPolyline.length - 2; // we don't take into account point of origin and we also remove index 0 from counter
+        const totalStops = legPolyline.length; // we don't take into account point of origin and we also remove index 0 from counter
 
         // totalDistance: `${totalDistance / 1000} km`, // convert meters to kilometers
         // totalDuration: `${totalDuration / 3600} hours`, // convert seconds to hours
