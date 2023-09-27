@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { Route, RouteTemplate } from '@prisma/client';
 import { PrismaRepository } from '../prisma/prisma.repository';
 import { DataBaseError, UnexpectedError } from '../shared/errors/custom-errors';
-import { PopulateRouteTemplateData, RouteData } from './interfaces/route.interface';
+import { RouteData, RouteTemplateDirectionsData } from './interfaces/route.interface';
 
 @Injectable()
 export class RouteRepository {
@@ -27,8 +27,6 @@ export class RouteRepository {
                                         stop_initial: data.stopInitial,
                                         stop_final: data.stopFinal,
                                         total_stops: data.totalStops,
-                                        // checklist_event[] TODO: might have to extract these to a function at the service level or controller level
-                                        //event[] TODO:  might have to extract these to a function at the service level or controller level
                                 },
                         });
 
@@ -206,7 +204,7 @@ export class RouteRepository {
                         }
                 }
         }
-        async updateRouteTemplateRecord(routeTemplateId: number, data: PopulateRouteTemplateData): Promise<RouteTemplate> {
+        async updateRouteTemplateRecord(routeTemplateId: number, data: RouteTemplateDirectionsData): Promise<RouteTemplate> {
                 try {
                         return await this.prismaRepository.routeTemplate.update({
                                 where: {

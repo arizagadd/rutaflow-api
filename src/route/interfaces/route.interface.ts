@@ -1,3 +1,5 @@
+import { RouteLeg } from '@googlemaps/google-maps-services-js';
+
 export interface RouteData {
         enterpriseId: number;
         clientId: number;
@@ -15,7 +17,7 @@ export interface RouteData {
         stopFinal: number;
 }
 
-export interface PopulateRouteTemplateData {
+export interface RouteTemplateDirectionsData {
         // enterpriseId: number;
         // driverId?: number;
         // name?: string;
@@ -31,4 +33,13 @@ export interface PopulateRouteTemplateData {
         // tag?: string;
 
         // the commented out data can de done from the CMS
+}
+
+export interface FilteredDirectionsData {
+        polyline: string;
+        legPolyline: string[];
+        legs: RouteLeg[];
+        totalDistance: number;
+        totalDuration: number;
+        totalStops: number;
 }
