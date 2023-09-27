@@ -165,6 +165,7 @@ export class RouteRepository {
                         });
                 }
         }
+
         async getOneStopCoordinateFromEventTemplate(stopId: number): Promise<string> {
                 try {
                         const eventTemplate = await this.prismaRepository.eventTemplate.findFirst({
@@ -204,6 +205,7 @@ export class RouteRepository {
                         }
                 }
         }
+
         async updateRouteTemplateRecord(routeTemplateId: number, data: RouteTemplateDirectionsData): Promise<RouteTemplate> {
                 try {
                         return await this.prismaRepository.routeTemplate.update({
@@ -266,16 +268,22 @@ export class RouteRepository {
                                                 });
 
                                                 if (correspondingEventTemplate) {
-                                                        const posValue = this.formatIndexForPos(index);
+                                                        let position: number;
+                                                        if (index === 0) {
+                                                                position = index;
+                                                        } else {
+                                                                position = index - 1;
+                                                        }
+
                                                         // Update the pos field of the eventTemplate
                                                         await this.prismaRepository.eventTemplate.update({
                                                                 where: { id_event_template: correspondingEventTemplate.id_event_template },
-                                                                data: { pos: posValue },
+                                                                data: { pos: position },
                                                         });
 
                                                         return {
                                                                 leg,
-                                                                pos: this.formatIndexForPos(index),
+                                                                pos: position,
                                                         };
                                                 }
                                         }
@@ -298,14 +306,6 @@ export class RouteRepository {
                                         cause: error,
                                 });
                         }
-                }
-        }
-
-        formatIndexForPos(index: number): number {
-                if (index === 0) {
-                        return index;
-                } else {
-                        return index - 1;
                 }
         }
 

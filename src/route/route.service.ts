@@ -40,7 +40,7 @@ export class RouteService {
                                                 waypoints,
                                         };
                                         // routeTemplate will be equal to the new updated record
-                                        routeTemplate = await this.populateRouteTemplate(params, routeTemplate.id_route_template);
+                                        routeTemplate = await this.updateRouteTemplateDirections(params, routeTemplate.id_route_template);
                                 } catch (error) {
                                         throw new DomainError({
                                                 domain: 'ROUTE',
@@ -130,7 +130,7 @@ export class RouteService {
                 }
         }
 
-        async populateRouteTemplate(params: DirectionsRequestParams, routeTemplateId: number): Promise<RouteTemplate> {
+        async updateRouteTemplateDirections(params: DirectionsRequestParams, routeTemplateId: number): Promise<RouteTemplate> {
                 try {
                         const directions = await this.mapsService.getDirections(params);
                         if (!directions.data.routes || !directions.data.routes[0]) {
@@ -148,10 +148,10 @@ export class RouteService {
                                 totalDuration: filteredDirections.totalDuration,
                                 totalStops: filteredDirections.totalStops,
                         };
-                        const updatedRouteTemplate = await this.routeRepository.updateRouteTemplateRecord(routeTemplateId, data);
+                        const updatedRouteTemplateRecord = await this.routeRepository.updateRouteTemplateRecord(routeTemplateId, data);
                         await this.routeRepository.matchLegsToEventTemplates(directions, routeTemplateId);
 
-                        return updatedRouteTemplate;
+                        return updatedRouteTemplateRecord;
                 } catch (error) {
                         if (error instanceof DomainError) {
                                 throw error;
