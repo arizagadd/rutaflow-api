@@ -1,6 +1,6 @@
 import { DirectionsResponse } from '@googlemaps/google-maps-services-js';
 import { Injectable } from '@nestjs/common';
-import { EventTemplate, Route, RouteTemplate, Stop } from '@prisma/client';
+import { EventStatus, EventTemplate, Route, RouteTemplate, Stop } from '@prisma/client';
 import { DirectionsRequestParams } from '../maps/maps.type';
 import { PrismaRepository } from '../prisma/prisma.repository';
 import { DataBaseError, UnexpectedError } from '../shared/errors/custom-errors';
@@ -245,24 +245,27 @@ export class RouteRepository {
             }
         }
     }
-
+    // matches order of points to the pos field in the corresponding event_template by checking lat, lng values from
+    // Google DirectionsResponse object and stop records from event_templates
     async matchLegsToManyEventTemplateRecords(directions: DirectionsResponse, routeTemplateId: number) {
         try {
             const legs = directions.data.routes[0].legs;
             const updatePromises = [];
 
-            const latitudeRounded = parseFloat(legs[0].start_location.lat.toFixed(3));
-            const longitudeRounded = parseFloat(legs[0].start_location.lng.toFixed(3));
+            // start_location represents the origin coordinates we passed to the setUpDirectionsParams
+            const latRounded = parseFloat(legs[0].start_location.lat.toFixed(3));
+            const lngRounded = parseFloat(legs[0].start_location.lng.toFixed(3));
 
+            // setup origin as pos 0
             const originStop = await this.prismaRepository.stop.findFirst({
                 where: {
                     lat: {
-                        gte: latitudeRounded - 0.0005,
-                        lte: latitudeRounded + 0.0005,
+                        gte: latRounded - 0.0005,
+                        lte: latRounded + 0.0005,
                     },
                     lon: {
-                        gte: longitudeRounded - 0.0005,
-                        lte: longitudeRounded + 0.0005,
+                        gte: lngRounded - 0.0005,
+                        lte: lngRounded + 0.0005,
                     },
                 },
             });
@@ -271,7 +274,7 @@ export class RouteRepository {
                     domain: 'ROUTE',
                     layer: 'REPOSITORY',
                     type: 'GET_RECORD_ERROR',
-                    message: `matchLegsToManyEventTemplateRecord: Stop with lat${latitudeRounded} and lng ${longitudeRounded} not found in DB `,
+                    message: `matchLegsToManyEventTemplateRecord: Stop with lat${latRounded} and lng ${lngRounded} not found in DB `,
                 });
             }
             const correspondingOriginEventTemplate = await this.prismaRepository.eventTemplate.findFirst({
@@ -354,6 +357,7 @@ export class RouteRepository {
                             id_route: routeId,
                             id_stop: template.id_stop,
                             pos: template.pos,
+                            status: EventStatus.PENDING,
                         },
                     });
                 }),
