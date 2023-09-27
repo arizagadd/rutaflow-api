@@ -1,6 +1,7 @@
 import { DirectionsResponse } from '@googlemaps/google-maps-services-js';
 import { Injectable } from '@nestjs/common';
 import { EventTemplate, Route, RouteTemplate, Stop } from '@prisma/client';
+import { DirectionsRequestParams } from '../maps/maps.type';
 import { PrismaRepository } from '../prisma/prisma.repository';
 import { DataBaseError, UnexpectedError } from '../shared/errors/custom-errors';
 import { CreateRouteParams, UpdateRouteTemplateParams } from './types/route.type';
@@ -138,8 +139,11 @@ export class RouteRepository {
         }
     }
 
-    async getWaypointsForRouteTemplate(routeTemplateId: number): Promise<string[]> {
+    async setUpDirectionsParams(routeTemplateId: number, stopInitial: Stop, stopFinal: Stop): Promise<DirectionsRequestParams> {
         try {
+            const origin = `${stopInitial.lat}, ${stopInitial.lon}`;
+            const destination = `${stopFinal.lat}, ${stopFinal.lon}`;
+
             // Fetching the routeTemplate to get stop_initial and stop_final
             const routeTemplate = await this.prismaRepository.routeTemplate.findUnique({
                 where: { id_route_template: routeTemplateId },
@@ -154,20 +158,9 @@ export class RouteRepository {
                     domain: 'ROUTE',
                     layer: 'REPOSITORY',
                     type: 'GET_RECORD_ERROR',
-                    message: `getWaypointsForRouteTemplate: RouteTemplate with id ${routeTemplateId} not found`,
+                    message: `setupDirectionsParams: RouteTemplate with id ${routeTemplateId} not found`,
                 });
             }
-
-            // Fetching the coordinates for stop_initial and stop_final
-            const initialStop = await this.prismaRepository.stop.findUnique({
-                where: { id_stop: routeTemplate.stop_initial },
-                select: { lat: true, lon: true },
-            });
-
-            const finalStop = await this.prismaRepository.stop.findUnique({
-                where: { id_stop: routeTemplate.stop_final },
-                select: { lat: true, lon: true },
-            });
 
             const eventTemplates = await this.prismaRepository.eventTemplate.findMany({
                 where: {
@@ -184,12 +177,18 @@ export class RouteRepository {
                 const { lat, lon } = event.stop;
 
                 // Checking if the coordinates are neither for stop_initial nor for stop_final
-                if (!((lat === initialStop?.lat && lon === initialStop?.lon) || (lat === finalStop?.lat && lon === finalStop?.lon))) {
+                if (!((lat === stopInitial?.lat && lon === stopInitial?.lon) || (lat === stopFinal?.lat && lon === stopFinal?.lon))) {
                     coordinatesSet.add(`${lat}, ${lon}`);
                 }
             });
 
-            return Array.from(coordinatesSet); // Converting Set back to Array
+            const requestData: DirectionsRequestParams = {
+                origin,
+                destination,
+                waypoints: Array.from(coordinatesSet), // Converting Set back to Array
+            };
+
+            return requestData;
         } catch (error) {
             throw new UnexpectedError({
                 domain: 'ROUTE',
@@ -198,27 +197,6 @@ export class RouteRepository {
                 message: `getStopCoordinatesFromManyEventTemplateRecords: Error:${error.message}`,
                 cause: error,
             });
-        }
-    }
-
-    async getCoordinatesFromStopRecord(stop: Stop): Promise<string> {
-        try {
-            const lat = stop.lat;
-            const lon = stop.lon;
-
-            return `${lat}, ${lon}`;
-        } catch (error) {
-            if (error instanceof DataBaseError) {
-                throw error;
-            } else {
-                throw new UnexpectedError({
-                    domain: 'ROUTE',
-                    layer: 'REPOSITORY',
-                    type: 'UNEXPECTED_ERROR',
-                    message: `getCoordinatesStopRecord: Error:${error.message}`,
-                    cause: error,
-                });
-            }
         }
     }
 
@@ -288,22 +266,30 @@ export class RouteRepository {
                     },
                 },
             });
+            if (!originStop) {
+                throw new DataBaseError({
+                    domain: 'ROUTE',
+                    layer: 'REPOSITORY',
+                    type: 'GET_RECORD_ERROR',
+                    message: `matchLegsToManyEventTemplateRecord: Stop with lat${latitudeRounded} and lng ${longitudeRounded} not found in DB `,
+                });
+            }
             const correspondingOriginEventTemplate = await this.prismaRepository.eventTemplate.findFirst({
                 where: {
                     id_stop: originStop.id_stop,
                     id_route_template: routeTemplateId,
                 },
             });
-            const updateOriginStopPosPromise = this.prismaRepository.eventTemplate.update({
+            const updateOriginEventTemplatePos = this.prismaRepository.eventTemplate.update({
                 where: { id_event_template: correspondingOriginEventTemplate.id_event_template },
                 data: { pos: 0 },
             });
-            updatePromises.push(updateOriginStopPosPromise);
+            updatePromises.push(updateOriginEventTemplatePos);
 
             for (const [index, leg] of legs.entries()) {
                 // Round to the 3rd decimal place
                 const latRounded = parseFloat(leg.end_location.lat.toFixed(3));
-                const lonRounded = parseFloat(leg.end_location.lng.toFixed(3));
+                const lngRounded = parseFloat(leg.end_location.lng.toFixed(3));
 
                 // Query for the stop with matching lat and lon coordinates up to 3rd decimal place
                 const matchingStop = await this.prismaRepository.stop.findFirst({
@@ -313,8 +299,8 @@ export class RouteRepository {
                             lte: latRounded + 0.0005,
                         },
                         lon: {
-                            gte: lonRounded - 0.0005,
-                            lte: lonRounded + 0.0005,
+                            gte: lngRounded - 0.0005,
+                            lte: lngRounded + 0.0005,
                         },
                     },
                 });
@@ -328,7 +314,6 @@ export class RouteRepository {
                     });
 
                     if (correspondingEventTemplate) {
-                        // const position = index === 0 ? index : index - 1;
                         const updatePromise = this.prismaRepository.eventTemplate.update({
                             where: { id_event_template: correspondingEventTemplate.id_event_template },
                             data: { pos: index + 1 },
