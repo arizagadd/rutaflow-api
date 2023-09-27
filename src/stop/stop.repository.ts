@@ -35,7 +35,7 @@ export class StopRepository {
                                         domain: 'VEHICLE',
                                         layer: 'REPOSITORY',
                                         type: 'UNEXPECTED_ERROR',
-                                        message: error.message,
+                                        message: `findStopRecordById: Error:${error.message}`,
                                         cause: error,
                                 });
                         }

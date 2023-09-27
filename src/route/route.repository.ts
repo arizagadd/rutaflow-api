@@ -48,7 +48,7 @@ export class RouteRepository {
                                         domain: 'ROUTE',
                                         layer: 'REPOSITORY',
                                         type: 'UNEXPECTED_ERROR',
-                                        message: error.message,
+                                        message: `createRouteRecord: Error:${error.message}`,
                                         cause: error,
                                 });
                         }
@@ -81,7 +81,7 @@ export class RouteRepository {
                                         domain: 'ROUTE',
                                         layer: 'REPOSITORY',
                                         type: 'UNEXPECTED_ERROR',
-                                        message: error.message,
+                                        message: `findRouteRecordById: Error:${error.message}`,
                                         cause: error,
                                 });
                         }
@@ -114,7 +114,7 @@ export class RouteRepository {
                                         domain: 'ROUTE',
                                         layer: 'REPOSITORY',
                                         type: 'UNEXPECTED_ERROR',
-                                        message: error.message,
+                                        message: `findRouteTemplateRecordById: Error:${error.message}`,
                                         cause: error,
                                 });
                         }
@@ -132,7 +132,7 @@ export class RouteRepository {
                                 domain: 'ROUTE',
                                 layer: 'REPOSITORY',
                                 type: 'UNEXPECTED_ERROR',
-                                message: error.message,
+                                message: `fetchAllEventTemplateRecords: Error:${error.message}`,
                                 cause: error,
                         });
                 }
@@ -160,7 +160,7 @@ export class RouteRepository {
                                 domain: 'ROUTE',
                                 layer: 'REPOSITORY',
                                 type: 'UNEXPECTED_ERROR',
-                                message: error.message,
+                                message: `getStopCoordinatesFromManyEventTemplateRecords: Error:${error.message}`,
                                 cause: error,
                         });
                 }
@@ -199,7 +199,7 @@ export class RouteRepository {
                                         domain: 'ROUTE',
                                         layer: 'REPOSITORY',
                                         type: 'UNEXPECTED_ERROR',
-                                        message: error.message,
+                                        message: `getStopCoordinatesFromEventTemplateRecord: Error:${error.message}`,
                                         cause: error,
                                 });
                         }
@@ -212,7 +212,21 @@ export class RouteRepository {
                                 where: {
                                         id_route_template: routeTemplateId,
                                 },
-                                data,
+                                data: {
+                                        id_enterprise: data.enterpriseId,
+                                        id_driver: data.driverId,
+                                        name: data.name,
+                                        polyline: data.polyline,
+                                        description: data.description,
+                                        color: data.color,
+                                        symbol: data.symbol,
+                                        total_duration: data.totalDuration,
+                                        total_distance: data.totalDistance,
+                                        total_stops: data.totalStops,
+                                        stop_initial: data.stopInitial,
+                                        stop_final: data.stopFinal,
+                                        tag: data.tag,
+                                },
                         });
                         if (!routeTemplate) {
                                 throw new DataBaseError({
@@ -231,7 +245,7 @@ export class RouteRepository {
                                         domain: 'ROUTE',
                                         layer: 'REPOSITORY',
                                         type: 'UNEXPECTED_ERROR',
-                                        message: error.message,
+                                        message: `updateRouteTemplateRecord: Error:${error.message}`,
                                         cause: error,
                                 });
                         }
@@ -241,63 +255,49 @@ export class RouteRepository {
         async matchLegsToManyEventTemplateRecords(directions: DirectionsResponse, routeTemplateId: number) {
                 try {
                         const legs = directions.data.routes[0].legs;
+                        const updatePromises = [];
 
-                        const mappedLegs = await Promise.all(
-                                legs.map(async (leg, index) => {
-                                        // Round to the 3rd decimal place
-                                        const latRounded = parseFloat(leg.start_location.lat.toFixed(3));
-                                        const lonRounded = parseFloat(leg.start_location.lng.toFixed(3));
+                        for (const [index, leg] of legs.entries()) {
+                                // Round to the 3rd decimal place
+                                const latRounded = parseFloat(leg.start_location.lat.toFixed(3));
+                                const lonRounded = parseFloat(leg.start_location.lng.toFixed(3));
 
-                                        // Query for the stop with matching lat and lon coordinates up to 3rd decimal place
-                                        const matchingStop = await this.prismaRepository.stop.findFirst({
+                                // Query for the stop with matching lat and lon coordinates up to 3rd decimal place
+                                const matchingStop = await this.prismaRepository.stop.findFirst({
+                                        where: {
+                                                lat: {
+                                                        gte: latRounded - 0.0005,
+                                                        lte: latRounded + 0.0005,
+                                                },
+                                                lon: {
+                                                        gte: lonRounded - 0.0005,
+                                                        lte: lonRounded + 0.0005,
+                                                },
+                                        },
+                                });
+
+                                if (matchingStop) {
+                                        const correspondingEventTemplate = await this.prismaRepository.eventTemplate.findFirst({
                                                 where: {
-                                                        lat: {
-                                                                gte: latRounded - 0.0005,
-                                                                lte: latRounded + 0.0005,
-                                                        },
-                                                        lon: {
-                                                                gte: lonRounded - 0.0005,
-                                                                lte: lonRounded + 0.0005,
-                                                        },
+                                                        id_stop: matchingStop.id_stop,
+                                                        id_route_template: routeTemplateId,
                                                 },
                                         });
 
-                                        if (matchingStop) {
-                                                // Get the eventTemplate that corresponds to this stop
-                                                const correspondingEventTemplate = await this.prismaRepository.eventTemplate.findFirst({
-                                                        where: {
-                                                                id_stop: matchingStop.id_stop,
-                                                                id_route_template: routeTemplateId,
-                                                        },
+                                        if (correspondingEventTemplate) {
+                                                const position = index === 0 ? index : index - 1;
+                                                const updatePromise = this.prismaRepository.eventTemplate.update({
+                                                        where: { id_event_template: correspondingEventTemplate.id_event_template },
+                                                        data: { pos: position },
                                                 });
-
-                                                if (correspondingEventTemplate) {
-                                                        let position: number;
-                                                        if (index === 0) {
-                                                                position = index;
-                                                        } else {
-                                                                position = index - 1;
-                                                        }
-
-                                                        // Update the pos field of the eventTemplate
-                                                        await this.prismaRepository.eventTemplate.update({
-                                                                where: { id_event_template: correspondingEventTemplate.id_event_template },
-                                                                data: { pos: position },
-                                                        });
-
-                                                        return {
-                                                                leg,
-                                                                pos: position,
-                                                        };
-                                                }
+                                                updatePromises.push(updatePromise);
                                         }
+                                }
+                        }
 
-                                        return null;
-                                }),
-                        );
-
-                        const result = mappedLegs.filter((item) => item !== null);
-                        return result;
+                        // Execute all update promises in a single transaction
+                        const results = await this.prismaRepository.$transaction(updatePromises);
+                        return results;
                 } catch (error) {
                         if (error instanceof DataBaseError) {
                                 throw error;
@@ -306,7 +306,7 @@ export class RouteRepository {
                                         domain: 'ROUTE',
                                         layer: 'REPOSITORY',
                                         type: 'UNEXPECTED_ERROR',
-                                        message: error.message,
+                                        message: `matchLegsToManyEventTemplateRecords: Error:${error.message}`,
                                         cause: error,
                                 });
                         }
@@ -338,7 +338,7 @@ export class RouteRepository {
                                         domain: 'ROUTE',
                                         layer: 'REPOSITORY',
                                         type: 'UNEXPECTED_ERROR',
-                                        message: error.message,
+                                        message: `createEventFromEventTemplateRecord: Error:${error.message}`,
                                         cause: error,
                                 });
                         }

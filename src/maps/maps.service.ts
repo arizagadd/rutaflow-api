@@ -48,7 +48,7 @@ export class MapsService {
                                 domain: 'MAP',
                                 layer: 'SERVICE',
                                 type: 'UNEXPECTED_ERROR',
-                                message: error,
+                                message: `getDirections: Error:${error.message}`,
                                 cause: error,
                         });
                 }

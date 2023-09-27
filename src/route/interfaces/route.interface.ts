@@ -22,11 +22,11 @@ export interface UpdateRouteTemplateParams {
         driverId?: number;
         name?: string;
         polyline?: string;
-        totalDuration?: number;
-        totalDistance?: number;
         description?: string;
         color?: string;
         symbol?: string;
+        totalDuration?: number;
+        totalDistance?: number;
         totalStops?: number;
         stopInitial?: number;
         stopFinal?: number;

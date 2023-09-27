@@ -33,7 +33,7 @@ export class DriverRepository {
                                         domain: 'DRIVER',
                                         layer: 'REPOSITORY',
                                         type: 'UNEXPECTED_ERROR',
-                                        message: error.message,
+                                        message: `findDriverRecordById: Error:${error.message}`,
                                         cause: error,
                                 });
                         }

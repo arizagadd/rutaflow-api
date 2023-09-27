@@ -35,7 +35,7 @@ export class VehicleRepository {
                                         domain: 'VEHICLE',
                                         layer: 'REPOSITORY',
                                         type: 'UNEXPECTED_ERROR',
-                                        message: error.message,
+                                        message: `findVehicleRecordById: Error:${error.message}`,
                                         cause: error,
                                 });
                         }

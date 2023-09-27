@@ -36,7 +36,7 @@ export class EnterpriseRepository {
                                         domain: 'ENTERPRISE',
                                         layer: 'REPOSITORY',
                                         type: 'UNEXPECTED_ERROR',
-                                        message: error.message,
+                                        message: `findEnterpriseRecordById: Error:${error.message}`,
                                         cause: error,
                                 });
                         }
@@ -69,7 +69,7 @@ export class EnterpriseRepository {
                                         domain: 'ENTERPRISE',
                                         layer: 'REPOSITORY',
                                         type: 'UNEXPECTED_ERROR',
-                                        message: error.message,
+                                        message: `findClientRecordById: Error:${error.message}`,
                                         cause: error,
                                 });
                         }
@@ -102,7 +102,7 @@ export class EnterpriseRepository {
                                         domain: 'ENTERPRISE',
                                         layer: 'REPOSITORY',
                                         type: 'UNEXPECTED_ERROR',
-                                        message: error.message,
+                                        message: `createChecklistRecord: Error:${error.message}`,
                                         cause: error,
                                 });
                         }
@@ -117,7 +117,7 @@ export class EnterpriseRepository {
                                 domain: 'ENTERPRISE',
                                 layer: 'REPOSITORY',
                                 type: 'UNEXPECTED_ERROR',
-                                message: error.message,
+                                message: `fetchAllEventRecords: Error:${error.message}`,
                                 cause: error,
                         });
                 }
@@ -131,7 +131,7 @@ export class EnterpriseRepository {
                                 domain: 'ENTERPRISE',
                                 layer: 'REPOSITORY',
                                 type: 'UNEXPECTED_ERROR',
-                                message: error.message,
+                                message: `fetchAllChecklistEventRecords: Error:${error.message}`,
                                 cause: error,
                         });
                 }
@@ -161,7 +161,7 @@ export class EnterpriseRepository {
                                         domain: 'ENTERPRISE',
                                         layer: 'REPOSITORY',
                                         type: 'UNEXPECTED_ERROR',
-                                        message: error.message,
+                                        message: `createChecklistEventRecord: Error:${error.message}`,
                                         cause: error,
                                 });
                         }
