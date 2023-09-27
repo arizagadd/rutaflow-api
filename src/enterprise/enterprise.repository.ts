@@ -10,7 +10,7 @@ export class EnterpriseRepository {
                 return { status: 'ok', data };
         }
 
-        async findEnterpriseById(id: number): Promise<Enterprise> {
+        async findEnterpriseRecordById(id: number): Promise<Enterprise> {
                 try {
                         const enterprise = await this.prismaRepository.enterprise.findFirst({
                                 where: {
@@ -23,7 +23,7 @@ export class EnterpriseRepository {
                                         domain: 'ENTERPRISE',
                                         layer: 'REPOSITORY',
                                         type: 'GET_RECORD_ERROR',
-                                        message: `findEnterpriseById: Enterprise with id ${id} not found`,
+                                        message: `findEnterpriseRecordById: Enterprise with id ${id} not found`,
                                 });
                         }
 
@@ -43,7 +43,7 @@ export class EnterpriseRepository {
                 }
         }
 
-        async findClientById(id: number): Promise<Client> {
+        async findClientRecordById(id: number): Promise<Client> {
                 try {
                         const client = await this.prismaRepository.client.findFirst({
                                 where: {
@@ -56,7 +56,7 @@ export class EnterpriseRepository {
                                         domain: 'ENTERPRISE',
                                         layer: 'REPOSITORY',
                                         type: 'GET_RECORD_ERROR',
-                                        message: `findClientById: Client with id ${id} not found`,
+                                        message: `findClientRecordById: Client with id ${id} not found`,
                                 });
                         }
 

@@ -8,7 +8,7 @@ export class DriverRepository {
         async createDriverRecord(data: any) {
                 return { status: 'ok', data };
         }
-        async findDriverById(id: number) {
+        async findDriverRecordById(id: number) {
                 try {
                         const driver = await this.prismaRepository.driver.findFirst({
                                 where: {

@@ -10,7 +10,7 @@ export class StopRepository {
                 return { status: 'ok', data };
         }
 
-        async findStopById(id: number): Promise<Stop> {
+        async findStopRecordById(id: number): Promise<Stop> {
                 try {
                         const stop = await this.prismaRepository.stop.findFirst({
                                 where: {

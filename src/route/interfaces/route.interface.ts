@@ -1,6 +1,6 @@
 import { RouteLeg } from '@googlemaps/google-maps-services-js';
 
-export interface RouteData {
+export interface CreateRouteParams {
         enterpriseId: number;
         clientId: number;
         driverId: number;
@@ -17,22 +17,20 @@ export interface RouteData {
         stopFinal: number;
 }
 
-export interface RouteTemplateDirectionsData {
-        // enterpriseId: number;
-        // driverId?: number;
-        // name?: string;
+export interface UpdateRouteTemplateParams {
+        enterpriseId?: number;
+        driverId?: number;
+        name?: string;
         polyline?: string;
         totalDuration?: number;
         totalDistance?: number;
-        // description?: string;
-        // color?: string;
-        // symbol?: string;
+        description?: string;
+        color?: string;
+        symbol?: string;
         totalStops?: number;
-        // stopInitial?: number; // already provided in request at controller level
-        // stopFinal?: number; // already provided in request at controller level
-        // tag?: string;
-
-        // the commented out data can de done from the CMS
+        stopInitial?: number;
+        stopFinal?: number;
+        tag?: string;
 }
 
 export interface FilteredDirectionsData {

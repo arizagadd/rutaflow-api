@@ -1,15 +1,15 @@
 import { DirectionsResponse } from '@googlemaps/google-maps-services-js';
 import { Injectable } from '@nestjs/common';
-import { Route, RouteTemplate } from '@prisma/client';
+import { EventTemplate, Route, RouteTemplate } from '@prisma/client';
 import { PrismaRepository } from '../prisma/prisma.repository';
 import { DataBaseError, UnexpectedError } from '../shared/errors/custom-errors';
-import { RouteData, RouteTemplateDirectionsData } from './interfaces/route.interface';
+import { CreateRouteParams, UpdateRouteTemplateParams } from './interfaces/route.interface';
 
 @Injectable()
 export class RouteRepository {
         constructor(private readonly prismaRepository: PrismaRepository) {}
 
-        async createRouteRecord(data: RouteData): Promise<Route> {
+        async createRouteRecord(data: CreateRouteParams): Promise<Route> {
                 try {
                         const newRoute = await this.prismaRepository.route.create({
                                 data: {
@@ -55,7 +55,7 @@ export class RouteRepository {
                 }
         }
 
-        async findRouteById(id: number): Promise<Route> {
+        async findRouteRecordById(id: number): Promise<Route> {
                 try {
                         const route = await this.prismaRepository.route.findFirst({
                                 where: {
@@ -68,7 +68,7 @@ export class RouteRepository {
                                         domain: 'ROUTE',
                                         layer: 'REPOSITORY',
                                         type: 'GET_RECORD_ERROR',
-                                        message: `findRouteById: Route with id ${id} not found`,
+                                        message: `findRouteRecordById: Route with id ${id} not found`,
                                 });
                         }
 
@@ -88,7 +88,7 @@ export class RouteRepository {
                 }
         }
 
-        async findRouteTemplateById(id: number): Promise<RouteTemplate> {
+        async findRouteTemplateRecordById(id: number): Promise<RouteTemplate> {
                 try {
                         const routeTemplate = await this.prismaRepository.routeTemplate.findFirst({
                                 where: {
@@ -101,7 +101,7 @@ export class RouteRepository {
                                         domain: 'ROUTE',
                                         layer: 'REPOSITORY',
                                         type: 'GET_RECORD_ERROR',
-                                        message: `findRouteTemplateById: RouteTemplate with id ${id} not found`,
+                                        message: `findRouteTemplateRecordById: RouteTemplate with id ${id} not found`,
                                 });
                         }
 
@@ -120,25 +120,25 @@ export class RouteRepository {
                         }
                 }
         }
-        // async fetchEventTemplates(routeTemplateId: number): Promise<EventTemplate[]> {
-        //         try {
-        //                 return await this.prismaRepository.eventTemplate.findMany({
-        //                         where: {
-        //                                 id_route_template: routeTemplateId,
-        //                         },
-        //                 });
-        //         } catch (error) {
-        //                 throw new UnexpectedError({
-        //                         domain: 'ROUTE',
-        //                         layer: 'REPOSITORY',
-        //                         type: 'UNEXPECTED_ERROR',
-        //                         message: error.message,
-        //                         cause: error,
-        //                 });
-        //         }
-        // }
+        async fetchAllEventTemplateRecords(routeTemplateId: number): Promise<EventTemplate[]> {
+                try {
+                        return await this.prismaRepository.eventTemplate.findMany({
+                                where: {
+                                        id_route_template: routeTemplateId,
+                                },
+                        });
+                } catch (error) {
+                        throw new UnexpectedError({
+                                domain: 'ROUTE',
+                                layer: 'REPOSITORY',
+                                type: 'UNEXPECTED_ERROR',
+                                message: error.message,
+                                cause: error,
+                        });
+                }
+        }
 
-        async getStopCoordinatesFromEventTemplate(routeTemplateId: number): Promise<string[]> {
+        async getStopCoordinatesFromManyEventTemplateRecords(routeTemplateId: number): Promise<string[]> {
                 try {
                         const eventTemplates = await this.prismaRepository.eventTemplate.findMany({
                                 where: {
@@ -166,7 +166,7 @@ export class RouteRepository {
                 }
         }
 
-        async getOneStopCoordinateFromEventTemplate(stopId: number): Promise<string> {
+        async getStopCoordinatesFromEventTemplateRecord(stopId: number): Promise<string> {
                 try {
                         const eventTemplate = await this.prismaRepository.eventTemplate.findFirst({
                                 where: {
@@ -183,7 +183,7 @@ export class RouteRepository {
                                         domain: 'ROUTE',
                                         layer: 'REPOSITORY',
                                         type: 'GET_RECORD_ERROR',
-                                        message: 'getOneStopCoordinateFromEventTemplate: Stop not found via EventTemplate.',
+                                        message: 'getStopCoordinatesFromEventTemplateRecord: Stop not found via EventTemplate.',
                                 });
                         }
 
@@ -206,19 +206,23 @@ export class RouteRepository {
                 }
         }
 
-        async updateRouteTemplateRecord(routeTemplateId: number, data: RouteTemplateDirectionsData): Promise<RouteTemplate> {
+        async updateRouteTemplateRecord(routeTemplateId: number, data: UpdateRouteTemplateParams): Promise<RouteTemplate> {
                 try {
-                        return await this.prismaRepository.routeTemplate.update({
+                        const routeTemplate = await this.prismaRepository.routeTemplate.update({
                                 where: {
                                         id_route_template: routeTemplateId,
                                 },
-                                data: {
-                                        polyline: data.polyline,
-                                        total_distance: data.totalDistance,
-                                        total_duration: data.totalDuration,
-                                        total_stops: data.totalStops,
-                                },
+                                data,
                         });
+                        if (!routeTemplate) {
+                                throw new DataBaseError({
+                                        domain: 'ROUTE',
+                                        layer: 'REPOSITORY',
+                                        type: 'UPDATE_RECORD_ERROR',
+                                        message: `updateRouteTemplateRecord: Unable to update RouteTemplate with id ${routeTemplateId} `,
+                                });
+                        }
+                        return routeTemplate;
                 } catch (error) {
                         if (error instanceof DataBaseError) {
                                 throw error;
@@ -234,7 +238,7 @@ export class RouteRepository {
                 }
         }
 
-        async matchLegsToEventTemplates(directions: DirectionsResponse, routeTemplateId: number) {
+        async matchLegsToManyEventTemplateRecords(directions: DirectionsResponse, routeTemplateId: number) {
                 try {
                         const legs = directions.data.routes[0].legs;
 
@@ -309,7 +313,7 @@ export class RouteRepository {
                 }
         }
 
-        async createEventFromEventTemplate(routeTemplateId: number, routeId: number) {
+        async createEventFromEventTemplateRecord(routeTemplateId: number, routeId: number) {
                 try {
                         const eventTemplates = await this.prismaRepository.eventTemplate.findMany({
                                 where: { id_route_template: routeTemplateId },

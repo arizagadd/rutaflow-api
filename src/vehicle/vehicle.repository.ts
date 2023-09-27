@@ -10,7 +10,7 @@ export class VehicleRepository {
                 return { status: 'ok', data };
         }
 
-        async findVehicleById(id: number): Promise<Vehicle> {
+        async findVehicleRecordById(id: number): Promise<Vehicle> {
                 try {
                         const vehicle = await this.prismaRepository.vehicle.findFirst({
                                 where: {
