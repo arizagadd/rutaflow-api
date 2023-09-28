@@ -39,7 +39,7 @@ export class MapsService {
                     domain: 'MAP',
                     layer: 'SERVICE',
                     type: 'UNEXPECTED_ERROR',
-                    message: `getDirections: Google Maps API error: ${error.response.data.error_message} `,
+                    message: `Google Maps API error: ${error.response.data.error_message} `,
                     cause: error,
                 });
             }
@@ -48,7 +48,7 @@ export class MapsService {
                 domain: 'MAP',
                 layer: 'SERVICE',
                 type: 'UNEXPECTED_ERROR',
-                message: `getDirections: Error:${error.message}`,
+                message: `Error:${error.message}`,
                 cause: error,
             });
         }
@@ -71,7 +71,7 @@ export class MapsService {
             throw new DomainError({
                 domain: 'MAP',
                 layer: 'SERVICE',
-                message: `convertLocationToLatLang: Cannot convert location "${location}" to latitude and longitude.`,
+                message: `Cannot convert location "${location}" to latitude and longitude.`,
             });
         }
     }

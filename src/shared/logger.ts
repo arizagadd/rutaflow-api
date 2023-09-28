@@ -27,12 +27,6 @@ const prettyPrint = format.printf((info) => {
     return `${info.timestamp} [${info.level}] ${info.message}`;
 });
 
-// // Simple structured log format
-// const structuredFormat = format.printf((info) => {
-//         const message = typeof info.message === 'object' ? JSON.stringify(info.message) : info.message;
-//         return `${info.timestamp} [${info.level}] ${message}`;
-// });
-
 const logger = createLogger({
     format: format.combine(format.timestamp(), prettyPrint),
     transports: [dailyRotateFileTransport],
@@ -50,77 +44,81 @@ function extractErrorDetails(error: ErrorBase<string, string, string>) {
     };
 }
 
+function getOriginatingFunctionName(error: Error): string {
+    if (!error.stack) {
+        return 'Unknown Function';
+    }
+
+    const stackLines = error.stack.split('\n');
+    const line = stackLines[1] ?? '';
+    const match = line.match(/at\s+(.*)\s+\(/);
+    return match ? match[1] : 'Unknown Function';
+}
+
 function prettyPrintStackTrace(error: Error): string {
     if (!error.stack) {
         return '';
     }
 
-    // Split the stack string into individual lines
     const stackLines = error.stack.split('\n');
-
-    // Filter out unwanted lines, if any (this example filters out lines containing 'node_modules')
     const filteredStack = stackLines.filter((line) => !line.includes('node_modules'));
-
-    // Map each line to a trimmed version of itself with a prefix (like '-> ')
     const formattedStack = filteredStack.map((line) => '-> ' + line.trim());
-
-    // Join the lines back together into a single string
     return formattedStack.join('\n');
 }
 
 function prettyPrintError(errorObj: any): void {
-    // Title
+    const printErrorDetail = (errorDetail: any, indent: string = '') => {
+        console.error(`${indent}Domain: ${errorDetail.context.domain}`);
+        console.error(`${indent}Layer: ${errorDetail.context.layer}`);
+        console.error(`${indent}Type: ${errorDetail.context.type}`);
+        console.error(`${indent}Message: ${errorDetail.context.message}`);
+
+        if (errorDetail.context.cause) {
+            console.error(`${indent}Cause:`);
+            printErrorDetail(errorDetail.context.cause, indent + '  ');
+        }
+    };
+
     console.log();
     console.error('[ERROR]');
-    console.error('='.repeat(50)); // Separator line
+    console.error('='.repeat(50));
 
-    // Metadata
     console.error(`Timestamp: ${errorObj.ERROR.timestamp}`);
     console.error(`Request URL: ${errorObj.ERROR.requestUrl}`);
-    console.error(''); // Empty line for separation
+    console.error(`Originating Function: ${errorObj.ERROR.originatingFunction}`);
+    console.error('');
 
-    // Stack Trace
     console.error('Stack Trace:');
     console.error(
         errorObj.ERROR.stack
             .split('\n')
-            .map((line) => '  ' + line)
+            .map((line: string) => '  ' + line)
             .join('\n'),
-    ); // Indented stack trace
-    console.error(''); // Empty line for separation
+    );
+    console.error('');
 
-    // Context
     console.error('Context:');
-    console.error(`  Domain: ${errorObj.ERROR.context.domain}`);
-    console.error(`  Layer: ${errorObj.ERROR.context.layer}`);
-    console.error(`  Message: ${errorObj.ERROR.context.message}`);
-
-    // Nested Cause
-    if (errorObj.ERROR.context.cause) {
-        console.error('Cause:');
-        console.error(`  Domain: ${errorObj.ERROR.context.cause.context.domain}`);
-        console.error(`  Layer: ${errorObj.ERROR.context.cause.context.layer}`);
-        console.error(`  Type: ${errorObj.ERROR.context.cause.context.type}`);
-        console.error(`  Message: ${errorObj.ERROR.context.cause.context.message}`);
-    }
+    printErrorDetail(errorObj.ERROR);
 }
 
 export function logError(error: Error, req: any) {
+    const originatingFunction = getOriginatingFunctionName(error);
+
     if (error instanceof ErrorBase) {
         const errorDetails = {
             ERROR: {
                 timestamp: new Date().toISOString(),
                 requestUrl: req.originalUrl,
+                originatingFunction,
                 stack: prettyPrintStackTrace(error),
                 ...extractErrorDetails(error),
             },
         };
-        // console.error(JSON.stringify(errorDetails, null, 2));
+
         prettyPrintError(errorDetails);
         logger.error(errorDetails);
     } else {
-        // log unexpected error
         console.log(error);
-        logger.error(error);
+        logger.error({ message: error.message, originatingFunction });
     }
 }

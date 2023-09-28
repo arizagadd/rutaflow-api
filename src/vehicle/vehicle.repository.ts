@@ -22,7 +22,7 @@ export class VehicleRepository {
                     domain: 'VEHICLE',
                     layer: 'REPOSITORY',
                     type: 'GET_RECORD_ERROR',
-                    message: `findVehicleRecordById: Vehicle with id ${id} not found`,
+                    message: `Vehicle with id ${id} not found`,
                 });
             }
 
@@ -35,7 +35,7 @@ export class VehicleRepository {
                     domain: 'VEHICLE',
                     layer: 'REPOSITORY',
                     type: 'UNEXPECTED_ERROR',
-                    message: `findVehicleRecordById: Error:${error.message}`,
+                    message: `Error:${error.message}`,
                     cause: error,
                 });
             }
