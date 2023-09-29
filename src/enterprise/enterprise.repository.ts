@@ -23,7 +23,7 @@ export class EnterpriseRepository {
                     domain: 'ENTERPRISE',
                     layer: 'REPOSITORY',
                     type: 'GET_RECORD_ERROR',
-                    message: `findEnterpriseRecordById: Enterprise with id ${id} not found`,
+                    message: `Enterprise with id ${id} not found`,
                 });
             }
 
@@ -36,7 +36,7 @@ export class EnterpriseRepository {
                     domain: 'ENTERPRISE',
                     layer: 'REPOSITORY',
                     type: 'UNEXPECTED_ERROR',
-                    message: `findEnterpriseRecordById: Error:${error.message}`,
+                    message: `Error:${error.message}`,
                     cause: error,
                 });
             }
@@ -56,7 +56,7 @@ export class EnterpriseRepository {
                     domain: 'ENTERPRISE',
                     layer: 'REPOSITORY',
                     type: 'GET_RECORD_ERROR',
-                    message: `findClientRecordById: Client with id ${id} not found`,
+                    message: `Client with id ${id} not found`,
                 });
             }
 
@@ -69,7 +69,7 @@ export class EnterpriseRepository {
                     domain: 'ENTERPRISE',
                     layer: 'REPOSITORY',
                     type: 'UNEXPECTED_ERROR',
-                    message: `findClientRecordById: Error:${error.message}`,
+                    message: `Error:${error.message}`,
                     cause: error,
                 });
             }
@@ -89,7 +89,7 @@ export class EnterpriseRepository {
                     domain: 'ENTERPRISE',
                     layer: 'REPOSITORY',
                     type: 'CREATE_RECORD_ERROR',
-                    message: `createChecklistRecord: Unable to create checklist`,
+                    message: `Unable to create checklist`,
                 });
             }
 
@@ -102,7 +102,7 @@ export class EnterpriseRepository {
                     domain: 'ENTERPRISE',
                     layer: 'REPOSITORY',
                     type: 'UNEXPECTED_ERROR',
-                    message: `createChecklistRecord: Error:${error.message}`,
+                    message: `Error:${error.message}`,
                     cause: error,
                 });
             }
@@ -117,7 +117,7 @@ export class EnterpriseRepository {
                 domain: 'ENTERPRISE',
                 layer: 'REPOSITORY',
                 type: 'UNEXPECTED_ERROR',
-                message: `fetchAllEventRecords: Error:${error.message}`,
+                message: `Error:${error.message}`,
                 cause: error,
             });
         }
@@ -131,7 +131,7 @@ export class EnterpriseRepository {
                 domain: 'ENTERPRISE',
                 layer: 'REPOSITORY',
                 type: 'UNEXPECTED_ERROR',
-                message: `fetchAllChecklistEventRecords: Error:${error.message}`,
+                message: `Error:${error.message}`,
                 cause: error,
             });
         }
@@ -150,7 +150,7 @@ export class EnterpriseRepository {
                     domain: 'ENTERPRISE',
                     layer: 'REPOSITORY',
                     type: 'CREATE_RECORD_ERROR',
-                    message: 'createChecklistEventRecord: Unable to create route',
+                    message: 'Unable to create route',
                 });
             }
         } catch (error) {
@@ -161,7 +161,7 @@ export class EnterpriseRepository {
                     domain: 'ENTERPRISE',
                     layer: 'REPOSITORY',
                     type: 'UNEXPECTED_ERROR',
-                    message: `createChecklistEventRecord: Error:${error.message}`,
+                    message: `Error:${error.message}`,
                     cause: error,
                 });
             }
