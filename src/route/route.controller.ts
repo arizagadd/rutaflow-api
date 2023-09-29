@@ -1,7 +1,7 @@
 import { Body, Controller, InternalServerErrorException, Post, Req } from '@nestjs/common';
 import { ErrorResponse, SuccessResponse } from '../shared/json-response.dto';
 import { logError } from '../shared/logger';
-import { CreateRouteDto } from './dtos/route.dto';
+import { CreateRouteDto, UpdateRouteDto } from './dtos/route.dto';
 import { RouteService } from './route.service';
 
 @Controller('route')
@@ -30,11 +30,11 @@ export class RouteController {
         };
     }
 
-    @Post('update')
-    async generate(@Req() req: Request, @Body() data: CreateRouteDto): Promise<SuccessResponse<string> | ErrorResponse> {
+    @Post('update-trajectory')
+    async generate(@Req() req: Request, @Body() data: UpdateRouteDto): Promise<SuccessResponse<string> | ErrorResponse> {
         try {
-            const newRoute = await this.routeService.generateRoute(data);
-            await this.routeService.getRoute(newRoute.id_route);
+            const updatedRoute = await this.routeService.updateRouteTrajectory(data);
+            await this.routeService.getRoute(updatedRoute.id_route);
         } catch (error) {
             logError(error, req);
             throw new InternalServerErrorException({

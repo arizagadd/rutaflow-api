@@ -4,7 +4,7 @@ import { EventStatus, EventTemplate, Route, RouteTemplate, Stop } from '@prisma/
 import { DirectionsRequestParams } from '../maps/maps.type';
 import { PrismaRepository } from '../prisma/prisma.repository';
 import { DataBaseError, UnexpectedError } from '../shared/errors/custom-errors';
-import { CreateRouteParams, UpdateRouteTemplateParams } from './types/route.type';
+import { CreateRouteParams, UpdateRouteParams, UpdateRouteTemplateParams } from './types/route.type';
 
 @Injectable()
 export class RouteRepository {
@@ -204,6 +204,8 @@ export class RouteRepository {
         }
     }
 
+    // TODO: move to maps service
+
     setUpRouteDirectionsParams(stopInitial: Stop, stopFinal: Stop, stopWaypoints: Stop[]): DirectionsRequestParams {
         try {
             const origin = `${stopInitial.lat}, ${stopInitial.lon}`;
@@ -381,53 +383,108 @@ export class RouteRepository {
             }
         }
     }
-
-    async matchLegsToManyEventRecords(routeId: number, params: DirectionsResponse) {
+    async updateRouteRecord(routeId: number, data: UpdateRouteParams): Promise<Route> {
         try {
-            const route = await this.findRouteRecordById(routeId);
-            if (!route) {
-                throw new Error(`Route with ID ${routeId} not found`);
-            }
-
-            const events = await this.prismaRepository.event.findMany({
+            const route = await this.prismaRepository.route.update({
                 where: {
                     id_route: routeId,
                 },
+                data: {
+                    id_enterprise: data.enterpriseId,
+                    id_driver: data.driverId,
+                    name: data.name,
+                    polyline: data.polyline,
+                    total_duration: data.totalDuration,
+                    total_distance: data.totalDistance,
+                    total_stops: data.totalStops,
+                    stop_initial: data.stopInitial,
+                    stop_final: data.stopFinal,
+                },
+            });
+            if (!route) {
+                throw new DataBaseError({
+                    domain: 'ROUTE',
+                    layer: 'REPOSITORY',
+                    type: 'UPDATE_RECORD_ERROR',
+                    message: `Unable to update Route with id ${routeId} `,
+                });
+            }
+            return route;
+        } catch (error) {
+            if (error instanceof DataBaseError) {
+                throw error;
+            } else {
+                throw new UnexpectedError({
+                    domain: 'ROUTE',
+                    layer: 'REPOSITORY',
+                    type: 'UNEXPECTED_ERROR',
+                    message: `Error:${error.message}`,
+                    cause: error,
+                });
+            }
+        }
+    }
+
+    async matchLegsToManyEventRecords(route: Route, params: DirectionsResponse) {
+        try {
+            const events = await this.prismaRepository.event.findMany({
+                where: {
+                    id_route: route.id_route,
+                },
                 select: {
+                    id_event: true, // Include id_event in the selection if it's the correct property name
                     stop: true,
                     status: true,
                 },
             });
-
             const completedEvents = events.filter((e) => e.status === EventStatus.COMPLETED);
-            const pendingEvents = events.filter((e) => e.status !== EventStatus.COMPLETED);
-            const newLegs = params.data.routes[0].legs;
-            const updatePromises = [];
 
-            // Match legs to events and update the pos
-            newLegs.forEach((leg, index) => {
+            // Delete all events with status not equal to COMPLETED
+            await this.prismaRepository.event.deleteMany({
+                where: {
+                    id_route: route.id_route,
+                    status: {
+                        not: EventStatus.COMPLETED,
+                    },
+                },
+            });
+
+            const updatePromises = [];
+            const newLegs = params.data.routes[0].legs;
+            for (const [index, leg] of newLegs.entries()) {
+                // Round to the 3rd decimal place
                 const latRounded = parseFloat(leg.end_location.lat.toFixed(3));
                 const lngRounded = parseFloat(leg.end_location.lng.toFixed(3));
 
-                const matchingEvent = pendingEvents.find(
-                    (event) => event.stop.lat.toFixed(3) === latRounded && event.stop.lon.toFixed(3) === lngRounded,
-                );
+                // Query for the stop with matching lat and lon coordinates up to 3rd decimal place
+                const matchingStop = await this.prismaRepository.stop.findFirst({
+                    where: {
+                        lat: {
+                            gte: latRounded - 0.0005,
+                            lte: latRounded + 0.0005,
+                        },
+                        lon: {
+                            gte: lngRounded - 0.0005,
+                            lte: lngRounded + 0.0005,
+                        },
+                    },
+                });
 
-                if (matchingEvent) {
-                    updatePromises.push(
-                        this.prismaRepository.event.update({
-                            where: { id_event: matchingEvent.id_event },
-                            data: { pos: index + completedEvents.length }, // Adjusting index based on completed events
-                        }),
-                    );
+                if (matchingStop) {
+                    const createUpdatePromise = this.prismaRepository.event.create({
+                        data: {
+                            id_route: route.id_route,
+                            id_stop: matchingStop.id_stop,
+                            pos: index + completedEvents.length,
+                            status: EventStatus.PENDING,
+                        },
+                    });
+                    updatePromises.push(createUpdatePromise);
                 }
-            });
+            }
+            const results = await this.prismaRepository.$transaction(updatePromises);
 
-            // Execute all update promises
-            await Promise.all(updatePromises);
-
-            // Return the updated route, or handle as per your requirements
-            return await this.findRouteRecordById(routeId);
+            return results;
         } catch (error) {
             throw new UnexpectedError({
                 domain: 'ROUTE',

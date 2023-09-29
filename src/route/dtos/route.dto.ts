@@ -1,40 +1,45 @@
-import { Type } from 'class-transformer';
-import { IsArray, IsNotEmpty, IsNumber, ValidateNested } from 'class-validator';
-import { number } from 'zod';
+import { Transform } from 'class-transformer';
+import { IsArray, IsNotEmpty, IsNumber } from 'class-validator';
 
 export class CreateRouteDto {
     @IsNumber()
     @IsNotEmpty()
+    @Transform(({ value }) => parseInt(value), { toClassOnly: true })
     routeTemplateId: number;
 
     @IsNumber()
     @IsNotEmpty()
+    @Transform(({ value }) => parseInt(value), { toClassOnly: true })
     clientId: number;
 
     @IsNumber()
     @IsNotEmpty()
+    @Transform(({ value }) => parseInt(value), { toClassOnly: true })
     driverId: number;
 
     @IsNumber()
     @IsNotEmpty()
+    @Transform(({ value }) => parseInt(value), { toClassOnly: true })
     vehicleId: number;
 }
 export class UpdateRouteDto {
     @IsNumber()
     @IsNotEmpty()
+    @Transform(({ value }) => parseInt(value), { toClassOnly: true })
     routeId: number;
 
     @IsNumber()
     @IsNotEmpty()
+    @Transform(({ value }) => parseInt(value), { toClassOnly: true })
     stopInitial: number;
 
     @IsNumber()
     @IsNotEmpty()
+    @Transform(({ value }) => parseInt(value), { toClassOnly: true })
     stopFinal: number;
 
-    @IsArray() // should be an array
-    @ValidateNested({ each: true }) // validate that each item in said nested array is IN FACT of type number
-    @Type(() => number) // define which type we are checking for validation
+    @IsArray()
+    @Transform(({ value }) => value.toString().split(',').map(Number))
     stopWaypoints: number[];
 }
 export class RouteResponseDto {}
