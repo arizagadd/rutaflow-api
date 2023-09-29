@@ -1,10 +1,9 @@
 import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsNumber } from 'class-validator';
 
 export class CreateRouteDto {
     @IsNumber()
     @IsNotEmpty()
-    @IsOptional()
     @Transform(({ value }) => parseInt(value), { toClassOnly: true })
     routeTemplateId: number;
 
@@ -13,13 +12,11 @@ export class CreateRouteDto {
     @Transform(({ value }) => parseInt(value), { toClassOnly: true })
     clientId: number;
 
-    @IsOptional()
     @IsNumber()
     @IsNotEmpty()
     @Transform(({ value }) => parseInt(value), { toClassOnly: true })
     driverId: number;
 
-    @IsOptional()
     @IsNumber()
     @IsNotEmpty()
     @Transform(({ value }) => parseInt(value), { toClassOnly: true })
