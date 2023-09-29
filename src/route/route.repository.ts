@@ -1,6 +1,6 @@
 import { DirectionsResponse } from '@googlemaps/google-maps-services-js';
 import { Injectable } from '@nestjs/common';
-import { EventStatus, EventTemplate, Route, RouteTemplate, Stop } from '@prisma/client';
+import { Event, EventStatus, EventTemplate, Route, RouteTemplate, Stop } from '@prisma/client';
 import { DirectionsRequestParams } from '../maps/maps.type';
 import { PrismaRepository } from '../prisma/prisma.repository';
 import { DataBaseError, UnexpectedError } from '../shared/errors/custom-errors';
@@ -89,6 +89,70 @@ export class RouteRepository {
         }
     }
 
+    async findEventRecordByRouteId(routeId: number): Promise<Event> {
+        try {
+            const event = await this.prismaRepository.event.findFirst({
+                where: {
+                    id_route: routeId,
+                },
+            });
+
+            if (!event) {
+                throw new DataBaseError({
+                    domain: 'ROUTE',
+                    layer: 'REPOSITORY',
+                    type: 'GET_RECORD_ERROR',
+                    message: `Event with Route id ${routeId} not found`,
+                });
+            }
+
+            return event;
+        } catch (error) {
+            if (error instanceof DataBaseError) {
+                throw error;
+            } else {
+                throw new UnexpectedError({
+                    domain: 'ROUTE',
+                    layer: 'REPOSITORY',
+                    type: 'UNEXPECTED_ERROR',
+                    message: `Error:${error.message}`,
+                    cause: error,
+                });
+            }
+        }
+    }
+
+    async findManyEventRecordsByRouteId(routeId: number): Promise<Event[]> {
+        try {
+            const events = await this.prismaRepository.event.findMany({
+                where: {
+                    id_route: routeId,
+                },
+            });
+            if (!events) {
+                throw new DataBaseError({
+                    domain: 'ROUTE',
+                    layer: 'REPOSITORY',
+                    type: 'GET_RECORD_ERROR',
+                    message: `Events with Route id ${routeId} not found`,
+                });
+            }
+            return events;
+        } catch (error) {
+            if (error instanceof DataBaseError) {
+                throw error;
+            } else {
+                throw new UnexpectedError({
+                    domain: 'ROUTE',
+                    layer: 'REPOSITORY',
+                    type: 'UNEXPECTED_ERROR',
+                    message: `Error:${error.message}`,
+                    cause: error,
+                });
+            }
+        }
+    }
+
     async findRouteTemplateRecordById(id: number): Promise<RouteTemplate> {
         try {
             const routeTemplate = await this.prismaRepository.routeTemplate.findFirst({
@@ -121,6 +185,7 @@ export class RouteRepository {
             }
         }
     }
+
     async fetchAllEventTemplateRecords(routeTemplateId: number): Promise<EventTemplate[]> {
         try {
             return await this.prismaRepository.eventTemplate.findMany({
@@ -332,6 +397,26 @@ export class RouteRepository {
 
     async updateRouteRecord(routeId: number, data: UpdateRouteParams): Promise<Route> {
         try {
+            let stopInitial: number;
+
+            // check if current initial stop has been completed before overwriting
+            const event = await this.prismaRepository.event.findFirst({
+                where: {
+                    id_route: routeId,
+                    pos: 0,
+                },
+                select: {
+                    status: true,
+                    stop: true,
+                },
+            });
+
+            if (event.status === EventStatus.COMPLETED) {
+                stopInitial = event.stop.id_stop;
+            } else {
+                stopInitial = data.stopInitial;
+            }
+
             const route = await this.prismaRepository.route.update({
                 where: {
                     id_route: routeId,
@@ -344,7 +429,7 @@ export class RouteRepository {
                     total_duration: data.totalDuration,
                     total_distance: data.totalDistance,
                     total_stops: data.totalStops,
-                    stop_initial: data.stopInitial,
+                    stop_initial: stopInitial,
                     stop_final: data.stopFinal,
                 },
             });
@@ -356,6 +441,7 @@ export class RouteRepository {
                     message: `Unable to update Route with id ${routeId} `,
                 });
             }
+
             return route;
         } catch (error) {
             if (error instanceof DataBaseError) {
