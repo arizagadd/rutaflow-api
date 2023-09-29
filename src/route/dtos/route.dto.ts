@@ -22,6 +22,7 @@ export class CreateRouteDto {
     @Transform(({ value }) => parseInt(value), { toClassOnly: true })
     vehicleId: number;
 }
+
 export class UpdateRouteDto {
     @IsNumber()
     @IsNotEmpty()
