@@ -1,6 +1,8 @@
 import { Client, DirectionsResponse, LatLng, TravelMode } from '@googlemaps/google-maps-services-js';
 import { geocode } from '@googlemaps/google-maps-services-js/dist/geocode/geocode';
 import { Injectable } from '@nestjs/common';
+import { Stop } from '@prisma/client';
+import { FilteredDirectionsData } from '../route/types/route.type';
 import { DomainError, UnexpectedError } from '../shared/errors/custom-errors';
 import { DirectionsRequestParams } from './maps.type';
 
@@ -95,5 +97,81 @@ export class MapsService {
         });
 
         return Promise.all(convertedLocations);
+    }
+
+    // Extract only the necessary fields from google maps API
+    filterDirectionsResponse(directions: DirectionsResponse): FilteredDirectionsData {
+        // get complete route polyline
+        const polyline = directions.data.routes[0].overview_polyline.points;
+
+        // legs represent each stop (waypoint) within the route
+        const legs = directions.data.routes[0].legs;
+
+        // calculate total distance and duration by summing up each leg's value
+        let totalDistance = 0; // in meters
+        let totalDuration = 0; // in seconds
+        for (const leg of legs) {
+            totalDistance += leg.distance.value;
+            totalDuration += leg.duration.value;
+        }
+
+        // get polyline for each waypoint,
+        // index 0 is from origin to first stop
+        // index 1 is from first stop to second stop, and so on
+        const legPolyline: string[] = legs.map((leg) => {
+            // Concatenate all the step polylines for this leg to get the entire leg's polyline
+            return leg.steps.map((step) => step.polyline.points).join('');
+        });
+
+        const totalStops = legPolyline.length; // we don't take into account point of origin and we also remove index 0 from counter
+
+        // totalDistance: `${totalDistance / 1000} km`, // convert meters to kilometers
+        // totalDuration: `${totalDuration / 3600} hours`, // convert seconds to hours
+        // stopInitial: legPolyline[0],
+        // stopFinal: legPolyline[legPolyline.length - 1],
+
+        const filteredData: FilteredDirectionsData = {
+            polyline,
+            legPolyline,
+            legs,
+            totalDistance,
+            totalDuration,
+            totalStops,
+        };
+        return filteredData;
+    }
+
+    setUpRouteDirectionsParams(stopInitial: Stop, stopFinal: Stop, stopWaypoints: Stop[]): DirectionsRequestParams {
+        try {
+            const origin = `${stopInitial.lat}, ${stopInitial.lon}`;
+            const destination = `${stopFinal.lat}, ${stopFinal.lon}`;
+
+            const coordinatesSet = new Set<string>(); // Using Set to ensure uniqueness
+
+            stopWaypoints.forEach((stop) => {
+                const { lat, lon } = stop;
+
+                // Checking if the coordinates are neither for stop_initial nor for stop_final
+                if (!((lat === stopInitial?.lat && lon === stopInitial?.lon) || (lat === stopFinal?.lat && lon === stopFinal?.lon))) {
+                    coordinatesSet.add(`${lat}, ${lon}`);
+                }
+            });
+
+            const requestData: DirectionsRequestParams = {
+                origin,
+                destination,
+                waypoints: Array.from(coordinatesSet), // Converting Set back to Array
+            };
+
+            return requestData;
+        } catch (error) {
+            throw new UnexpectedError({
+                domain: 'ROUTE',
+                layer: 'REPOSITORY',
+                type: 'UNEXPECTED_ERROR',
+                message: `Error:${error.message}`,
+                cause: error,
+            });
+        }
     }
 }

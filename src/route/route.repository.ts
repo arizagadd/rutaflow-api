@@ -147,24 +147,7 @@ export class RouteRepository {
         try {
             const origin = `${stopInitial.lat}, ${stopInitial.lon}`;
             const destination = `${stopFinal.lat}, ${stopFinal.lon}`;
-
-            // // Fetching the routeTemplate to get stop_initial and stop_final
-            // const routeTemplate = await this.prismaRepository.routeTemplate.findUnique({
-            //     where: { id_route_template: routeTemplateId },
-            //     select: {
-            //         stop_initial: true,
-            //         stop_final: true,
-            //     },
-            // });
-
-            // if (!routeTemplate) {
-            //     throw new DataBaseError({
-            //         domain: 'ROUTE',
-            //         layer: 'REPOSITORY',
-            //         type: 'GET_RECORD_ERROR',
-            //         message: `setupDirectionsParams: RouteTemplate with id ${routeTemplateId} not found`,
-            //     });
-            // }
+            const coordinatesSet = new Set<string>(); // Using Set to ensure uniqueness
 
             const eventTemplates = await this.prismaRepository.eventTemplate.findMany({
                 where: {
@@ -175,12 +158,10 @@ export class RouteRepository {
                 },
             });
 
-            const coordinatesSet = new Set<string>(); // Using Set to ensure uniqueness
-
             eventTemplates.forEach((event) => {
                 const { lat, lon } = event.stop;
 
-                // Checking if the coordinates are neither for stop_initial nor for stop_final
+                // Check if the coordinates are neither for stop_initial nor for stop_final
                 if (!((lat === stopInitial?.lat && lon === stopInitial?.lon) || (lat === stopFinal?.lat && lon === stopFinal?.lon))) {
                     coordinatesSet.add(`${lat}, ${lon}`);
                 }
@@ -189,43 +170,7 @@ export class RouteRepository {
             const requestData: DirectionsRequestParams = {
                 origin,
                 destination,
-                waypoints: Array.from(coordinatesSet), // Converting Set back to Array
-            };
-
-            return requestData;
-        } catch (error) {
-            throw new UnexpectedError({
-                domain: 'ROUTE',
-                layer: 'REPOSITORY',
-                type: 'UNEXPECTED_ERROR',
-                message: `Error:${error.message}`,
-                cause: error,
-            });
-        }
-    }
-
-    // TODO: move to maps service
-
-    setUpRouteDirectionsParams(stopInitial: Stop, stopFinal: Stop, stopWaypoints: Stop[]): DirectionsRequestParams {
-        try {
-            const origin = `${stopInitial.lat}, ${stopInitial.lon}`;
-            const destination = `${stopFinal.lat}, ${stopFinal.lon}`;
-
-            const coordinatesSet = new Set<string>(); // Using Set to ensure uniqueness
-
-            stopWaypoints.forEach((stop) => {
-                const { lat, lon } = stop;
-
-                // Checking if the coordinates are neither for stop_initial nor for stop_final
-                if (!((lat === stopInitial?.lat && lon === stopInitial?.lon) || (lat === stopFinal?.lat && lon === stopFinal?.lon))) {
-                    coordinatesSet.add(`${lat}, ${lon}`);
-                }
-            });
-
-            const requestData: DirectionsRequestParams = {
-                origin,
-                destination,
-                waypoints: Array.from(coordinatesSet), // Converting Set back to Array
+                waypoints: Array.from(coordinatesSet), // Convert Set back to Array
             };
 
             return requestData;
@@ -285,6 +230,7 @@ export class RouteRepository {
             }
         }
     }
+
     // matches order of points to the pos field in the corresponding event_template by checking lat, lng values from
     // Google DirectionsResponse object and stop records from event_templates
     async matchLegsToManyEventTemplateRecords(directions: DirectionsResponse, routeTemplateId: number) {
@@ -383,6 +329,7 @@ export class RouteRepository {
             }
         }
     }
+
     async updateRouteRecord(routeId: number, data: UpdateRouteParams): Promise<Route> {
         try {
             const route = await this.prismaRepository.route.update({
@@ -528,10 +475,4 @@ export class RouteRepository {
             }
         }
     }
-
-    // // Helper function to determine if two sets of coordinates are close enough to be considered a match.
-    // // This might be necessary because floating point precision could cause minor discrepancies.
-    // areCoordinatesCloseEnough(lat1, lon1, lat2, lon2, threshold = 0.0001) {
-    //         return Math.abs(lat1 - lat2) <= threshold && Math.abs(lon1 - lon2) <= threshold;
-    // }
 }

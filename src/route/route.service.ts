@@ -1,4 +1,3 @@
-import { DirectionsResponse } from '@googlemaps/google-maps-services-js';
 import { Injectable } from '@nestjs/common';
 import { Route, RouteTemplate, Stop } from '@prisma/client';
 import { DriverRepository } from '../driver/driver.repository';
@@ -10,7 +9,7 @@ import { StopRepository } from '../stop/stop.repository';
 import { VehicleRepository } from '../vehicle/vehicle.repository';
 import { CreateRouteDto, UpdateRouteDto } from './dtos/route.dto';
 import { RouteRepository } from './route.repository';
-import { CreateRouteParams, FilteredDirectionsData, UpdateRouteParams, UpdateRouteTemplateParams } from './types/route.type';
+import { CreateRouteParams, UpdateRouteParams, UpdateRouteTemplateParams } from './types/route.type';
 
 @Injectable()
 export class RouteService {
@@ -23,7 +22,7 @@ export class RouteService {
         private readonly stopRepository: StopRepository,
     ) {}
 
-    // this generates the route that the driver will follow to complete a journey
+    // Generates the route that the driver will follow to complete a journey
     async generateRoute(body: CreateRouteDto): Promise<Route> {
         try {
             // origen = stop_initial, destination = stop_final which should already exist in the database upon creation of route template
@@ -105,9 +104,17 @@ export class RouteService {
         }
     }
 
-    async getRoute(id: number): Promise<Route> {
+    async updateRouteTrajectory(body: UpdateRouteDto): Promise<Route> {
         try {
-            return await this.routeRepository.findRouteRecordById(id);
+            let route = await this.routeRepository.findRouteRecordById(body.routeId);
+            const stopInitial = await this.stopRepository.findStopRecordById(body.stopInitial);
+            const stopFinal = await this.stopRepository.findStopRecordById(body.stopFinal);
+            const stopWaypoints = await this.stopRepository.findManyStopsById(body.stopWaypoints);
+
+            const params = await this.mapsService.setUpRouteDirectionsParams(stopInitial, stopFinal, stopWaypoints);
+            route = await this.updateRouteDirections(route, stopFinal, params);
+
+            return route;
         } catch (error) {
             if (error instanceof DomainError) {
                 throw error;
@@ -117,7 +124,7 @@ export class RouteService {
                 throw new DomainError({
                     domain: 'ROUTE',
                     layer: 'SERVICE',
-                    message: `Unable to get route`,
+                    message: `Unable to update route`,
                     cause: error,
                 });
             }
@@ -142,7 +149,7 @@ export class RouteService {
                     message: `Unable to generate route, missing DirectionsRoute[] from DirectionsResponseData.routes `,
                 });
             }
-            const filteredDirections = this.filterDirectionsResponse(directions);
+            const filteredDirections = this.mapsService.filterDirectionsResponse(directions);
 
             const routeTemplateData: UpdateRouteTemplateParams = {
                 polyline: filteredDirections.polyline,
@@ -178,25 +185,29 @@ export class RouteService {
         }
     }
 
-    // async updateRouteDirections(params: DirectionsRequestParams, routeId: number): void {
-    //     // get new directions payload from google API
-    //     // drop all events that haven't been completed from current trajectory, but keep the ones
-    //     // that have been completed to the current route
-    //     // prob take into consideration las pos of completed stop and add to the index
-    //     // when creating new trajectory. So if last index was 5 the new 3 stops will be 6, 7, 8...
-    // }
-
-    async updateRouteTrajectory(body: UpdateRouteDto): Promise<Route> {
+    async updateRouteDirections(route: Route, newStopFinal: Stop, newDirections: DirectionsRequestParams): Promise<Route> {
         try {
-            let route = await this.routeRepository.findRouteRecordById(body.routeId);
-            const stopInitial = await this.stopRepository.findStopRecordById(body.stopInitial);
-            const stopFinal = await this.stopRepository.findStopRecordById(body.stopFinal);
-            const stopWaypoints = await this.stopRepository.findManyStopsById(body.stopWaypoints);
+            const directions = await this.mapsService.getDirections(newDirections);
+            if (!directions.data.routes || !directions.data.routes[0]) {
+                throw new DomainError({
+                    domain: 'ROUTE',
+                    layer: 'SERVICE',
+                    message: `Unable to generate route, missing DirectionsRoute[] from DirectionsResponseData.routes `,
+                });
+            }
+            const filteredDirections = this.mapsService.filterDirectionsResponse(directions);
+            const routeData: UpdateRouteParams = {
+                polyline: filteredDirections.polyline,
+                totalDistance: filteredDirections.totalDistance,
+                totalDuration: filteredDirections.totalDuration,
+                totalStops: filteredDirections.totalStops,
+                //    stopInitial: newStopInitial.id_stop, // TODO: might have to add this if the whole route was changed before anytype of completion
+                stopFinal: newStopFinal.id_stop,
+            };
+            const updatedRoute = this.routeRepository.updateRouteRecord(route.id_route, routeData);
+            await this.routeRepository.matchLegsToManyEventRecords(route, directions);
 
-            const params = await this.routeRepository.setUpRouteDirectionsParams(stopInitial, stopFinal, stopWaypoints);
-            route = await this.updateRouteDirections(route, stopFinal, params);
-            console.log(route);
-            return route;
+            return updatedRoute;
         } catch (error) {
             if (error instanceof DomainError) {
                 throw error;
@@ -221,72 +232,30 @@ export class RouteService {
         }
     }
 
-    async updateRouteDirections(route: Route, newStopFinal: Stop, newDirections: DirectionsRequestParams): Promise<Route> {
+    async getRoute(id: number): Promise<Route> {
         try {
-            const directions = await this.mapsService.getDirections(newDirections);
-            if (!directions.data.routes || !directions.data.routes[0]) {
+            return await this.routeRepository.findRouteRecordById(id);
+        } catch (error) {
+            if (error instanceof DomainError) {
+                throw error;
+            }
+
+            if (error instanceof DataBaseError) {
                 throw new DomainError({
                     domain: 'ROUTE',
                     layer: 'SERVICE',
-                    message: `Unable to generate route, missing DirectionsRoute[] from DirectionsResponseData.routes `,
+                    message: `Unable to get route`,
+                    cause: error,
                 });
             }
-            const filteredDirections = this.filterDirectionsResponse(directions);
-            const routeData: UpdateRouteParams = {
-                polyline: filteredDirections.polyline,
-                totalDistance: filteredDirections.totalDistance,
-                totalDuration: filteredDirections.totalDuration,
-                totalStops: filteredDirections.totalStops,
-                //    stopInitial: newStopInitial.id_stop, // TODO: might have to add this if the whole route was changed before anytype of completion
-                stopFinal: newStopFinal.id_stop,
-            };
-            const updatedRoute = this.routeRepository.updateRouteRecord(route.id_route, routeData);
-            await this.routeRepository.matchLegsToManyEventRecords(route, directions);
 
-            return updatedRoute;
-        } catch (error) {}
-    }
-
-    // TODO: move to maps service
-    // Extract only the necessary fields from google maps API
-    filterDirectionsResponse(directions: DirectionsResponse): FilteredDirectionsData {
-        // get complete route polyline
-        const polyline = directions.data.routes[0].overview_polyline.points;
-
-        // legs represent each stop (waypoint) within the route
-        const legs = directions.data.routes[0].legs;
-
-        // calculate total distance and duration by summing up each leg's value
-        let totalDistance = 0; // in meters
-        let totalDuration = 0; // in seconds
-        for (const leg of legs) {
-            totalDistance += leg.distance.value;
-            totalDuration += leg.duration.value;
+            throw new UnexpectedError({
+                domain: 'ROUTE',
+                layer: 'SERVICE',
+                type: 'UNEXPECTED_ERROR',
+                message: `Error:${error.message}`,
+                cause: error,
+            });
         }
-
-        // get polyline for each waypoint,
-        // index 0 is from origin to first stop
-        // index 1 is from first stop to second stop, and so on
-        const legPolyline: string[] = legs.map((leg) => {
-            // Concatenate all the step polylines for this leg to get the entire leg's polyline
-            return leg.steps.map((step) => step.polyline.points).join('');
-        });
-
-        const totalStops = legPolyline.length; // we don't take into account point of origin and we also remove index 0 from counter
-
-        // totalDistance: `${totalDistance / 1000} km`, // convert meters to kilometers
-        // totalDuration: `${totalDuration / 3600} hours`, // convert seconds to hours
-        // stopInitial: legPolyline[0],
-        // stopFinal: legPolyline[legPolyline.length - 1],
-
-        const filteredData: FilteredDirectionsData = {
-            polyline,
-            legPolyline,
-            legs,
-            totalDistance,
-            totalDuration,
-            totalStops,
-        };
-        return filteredData;
     }
 }
