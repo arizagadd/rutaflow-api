@@ -41,4 +41,37 @@ export class StopRepository {
             }
         }
     }
+    async findManyStopsById(stopIds: number[]): Promise<Stop[]> {
+        try {
+            const stops = await this.prismaRepository.stop.findMany({
+                where: {
+                    id_stop: {
+                        in: stopIds,
+                    },
+                },
+            });
+
+            if (!stops) {
+                throw new DataBaseError({
+                    domain: 'STOP',
+                    layer: 'REPOSITORY',
+                    type: 'GET_RECORD_ERROR',
+                    message: `No stops found`,
+                });
+            }
+            return stops;
+        } catch (error) {
+            if (error instanceof DataBaseError) {
+                throw error;
+            } else {
+                throw new UnexpectedError({
+                    domain: 'VEHICLE',
+                    layer: 'REPOSITORY',
+                    type: 'UNEXPECTED_ERROR',
+                    message: `Error:${error.message}`,
+                    cause: error,
+                });
+            }
+        }
+    }
 }

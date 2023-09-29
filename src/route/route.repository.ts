@@ -4,7 +4,7 @@ import { EventStatus, EventTemplate, Route, RouteTemplate, Stop } from '@prisma/
 import { DirectionsRequestParams } from '../maps/maps.type';
 import { PrismaRepository } from '../prisma/prisma.repository';
 import { DataBaseError, UnexpectedError } from '../shared/errors/custom-errors';
-import { CreateRouteParams, UpdateRouteTemplateParams } from './types/route.type';
+import { CreateRouteParams, UpdateRouteParams, UpdateRouteTemplateParams } from './types/route.type';
 
 @Injectable()
 export class RouteRepository {
@@ -36,7 +36,7 @@ export class RouteRepository {
                     domain: 'ROUTE',
                     layer: 'REPOSITORY',
                     type: 'CREATE_RECORD_ERROR',
-                    message: 'createRouteRecord: Unable to create route',
+                    message: 'Unable to create route',
                 });
             }
 
@@ -49,7 +49,7 @@ export class RouteRepository {
                     domain: 'ROUTE',
                     layer: 'REPOSITORY',
                     type: 'UNEXPECTED_ERROR',
-                    message: `createRouteRecord: Error:${error.message}`,
+                    message: `Error:${error.message}`,
                     cause: error,
                 });
             }
@@ -69,7 +69,7 @@ export class RouteRepository {
                     domain: 'ROUTE',
                     layer: 'REPOSITORY',
                     type: 'GET_RECORD_ERROR',
-                    message: `findRouteRecordById: Route with id ${id} not found`,
+                    message: `Route with id ${id} not found`,
                 });
             }
 
@@ -82,7 +82,7 @@ export class RouteRepository {
                     domain: 'ROUTE',
                     layer: 'REPOSITORY',
                     type: 'UNEXPECTED_ERROR',
-                    message: `findRouteRecordById: Error:${error.message}`,
+                    message: `Error:${error.message}`,
                     cause: error,
                 });
             }
@@ -102,7 +102,7 @@ export class RouteRepository {
                     domain: 'ROUTE',
                     layer: 'REPOSITORY',
                     type: 'GET_RECORD_ERROR',
-                    message: `findRouteTemplateRecordById: RouteTemplate with id ${id} not found`,
+                    message: `RouteTemplate with id ${id} not found`,
                 });
             }
 
@@ -115,7 +115,7 @@ export class RouteRepository {
                     domain: 'ROUTE',
                     layer: 'REPOSITORY',
                     type: 'UNEXPECTED_ERROR',
-                    message: `findRouteTemplateRecordById: Error:${error.message}`,
+                    message: `Error:${error.message}`,
                     cause: error,
                 });
             }
@@ -133,34 +133,21 @@ export class RouteRepository {
                 domain: 'ROUTE',
                 layer: 'REPOSITORY',
                 type: 'UNEXPECTED_ERROR',
-                message: `fetchAllEventTemplateRecords: Error:${error.message}`,
+                message: `Error:${error.message}`,
                 cause: error,
             });
         }
     }
 
-    async setUpDirectionsParams(routeTemplateId: number, stopInitial: Stop, stopFinal: Stop): Promise<DirectionsRequestParams> {
+    async setUpRouteTemplateDirectionsParams(
+        routeTemplateId: number,
+        stopInitial: Stop,
+        stopFinal: Stop,
+    ): Promise<DirectionsRequestParams> {
         try {
             const origin = `${stopInitial.lat}, ${stopInitial.lon}`;
             const destination = `${stopFinal.lat}, ${stopFinal.lon}`;
-
-            // Fetching the routeTemplate to get stop_initial and stop_final
-            const routeTemplate = await this.prismaRepository.routeTemplate.findUnique({
-                where: { id_route_template: routeTemplateId },
-                select: {
-                    stop_initial: true,
-                    stop_final: true,
-                },
-            });
-
-            if (!routeTemplate) {
-                throw new DataBaseError({
-                    domain: 'ROUTE',
-                    layer: 'REPOSITORY',
-                    type: 'GET_RECORD_ERROR',
-                    message: `setupDirectionsParams: RouteTemplate with id ${routeTemplateId} not found`,
-                });
-            }
+            const coordinatesSet = new Set<string>(); // Using Set to ensure uniqueness
 
             const eventTemplates = await this.prismaRepository.eventTemplate.findMany({
                 where: {
@@ -171,12 +158,10 @@ export class RouteRepository {
                 },
             });
 
-            const coordinatesSet = new Set<string>(); // Using Set to ensure uniqueness
-
             eventTemplates.forEach((event) => {
                 const { lat, lon } = event.stop;
 
-                // Checking if the coordinates are neither for stop_initial nor for stop_final
+                // Check if the coordinates are neither for stop_initial nor for stop_final
                 if (!((lat === stopInitial?.lat && lon === stopInitial?.lon) || (lat === stopFinal?.lat && lon === stopFinal?.lon))) {
                     coordinatesSet.add(`${lat}, ${lon}`);
                 }
@@ -185,7 +170,7 @@ export class RouteRepository {
             const requestData: DirectionsRequestParams = {
                 origin,
                 destination,
-                waypoints: Array.from(coordinatesSet), // Converting Set back to Array
+                waypoints: Array.from(coordinatesSet), // Convert Set back to Array
             };
 
             return requestData;
@@ -194,7 +179,7 @@ export class RouteRepository {
                 domain: 'ROUTE',
                 layer: 'REPOSITORY',
                 type: 'UNEXPECTED_ERROR',
-                message: `getStopCoordinatesFromManyEventTemplateRecords: Error:${error.message}`,
+                message: `Error:${error.message}`,
                 cause: error,
             });
         }
@@ -227,7 +212,7 @@ export class RouteRepository {
                     domain: 'ROUTE',
                     layer: 'REPOSITORY',
                     type: 'UPDATE_RECORD_ERROR',
-                    message: `updateRouteTemplateRecord: Unable to update RouteTemplate with id ${routeTemplateId} `,
+                    message: `Unable to update RouteTemplate with id ${routeTemplateId} `,
                 });
             }
             return routeTemplate;
@@ -239,12 +224,13 @@ export class RouteRepository {
                     domain: 'ROUTE',
                     layer: 'REPOSITORY',
                     type: 'UNEXPECTED_ERROR',
-                    message: `updateRouteTemplateRecord: Error:${error.message}`,
+                    message: `Error:${error.message}`,
                     cause: error,
                 });
             }
         }
     }
+
     // matches order of points to the pos field in the corresponding event_template by checking lat, lng values from
     // Google DirectionsResponse object and stop records from event_templates
     async matchLegsToManyEventTemplateRecords(directions: DirectionsResponse, routeTemplateId: number) {
@@ -274,7 +260,7 @@ export class RouteRepository {
                     domain: 'ROUTE',
                     layer: 'REPOSITORY',
                     type: 'GET_RECORD_ERROR',
-                    message: `matchLegsToManyEventTemplateRecord: Stop with lat${latRounded} and lng ${lngRounded} not found in DB `,
+                    message: `Stop with lat${latRounded} and lng ${lngRounded} not found in DB `,
                 });
             }
             const correspondingOriginEventTemplate = await this.prismaRepository.eventTemplate.findFirst({
@@ -337,10 +323,123 @@ export class RouteRepository {
                     domain: 'ROUTE',
                     layer: 'REPOSITORY',
                     type: 'UNEXPECTED_ERROR',
-                    message: `matchLegsToManyEventTemplateRecords: Error:${error.message}`,
+                    message: `Error:${error.message}`,
                     cause: error,
                 });
             }
+        }
+    }
+
+    async updateRouteRecord(routeId: number, data: UpdateRouteParams): Promise<Route> {
+        try {
+            const route = await this.prismaRepository.route.update({
+                where: {
+                    id_route: routeId,
+                },
+                data: {
+                    id_enterprise: data.enterpriseId,
+                    id_driver: data.driverId,
+                    name: data.name,
+                    polyline: data.polyline,
+                    total_duration: data.totalDuration,
+                    total_distance: data.totalDistance,
+                    total_stops: data.totalStops,
+                    stop_initial: data.stopInitial,
+                    stop_final: data.stopFinal,
+                },
+            });
+            if (!route) {
+                throw new DataBaseError({
+                    domain: 'ROUTE',
+                    layer: 'REPOSITORY',
+                    type: 'UPDATE_RECORD_ERROR',
+                    message: `Unable to update Route with id ${routeId} `,
+                });
+            }
+            return route;
+        } catch (error) {
+            if (error instanceof DataBaseError) {
+                throw error;
+            } else {
+                throw new UnexpectedError({
+                    domain: 'ROUTE',
+                    layer: 'REPOSITORY',
+                    type: 'UNEXPECTED_ERROR',
+                    message: `Error:${error.message}`,
+                    cause: error,
+                });
+            }
+        }
+    }
+
+    async matchLegsToManyEventRecords(route: Route, params: DirectionsResponse) {
+        try {
+            const events = await this.prismaRepository.event.findMany({
+                where: {
+                    id_route: route.id_route,
+                },
+                select: {
+                    id_event: true, // Include id_event in the selection if it's the correct property name
+                    stop: true,
+                    status: true,
+                },
+            });
+            const completedEvents = events.filter((e) => e.status === EventStatus.COMPLETED);
+
+            // Delete all events with status not equal to COMPLETED
+            await this.prismaRepository.event.deleteMany({
+                where: {
+                    id_route: route.id_route,
+                    status: {
+                        not: EventStatus.COMPLETED,
+                    },
+                },
+            });
+
+            const updatePromises = [];
+            const newLegs = params.data.routes[0].legs;
+            for (const [index, leg] of newLegs.entries()) {
+                // Round to the 3rd decimal place
+                const latRounded = parseFloat(leg.end_location.lat.toFixed(3));
+                const lngRounded = parseFloat(leg.end_location.lng.toFixed(3));
+
+                // Query for the stop with matching lat and lon coordinates up to 3rd decimal place
+                const matchingStop = await this.prismaRepository.stop.findFirst({
+                    where: {
+                        lat: {
+                            gte: latRounded - 0.0005,
+                            lte: latRounded + 0.0005,
+                        },
+                        lon: {
+                            gte: lngRounded - 0.0005,
+                            lte: lngRounded + 0.0005,
+                        },
+                    },
+                });
+
+                if (matchingStop) {
+                    const createUpdatePromise = this.prismaRepository.event.create({
+                        data: {
+                            id_route: route.id_route,
+                            id_stop: matchingStop.id_stop,
+                            pos: index + completedEvents.length,
+                            status: EventStatus.PENDING,
+                        },
+                    });
+                    updatePromises.push(createUpdatePromise);
+                }
+            }
+            const results = await this.prismaRepository.$transaction(updatePromises);
+
+            return results;
+        } catch (error) {
+            throw new UnexpectedError({
+                domain: 'ROUTE',
+                layer: 'REPOSITORY',
+                type: 'UNEXPECTED_ERROR',
+                message: `Error:${error.message}`,
+                cause: error,
+            });
         }
     }
 
@@ -370,16 +469,10 @@ export class RouteRepository {
                     domain: 'ROUTE',
                     layer: 'REPOSITORY',
                     type: 'UNEXPECTED_ERROR',
-                    message: `createEventFromEventTemplateRecord: Error:${error.message}`,
+                    message: `Error:${error.message}`,
                     cause: error,
                 });
             }
         }
     }
-
-    // // Helper function to determine if two sets of coordinates are close enough to be considered a match.
-    // // This might be necessary because floating point precision could cause minor discrepancies.
-    // areCoordinatesCloseEnough(lat1, lon1, lat2, lon2, threshold = 0.0001) {
-    //         return Math.abs(lat1 - lat2) <= threshold && Math.abs(lon1 - lon2) <= threshold;
-    // }
 }

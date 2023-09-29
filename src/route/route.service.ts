@@ -1,6 +1,5 @@
-import { DirectionsResponse } from '@googlemaps/google-maps-services-js';
 import { Injectable } from '@nestjs/common';
-import { Route, RouteTemplate } from '@prisma/client';
+import { Route, RouteTemplate, Stop } from '@prisma/client';
 import { DriverRepository } from '../driver/driver.repository';
 import { EnterpriseRepository } from '../enterprise/enterprise.repository';
 import { MapsService } from '../maps/maps.service';
@@ -8,9 +7,9 @@ import { DirectionsRequestParams } from '../maps/maps.type';
 import { DataBaseError, DomainError, UnexpectedError } from '../shared/errors/custom-errors';
 import { StopRepository } from '../stop/stop.repository';
 import { VehicleRepository } from '../vehicle/vehicle.repository';
-import { CreateRouteDto } from './dtos/route.dto';
+import { CreateRouteDto, UpdateRouteDto } from './dtos/route.dto';
 import { RouteRepository } from './route.repository';
-import { CreateRouteParams, FilteredDirectionsData, UpdateRouteTemplateParams } from './types/route.type';
+import { CreateRouteParams, UpdateRouteParams, UpdateRouteTemplateParams } from './types/route.type';
 
 @Injectable()
 export class RouteService {
@@ -23,7 +22,7 @@ export class RouteService {
         private readonly stopRepository: StopRepository,
     ) {}
 
-    // this generates the route that the driver will follow to complete a journey
+    // Generates the route that the driver will follow to complete a journey
     async generateRoute(body: CreateRouteDto): Promise<Route> {
         try {
             // origen = stop_initial, destination = stop_final which should already exist in the database upon creation of route template
@@ -31,19 +30,23 @@ export class RouteService {
 
             const stopInitial = await this.stopRepository.findStopRecordById(routeTemplate.stop_initial);
             const stopFinal = await this.stopRepository.findStopRecordById(routeTemplate.stop_final);
-            const params = await this.routeRepository.setUpDirectionsParams(routeTemplate.id_route_template, stopInitial, stopFinal);
+            const params = await this.routeRepository.setUpRouteTemplateDirectionsParams(
+                routeTemplate.id_route_template,
+                stopInitial,
+                stopFinal,
+            );
 
             // if there is no polyline this means the RoutTemplate doesn't have a predefined set of directions for completing the route yet
             // therefore a route must be generated and the data must be updated in the RouteTemplate record
             if (!routeTemplate.polyline) {
                 try {
                     //routeTemplate will be equal to the new updated record
-                    routeTemplate = await this.updateRouteTemplateDirections(params, routeTemplate.id_route_template);
+                    routeTemplate = await this.updateRouteTemplateDirections(routeTemplate.id_route_template, params);
                 } catch (error) {
                     throw new DomainError({
                         domain: 'ROUTE',
                         layer: 'SERVICE',
-                        message: `generateRoute: Unable to populate RouteTemplate with id ${routeTemplate.id_route_template} `,
+                        message: `Unable to populate directions in RouteTemplate with id ${routeTemplate.id_route_template} `,
                         cause: error,
                     });
                 }
@@ -86,7 +89,7 @@ export class RouteService {
                 throw new DomainError({
                     domain: 'ROUTE',
                     layer: 'SERVICE',
-                    message: 'generateRoute: Unable to generate route',
+                    message: 'Unable to generate route',
                     cause: error,
                 });
             }
@@ -95,15 +98,23 @@ export class RouteService {
                 domain: 'ROUTE',
                 layer: 'SERVICE',
                 type: 'UNEXPECTED_ERROR',
-                message: `generateRoute: Error:${error.message}`,
+                message: `Error:${error.message}`,
                 cause: error,
             });
         }
     }
 
-    async getRoute(id: number): Promise<Route> {
+    async updateRouteTrajectory(body: UpdateRouteDto): Promise<Route> {
         try {
-            return await this.routeRepository.findRouteRecordById(id);
+            let route = await this.routeRepository.findRouteRecordById(body.routeId);
+            const stopInitial = await this.stopRepository.findStopRecordById(body.stopInitial);
+            const stopFinal = await this.stopRepository.findStopRecordById(body.stopFinal);
+            const stopWaypoints = await this.stopRepository.findManyStopsById(body.stopWaypoints);
+
+            const params = await this.mapsService.setUpRouteDirectionsParams(stopInitial, stopFinal, stopWaypoints);
+            route = await this.updateRouteDirections(route, stopFinal, params);
+
+            return route;
         } catch (error) {
             if (error instanceof DomainError) {
                 throw error;
@@ -113,7 +124,7 @@ export class RouteService {
                 throw new DomainError({
                     domain: 'ROUTE',
                     layer: 'SERVICE',
-                    message: `getRoute: Unable to get route`,
+                    message: `Unable to update route`,
                     cause: error,
                 });
             }
@@ -122,23 +133,23 @@ export class RouteService {
                 domain: 'ROUTE',
                 layer: 'SERVICE',
                 type: 'UNEXPECTED_ERROR',
-                message: `getRoute: Error:${error.message}`,
+                message: `Error:${error.message}`,
                 cause: error,
             });
         }
     }
 
-    async updateRouteTemplateDirections(params: DirectionsRequestParams, routeTemplateId: number): Promise<RouteTemplate> {
+    async updateRouteTemplateDirections(routeTemplateId: number, params: DirectionsRequestParams): Promise<RouteTemplate> {
         try {
             const directions = await this.mapsService.getDirections(params);
             if (!directions.data.routes || !directions.data.routes[0]) {
                 throw new DomainError({
                     domain: 'ROUTE',
                     layer: 'SERVICE',
-                    message: `populateRouteTemplate: Unable to generate route, missing DirectionsRoute[] from DirectionsResponseData.routes `,
+                    message: `Unable to generate route, missing DirectionsRoute[] from DirectionsResponseData.routes `,
                 });
             }
-            const filteredDirections = this.filterDirectionsResponse(directions);
+            const filteredDirections = this.mapsService.filterDirectionsResponse(directions);
 
             const routeTemplateData: UpdateRouteTemplateParams = {
                 polyline: filteredDirections.polyline,
@@ -159,7 +170,7 @@ export class RouteService {
                 throw new DomainError({
                     domain: 'ROUTE',
                     layer: 'SERVICE',
-                    message: `getRoute: Unable to get route`,
+                    message: `Unable to get route`,
                     cause: error,
                 });
             }
@@ -168,51 +179,83 @@ export class RouteService {
                 domain: 'ROUTE',
                 layer: 'SERVICE',
                 type: 'UNEXPECTED_ERROR',
-                message: `updateRouteTemplateDirections: Error:${error.message}`,
+                message: `Error:${error.message}`,
                 cause: error,
             });
         }
     }
 
-    // Extract only the necessary fields from google maps API
-    filterDirectionsResponse(directions: DirectionsResponse): FilteredDirectionsData {
-        // get complete route polyline
-        const polyline = directions.data.routes[0].overview_polyline.points;
+    async updateRouteDirections(route: Route, newStopFinal: Stop, newDirections: DirectionsRequestParams): Promise<Route> {
+        try {
+            const directions = await this.mapsService.getDirections(newDirections);
+            if (!directions.data.routes || !directions.data.routes[0]) {
+                throw new DomainError({
+                    domain: 'ROUTE',
+                    layer: 'SERVICE',
+                    message: `Unable to generate route, missing DirectionsRoute[] from DirectionsResponseData.routes `,
+                });
+            }
+            const filteredDirections = this.mapsService.filterDirectionsResponse(directions);
+            const routeData: UpdateRouteParams = {
+                polyline: filteredDirections.polyline,
+                totalDistance: filteredDirections.totalDistance,
+                totalDuration: filteredDirections.totalDuration,
+                totalStops: filteredDirections.totalStops,
+                //    stopInitial: newStopInitial.id_stop, // TODO: might have to add this if the whole route was changed before anytype of completion
+                stopFinal: newStopFinal.id_stop,
+            };
+            const updatedRoute = this.routeRepository.updateRouteRecord(route.id_route, routeData);
+            await this.routeRepository.matchLegsToManyEventRecords(route, directions);
 
-        // legs represent each stop (waypoint) within the route
-        const legs = directions.data.routes[0].legs;
+            return updatedRoute;
+        } catch (error) {
+            if (error instanceof DomainError) {
+                throw error;
+            }
 
-        // calculate total distance and duration by summing up each leg's value
-        let totalDistance = 0; // in meters
-        let totalDuration = 0; // in seconds
-        for (const leg of legs) {
-            totalDistance += leg.distance.value;
-            totalDuration += leg.duration.value;
+            if (error instanceof DataBaseError) {
+                throw new DomainError({
+                    domain: 'ROUTE',
+                    layer: 'SERVICE',
+                    message: `Unable to update route`,
+                    cause: error,
+                });
+            }
+
+            throw new UnexpectedError({
+                domain: 'ROUTE',
+                layer: 'SERVICE',
+                type: 'UNEXPECTED_ERROR',
+                message: `Error:${error.message}`,
+                cause: error,
+            });
         }
+    }
 
-        // get polyline for each waypoint,
-        // index 0 is from origin to first stop
-        // index 1 is from first stop to second stop, and so on
-        const legPolyline: string[] = legs.map((leg) => {
-            // Concatenate all the step polylines for this leg to get the entire leg's polyline
-            return leg.steps.map((step) => step.polyline.points).join('');
-        });
+    async getRoute(id: number): Promise<Route> {
+        try {
+            return await this.routeRepository.findRouteRecordById(id);
+        } catch (error) {
+            if (error instanceof DomainError) {
+                throw error;
+            }
 
-        const totalStops = legPolyline.length; // we don't take into account point of origin and we also remove index 0 from counter
+            if (error instanceof DataBaseError) {
+                throw new DomainError({
+                    domain: 'ROUTE',
+                    layer: 'SERVICE',
+                    message: `Unable to get route`,
+                    cause: error,
+                });
+            }
 
-        // totalDistance: `${totalDistance / 1000} km`, // convert meters to kilometers
-        // totalDuration: `${totalDuration / 3600} hours`, // convert seconds to hours
-        // stopInitial: legPolyline[0],
-        // stopFinal: legPolyline[legPolyline.length - 1],
-
-        const filteredData: FilteredDirectionsData = {
-            polyline,
-            legPolyline,
-            legs,
-            totalDistance,
-            totalDuration,
-            totalStops,
-        };
-        return filteredData;
+            throw new UnexpectedError({
+                domain: 'ROUTE',
+                layer: 'SERVICE',
+                type: 'UNEXPECTED_ERROR',
+                message: `Error:${error.message}`,
+                cause: error,
+            });
+        }
     }
 }
