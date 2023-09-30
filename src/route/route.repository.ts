@@ -298,7 +298,7 @@ export class RouteRepository {
 
     // matches order of points to the pos field in the corresponding event_template by checking lat, lng values from
     // Google DirectionsResponse object and stop records from event_templates
-    async matchLegsToManyEventTemplateRecords(directions: DirectionsResponse, routeTemplateId: number) {
+    async matchLegsToManyEventTemplateRecords(routeTemplateId: number, directions: DirectionsResponse) {
         try {
             const legs = directions.data.routes[0].legs;
             const updatePromises = [];
@@ -459,7 +459,84 @@ export class RouteRepository {
     }
 
     async matchLegsToManyEventRecords(route: Route, params: DirectionsResponse) {
+        const updatePromises = [];
+
         try {
+            const routeOriginEvent = await this.prismaRepository.event.findFirst({
+                where: {
+                    id_route: route.id_route,
+                    pos: 0,
+                },
+                select: {
+                    stop: true,
+                    status: true,
+                },
+            });
+
+            //TODO: update the new origin first (if applicable), wrap it in a if statement or something
+            if (routeOriginEvent.status !== EventStatus.COMPLETED) {
+                const legs = params.data.routes[0].legs;
+                // start_location represents the origin coordinates we passed to the setUpDirectionsParams
+                const latRounded = parseFloat(legs[0].start_location.lat.toFixed(3));
+                const lngRounded = parseFloat(legs[0].start_location.lng.toFixed(3));
+
+                // Delete all events with status not equal to COMPLETED except for the event related
+                // this particular origin stop
+                await this.prismaRepository.event.deleteMany({
+                    where: {
+                        id_route: route.id_route,
+                        status: {
+                            not: EventStatus.COMPLETED,
+                        },
+                    },
+                });
+
+                // index = index + 1; // add this type of logic somewhere so that
+                // the bottom code can update its index taking into account the new index here
+
+                const newOriginStop = await this.prismaRepository.stop.findFirst({
+                    where: {
+                        lat: {
+                            gte: latRounded - 0.0005,
+                            lte: latRounded + 0.0005,
+                        },
+                        lon: {
+                            gte: lngRounded - 0.0005,
+                            lte: lngRounded + 0.0005,
+                        },
+                    },
+                });
+                if (!newOriginStop) {
+                    throw new DataBaseError({
+                        domain: 'ROUTE',
+                        layer: 'REPOSITORY',
+                        type: 'GET_RECORD_ERROR',
+                        message: `Stop with lat${latRounded} and lng ${lngRounded} not found in DB `,
+                    });
+                }
+                //setup stop_initial as pos 0
+                const newOriginStopEvent = this.prismaRepository.event.create({
+                    data: {
+                        id_route: route.id_route,
+                        id_stop: newOriginStop.id_stop,
+                        status: EventStatus.PENDING,
+                        pos: 0,
+                    },
+                });
+
+                updatePromises.push(newOriginStopEvent);
+            } else {
+                // Delete all events with status not equal to COMPLETED
+                await this.prismaRepository.event.deleteMany({
+                    where: {
+                        id_route: route.id_route,
+                        status: {
+                            not: EventStatus.COMPLETED,
+                        },
+                    },
+                });
+            }
+
             const events = await this.prismaRepository.event.findMany({
                 where: {
                     id_route: route.id_route,
@@ -472,17 +549,6 @@ export class RouteRepository {
             });
             const completedEvents = events.filter((e) => e.status === EventStatus.COMPLETED);
 
-            // Delete all events with status not equal to COMPLETED
-            await this.prismaRepository.event.deleteMany({
-                where: {
-                    id_route: route.id_route,
-                    status: {
-                        not: EventStatus.COMPLETED,
-                    },
-                },
-            });
-
-            const updatePromises = [];
             const newLegs = params.data.routes[0].legs;
             for (const [index, leg] of newLegs.entries()) {
                 // Round to the 3rd decimal place

@@ -1,4 +1,6 @@
 import { RouteLeg } from '@googlemaps/google-maps-services-js';
+import { Route, Stop } from '@prisma/client';
+import { DirectionsRequestParams } from '../../maps/maps.type';
 
 export type CreateRouteParams = {
     enterpriseId: number;
@@ -56,4 +58,16 @@ export type UpdateRouteParams = {
     totalStops?: number;
     stopInitial?: number;
     stopFinal?: number;
+};
+
+export type SetRouteTemplateDirectionsParams = {
+    routeTemplateId: number;
+    directions: DirectionsRequestParams;
+};
+
+export type UpdateRouteDirectionsParams = {
+    route: Route;
+    newStopInitial: Stop;
+    newStopFinal: Stop;
+    newDirections: DirectionsRequestParams;
 };
