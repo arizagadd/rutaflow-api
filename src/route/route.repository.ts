@@ -622,11 +622,19 @@ export class RouteRepository {
         }
     }
 
-    async createEventFromEventTemplateRecord(routeTemplateId: number, routeId: number): Promise<void> {
+    async createEventRecordFromEventTemplate(routeTemplateId: number, routeId: number): Promise<void> {
         try {
             const eventTemplates = await this.prismaRepository.eventTemplate.findMany({
                 where: { id_route_template: routeTemplateId },
             });
+            if (!eventTemplates) {
+                throw new DataBaseError({
+                    domain: 'ROUTE',
+                    layer: 'REPOSITORY',
+                    type: 'GET_RECORD_ERROR',
+                    message: `EventTemplates with RouteTemplate id ${routeTemplateId} not found in DB `,
+                });
+            }
 
             const createEvents = eventTemplates.map((template) => {
                 return this.prismaRepository.event.create({

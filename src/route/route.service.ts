@@ -88,7 +88,7 @@ export class RouteService {
             const route = await this.routeRepository.createRouteRecord(routeData);
 
             // creates the events that will be related to the newly created route
-            await this.routeRepository.createEventFromEventTemplateRecord(routeTemplate.id_route_template, route.id_route);
+            await this.routeRepository.createEventRecordFromEventTemplate(routeTemplate.id_route_template, route.id_route);
 
             return route;
         } catch (error) {
