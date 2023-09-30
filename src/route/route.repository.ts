@@ -298,7 +298,7 @@ export class RouteRepository {
 
     // matches order of points to the pos field in the corresponding event_template by checking lat, lng values from
     // Google DirectionsResponse object and stop records from event_templates
-    async matchLegsToManyEventTemplateRecords(routeTemplateId: number, directions: DirectionsResponse) {
+    async matchLegsToManyEventTemplateRecords(routeTemplateId: number, directions: DirectionsResponse): Promise<void> {
         try {
             const legs = directions.data.routes[0].legs;
             const updatePromises = [];
@@ -378,8 +378,7 @@ export class RouteRepository {
             }
 
             // Execute all update promises in a single transaction
-            const results = await this.prismaRepository.$transaction(updatePromises);
-            return results;
+            await this.prismaRepository.$transaction(updatePromises);
         } catch (error) {
             if (error instanceof DataBaseError) {
                 throw error;
@@ -458,7 +457,7 @@ export class RouteRepository {
         }
     }
 
-    async matchLegsToManyEventRecords(route: Route, params: DirectionsResponse) {
+    async matchLegsToManyEventRecords(route: Route, params: DirectionsResponse): Promise<void> {
         let posindex = 0;
         const updatePromises = [];
         const legs = params.data.routes[0].legs;
@@ -611,9 +610,7 @@ export class RouteRepository {
                     updatePromises.push(createUpdatePromise);
                 }
             }
-            const results = await this.prismaRepository.$transaction(updatePromises);
-
-            return results;
+            await this.prismaRepository.$transaction(updatePromises);
         } catch (error) {
             throw new UnexpectedError({
                 domain: 'ROUTE',
@@ -625,24 +622,24 @@ export class RouteRepository {
         }
     }
 
-    async createEventFromEventTemplateRecord(routeTemplateId: number, routeId: number) {
+    async createEventFromEventTemplateRecord(routeTemplateId: number, routeId: number): Promise<void> {
         try {
             const eventTemplates = await this.prismaRepository.eventTemplate.findMany({
                 where: { id_route_template: routeTemplateId },
             });
 
-            await Promise.all(
-                eventTemplates.map(async (template) => {
-                    return this.prismaRepository.event.create({
-                        data: {
-                            id_route: routeId,
-                            id_stop: template.id_stop,
-                            pos: template.pos,
-                            status: EventStatus.PENDING,
-                        },
-                    });
-                }),
-            );
+            const createEvents = eventTemplates.map((template) => {
+                return this.prismaRepository.event.create({
+                    data: {
+                        id_route: routeId,
+                        id_stop: template.id_stop,
+                        pos: template.pos,
+                        status: EventStatus.PENDING,
+                    },
+                });
+            });
+
+            await this.prismaRepository.$transaction(createEvents);
         } catch (error) {
             if (error instanceof DataBaseError) {
                 throw error;

@@ -26,8 +26,10 @@ export class RouteService {
         private readonly driverRepository: DriverRepository,
         private readonly stopRepository: StopRepository,
     ) {}
+
     //TODO: handle empty waypoint array
-    //TODO: mark pos 0 of events of specific route to 'completed' once driver has started journey
+    //TODO: update pos 0 event of specific route to 'completed' once driver has started journey
+
     // Generates the route that the driver will follow to complete a journey
     async generateRoute(body: CreateRouteDto): Promise<Route> {
         try {
