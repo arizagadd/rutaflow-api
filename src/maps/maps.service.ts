@@ -196,8 +196,8 @@ export class MapsService {
             return requestData;
         } catch (error) {
             throw new UnexpectedError({
-                domain: 'ROUTE',
-                layer: 'REPOSITORY',
+                domain: 'MAP',
+                layer: 'SERVICE',
                 type: 'UNEXPECTED_ERROR',
                 message: `Error:${error.message}`,
                 cause: error,

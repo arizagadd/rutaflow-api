@@ -224,7 +224,7 @@ export class RouteRepository {
                 const { lat, lon } = event.stop;
 
                 // Check if the coordinates are neither for stop_initial nor for stop_final
-                if (!((lat === stopInitial?.lat && lon === stopInitial?.lon) || (lat === stopFinal?.lat && lon === stopFinal?.lon))) {
+                if (!((lat === stopInitial.lat && lon === stopInitial.lon) || (lat === stopFinal.lat && lon === stopFinal.lon))) {
                     coordinatesSet.add(`${lat}, ${lon}`);
                 }
             });
