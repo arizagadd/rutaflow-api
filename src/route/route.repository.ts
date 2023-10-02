@@ -204,11 +204,7 @@ export class RouteRepository {
         }
     }
 
-    async setUpRouteTemplateDirectionsParams(
-        routeTemplateId: number,
-        stopInitial: Stop,
-        stopFinal: Stop,
-    ): Promise<DirectionsRequestParams> {
+    async prepareRouteTemplateDirections(routeTemplateId: number, stopInitial: Stop, stopFinal: Stop): Promise<DirectionsRequestParams> {
         try {
             const origin = `${stopInitial.lat}, ${stopInitial.lon}`;
             const destination = `${stopFinal.lat}, ${stopFinal.lon}`;

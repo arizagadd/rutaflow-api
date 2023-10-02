@@ -36,22 +36,23 @@ export class RouteService {
             // origen = stop_initial, destination = stop_final which should already exist in the database upon creation of route template
             let routeTemplate = await this.routeRepository.findRouteTemplateRecordById(body.routeTemplateId);
 
-            const stopInitial = await this.stopRepository.findStopRecordById(routeTemplate.stop_initial);
-            const stopFinal = await this.stopRepository.findStopRecordById(routeTemplate.stop_final);
-            const directions = await this.routeRepository.setUpRouteTemplateDirectionsParams(
-                routeTemplate.id_route_template,
-                stopInitial,
-                stopFinal,
-            );
-
             // if there is no polyline this means the RoutTemplate doesn't have a predefined set of directions for completing the route yet
             // therefore a route must be generated and the data must be updated in the RouteTemplate record
             if (!routeTemplate.polyline) {
                 try {
+                    const stopInitial = await this.stopRepository.findStopRecordById(routeTemplate.stop_initial);
+                    const stopFinal = await this.stopRepository.findStopRecordById(routeTemplate.stop_final);
+                    const directions = await this.routeRepository.prepareRouteTemplateDirections(
+                        routeTemplate.id_route_template,
+                        stopInitial,
+                        stopFinal,
+                    );
+
                     const routeTemplateData: SetRouteTemplateDirectionsParams = {
                         routeTemplateId: routeTemplate.id_route_template,
                         directions,
                     };
+
                     //routeTemplate will be equal to the new updated record
                     routeTemplate = await this.setRouteTemplateDirections(routeTemplateData);
                 } catch (error) {
