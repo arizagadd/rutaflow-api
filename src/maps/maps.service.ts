@@ -1,8 +1,7 @@
 import { Client, DirectionsResponse, LatLng, TravelMode } from '@googlemaps/google-maps-services-js';
 import { geocode } from '@googlemaps/google-maps-services-js/dist/geocode/geocode';
 import { Injectable } from '@nestjs/common';
-import { Stop } from '@prisma/client';
-import { FilteredDirectionsData } from '../route/types/route.type';
+import { FilteredDirectionsData, SetupRouteDirectionsParams } from '../route/types/route.type';
 import { DomainError, UnexpectedError } from '../shared/errors/custom-errors';
 import { DirectionsRequestParams } from './maps.type';
 
@@ -20,18 +19,36 @@ export class MapsService {
         try {
             const origin = await this.convertLocationToLatLng(data.origin);
             const destination = await this.convertLocationToLatLng(data.destination);
-            const waypoints: LatLng[] = await this.convertLocationsToLatLng(data.waypoints);
+            let waypoints: LatLng[];
+            let response: DirectionsResponse;
 
-            return await this.googleMapsClient.directions({
-                params: {
-                    origin,
-                    destination,
-                    mode: TravelMode.driving,
-                    waypoints,
-                    optimize: true,
-                    key: this.apiKey,
-                },
-            });
+            if (!data.waypoints) {
+                // send request to google with only origin and destination
+                response = await this.googleMapsClient.directions({
+                    // optimize field unnecessary when dealing with 2 points on a map
+                    params: {
+                        origin,
+                        destination,
+                        mode: TravelMode.driving,
+                        key: this.apiKey,
+                    },
+                });
+            } else {
+                // send request with intermediary waypoints
+                waypoints = await this.convertLocationsToLatLng(data.waypoints);
+                response = await this.googleMapsClient.directions({
+                    params: {
+                        origin,
+                        destination,
+                        mode: TravelMode.driving,
+                        waypoints,
+                        optimize: true,
+                        key: this.apiKey,
+                    },
+                });
+            }
+
+            return response;
         } catch (error) {
             if (error instanceof DomainError) {
                 throw error;
@@ -141,27 +158,40 @@ export class MapsService {
         return filteredData;
     }
 
-    setUpRouteDirectionsParams(stopInitial: Stop, stopFinal: Stop, stopWaypoints: Stop[]): DirectionsRequestParams {
+    setUpRouteDirectionsParams(params: SetupRouteDirectionsParams): DirectionsRequestParams {
         try {
-            const origin = `${stopInitial.lat}, ${stopInitial.lon}`;
-            const destination = `${stopFinal.lat}, ${stopFinal.lon}`;
-
+            const origin = `${params.stopInitial.lat}, ${params.stopInitial.lon}`;
+            const destination = `${params.stopFinal.lat}, ${params.stopFinal.lon}`;
             const coordinatesSet = new Set<string>(); // Using Set to ensure uniqueness
+            let requestData: DirectionsRequestParams;
 
-            stopWaypoints.forEach((stop) => {
-                const { lat, lon } = stop;
+            if (!params.stopWaypoints) {
+                // user only wants directions towards one location
+                requestData = {
+                    origin,
+                    destination,
+                };
+            } else {
+                params.stopWaypoints.forEach((stop) => {
+                    const { lat, lon } = stop;
 
-                // Checking if the coordinates are neither for stop_initial nor for stop_final
-                if (!((lat === stopInitial?.lat && lon === stopInitial?.lon) || (lat === stopFinal?.lat && lon === stopFinal?.lon))) {
-                    coordinatesSet.add(`${lat}, ${lon}`);
-                }
-            });
+                    // Checking if the coordinates are neither for stop_initial nor for stop_final
+                    if (
+                        !(
+                            (lat === params.stopInitial?.lat && lon === params.stopInitial?.lon) ||
+                            (lat === params.stopFinal?.lat && lon === params.stopFinal?.lon)
+                        )
+                    ) {
+                        coordinatesSet.add(`${lat}, ${lon}`);
+                    }
+                });
 
-            const requestData: DirectionsRequestParams = {
-                origin,
-                destination,
-                waypoints: Array.from(coordinatesSet), // Converting Set back to Array
-            };
+                requestData = {
+                    origin,
+                    destination,
+                    waypoints: Array.from(coordinatesSet), // Converting Set back to Array
+                };
+            }
 
             return requestData;
         } catch (error) {

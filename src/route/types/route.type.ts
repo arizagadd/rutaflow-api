@@ -65,6 +65,12 @@ export type SetRouteTemplateDirectionsParams = {
     directions: DirectionsRequestParams;
 };
 
+export type SetupRouteDirectionsParams = {
+    stopInitial: Stop;
+    stopFinal: Stop;
+    stopWaypoints?: Stop[];
+};
+
 export type UpdateRouteDirectionsParams = {
     route: Route;
     newStopInitial: Stop;

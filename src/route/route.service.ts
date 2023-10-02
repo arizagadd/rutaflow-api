@@ -11,6 +11,7 @@ import { RouteRepository } from './route.repository';
 import {
     CreateRouteParams,
     SetRouteTemplateDirectionsParams,
+    SetupRouteDirectionsParams,
     UpdateRouteDirectionsParams,
     UpdateRouteParams,
     UpdateRouteTemplateParams,
@@ -27,7 +28,6 @@ export class RouteService {
         private readonly stopRepository: StopRepository,
     ) {}
 
-    //TODO: handle empty waypoint array
     //TODO: update pos 0 event of specific route to 'completed' once driver has started journey
 
     // Generates the route that the driver will follow to complete a journey
@@ -121,9 +121,23 @@ export class RouteService {
             let route = await this.routeRepository.findRouteRecordById(body.routeId);
             const newStopInitial = await this.stopRepository.findStopRecordById(body.stopInitial);
             const newStopFinal = await this.stopRepository.findStopRecordById(body.stopFinal);
-            const newStopWaypoints = await this.stopRepository.findManyStopsById(body.stopWaypoints);
+            let params: SetupRouteDirectionsParams;
 
-            const newDirections = await this.mapsService.setUpRouteDirectionsParams(newStopInitial, newStopFinal, newStopWaypoints);
+            if (!body.stopWaypoints) {
+                params = {
+                    stopInitial: newStopInitial,
+                    stopFinal: newStopFinal,
+                };
+            } else {
+                const newStopWaypoints = await this.stopRepository.findManyStopsById(body.stopWaypoints);
+                params = {
+                    stopInitial: newStopInitial,
+                    stopFinal: newStopFinal,
+                    stopWaypoints: newStopWaypoints,
+                };
+            }
+
+            const newDirections = this.mapsService.setUpRouteDirectionsParams(params);
             const routeDirectionsData: UpdateRouteDirectionsParams = {
                 route,
                 newStopInitial,
@@ -258,7 +272,7 @@ export class RouteService {
         try {
             return await this.routeRepository.findRouteRecordById(id);
         } catch (error) {
-            if (error instanceof DomainError) {
+            if (error instanceof DataBaseError) {
                 throw error;
             }
 

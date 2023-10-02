@@ -213,6 +213,7 @@ export class RouteRepository {
             const origin = `${stopInitial.lat}, ${stopInitial.lon}`;
             const destination = `${stopFinal.lat}, ${stopFinal.lon}`;
             const coordinatesSet = new Set<string>(); // Using Set to ensure uniqueness
+            let requestData: DirectionsRequestParams;
 
             const eventTemplates = await this.prismaRepository.eventTemplate.findMany({
                 where: {
@@ -232,11 +233,18 @@ export class RouteRepository {
                 }
             });
 
-            const requestData: DirectionsRequestParams = {
-                origin,
-                destination,
-                waypoints: Array.from(coordinatesSet), // Convert Set back to Array
-            };
+            if (!coordinatesSet.size) {
+                requestData = {
+                    origin,
+                    destination,
+                };
+            } else {
+                requestData = {
+                    origin,
+                    destination,
+                    waypoints: Array.from(coordinatesSet), // Convert Set back to Array
+                };
+            }
 
             return requestData;
         } catch (error) {
