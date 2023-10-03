@@ -41,7 +41,7 @@ export class RouteController {
                 status: 'error',
                 error: {
                     code: 500,
-                    message: 'Route could not be created.',
+                    message: 'Route could not be updated.',
                 },
             });
         }
