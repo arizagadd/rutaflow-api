@@ -1,7 +1,7 @@
 import { Transform } from 'class-transformer';
 import { IsArray, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 
-export class CreateRouteDto {
+export class CreateRouteByTemplateDto {
     @IsNumber()
     @IsNotEmpty()
     @Transform(({ value }) => parseInt(value), { toClassOnly: true })
@@ -43,4 +43,22 @@ export class UpdateRouteDto {
     @Transform(({ value }) => value.toString().split(',').map(Number))
     stopWaypoints?: number[];
 }
+
+export class CreateRouteDto {
+    @IsNumber()
+    @IsNotEmpty()
+    @Transform(({ value }) => parseInt(value), { toClassOnly: true })
+    stopInitial: number;
+
+    @IsNumber()
+    @IsNotEmpty()
+    @Transform(({ value }) => parseInt(value), { toClassOnly: true })
+    stopFinal: number;
+
+    @IsOptional()
+    @IsArray()
+    @Transform(({ value }) => value.toString().split(',').map(Number))
+    stopWaypoints?: number[];
+}
+
 export class RouteResponseDto {}

@@ -6,7 +6,7 @@ import { MapsService } from '../maps/maps.service';
 import { DataBaseError, DomainError, UnexpectedError } from '../shared/errors/custom-errors';
 import { StopRepository } from '../stop/stop.repository';
 import { VehicleRepository } from '../vehicle/vehicle.repository';
-import { CreateRouteDto, UpdateRouteDto } from './dtos/route.dto';
+import { CreateRouteByTemplateDto, UpdateRouteDto } from './dtos/route.dto';
 import { RouteRepository } from './route.repository';
 import {
     CreateRouteParams,
@@ -31,7 +31,7 @@ export class RouteService {
     //TODO: update pos 0 event of specific route to 'completed' once driver has started journey
 
     // Generates the route that the driver will follow to complete a journey
-    async generateRoute(body: CreateRouteDto): Promise<Route> {
+    async generateRouteFromTemplate(body: CreateRouteByTemplateDto): Promise<Route> {
         try {
             // origen = stop_initial, destination = stop_final which should already exist in the database upon creation of route template
             let routeTemplate = await this.routeRepository.findRouteTemplateRecordById(body.routeTemplateId);

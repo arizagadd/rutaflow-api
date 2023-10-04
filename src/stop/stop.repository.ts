@@ -6,9 +6,9 @@ import { DataBaseError, UnexpectedError } from '../shared/errors/custom-errors';
 @Injectable()
 export class StopRepository {
     constructor(private readonly prismaRepository: PrismaRepository) {}
-    async createStopRecord(data: any) {
-        return { status: 'ok', data };
-    }
+    // async createStopRecord(data: any) {
+    //     return { status: 'ok', data };
+    // }
 
     async findStopRecordById(id: number): Promise<Stop> {
         try {
