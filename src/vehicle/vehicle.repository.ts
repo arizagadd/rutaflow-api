@@ -6,7 +6,7 @@ import { DataBaseError, UnexpectedError } from '../shared/errors/custom-errors';
 @Injectable()
 export class VehicleRepository {
     constructor(private readonly prismaRepository: PrismaRepository) {}
-    async createVehicleRecord(data: any) {
+    async createVehicleRecord(data: any): Promise<any> {
         return { status: 'ok', data };
     }
 

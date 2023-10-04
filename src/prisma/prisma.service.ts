@@ -20,7 +20,7 @@ import { PrismaRepository } from './prisma.repository';
 @Injectable()
 export class PrismaService {
     constructor(private readonly prismaRepository: PrismaRepository) {}
-    async seedDB() {
+    async seedDB(): Promise<string> {
         try {
             const users = [
                 {

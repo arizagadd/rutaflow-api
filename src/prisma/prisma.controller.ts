@@ -1,4 +1,5 @@
 import { Controller, Get, InternalServerErrorException } from '@nestjs/common';
+import { ErrorResponse, SuccessResponse } from '../shared/json-response.dto';
 import { PrismaService } from './prisma.service';
 
 @Controller('prisma')
@@ -7,7 +8,7 @@ export class PrismaController {
 
     //WARNING: ONLY FOR DEVELOPMENT PURPOSES!!!
     @Get('seed')
-    private async seedDatabase() {
+    private async seedDatabase(): Promise<SuccessResponse<string> | ErrorResponse> {
         try {
             await this.prismaService.seedDB();
         } catch (error) {

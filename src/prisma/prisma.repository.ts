@@ -7,11 +7,11 @@ import { PrismaClient } from '@prisma/client';
 // and we need our prisma service to implement the OnModuleInit in order to do operations with the DB
 export class PrismaRepository extends PrismaClient implements OnModuleInit {
     //connect to prisma
-    async onModuleInit() {
+    async onModuleInit(): Promise<void> {
         await this.$connect();
     }
     //close connection when finished
-    async onModuleDestroy() {
+    async onModuleDestroy(): Promise<void> {
         await this.$disconnect();
     }
 }

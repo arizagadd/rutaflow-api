@@ -32,7 +32,16 @@ const logger = createLogger({
     transports: [dailyRotateFileTransport],
 });
 
-function extractErrorDetails(error: ErrorBase<string, string, string>) {
+type ErrorDetails = {
+    context: {
+        domain: string;
+        layer: string;
+        type: string;
+        message: string;
+        cause: string | ErrorDetails; // recursive type for nested ErrorBase instances
+    };
+};
+function extractErrorDetails(error: ErrorBase<string, string, string>): ErrorDetails {
     return {
         context: {
             domain: error.domain,
@@ -67,7 +76,7 @@ function prettyPrintStackTrace(error: Error): string {
 }
 
 function prettyPrintError(errorObj: any): void {
-    const printErrorDetail = (errorDetail: any, indent: string = '') => {
+    const printErrorDetail = (errorDetail: any, indent: string = ''): void => {
         console.error(`${indent}Domain: ${errorDetail.context.domain}`);
         console.error(`${indent}Layer: ${errorDetail.context.layer}`);
         console.error(`${indent}Type: ${errorDetail.context.type}`);
@@ -101,7 +110,7 @@ function prettyPrintError(errorObj: any): void {
     printErrorDetail(errorObj.ERROR);
 }
 
-export function logError(error: Error, req: any) {
+export function logError(error: Error, req: any): void {
     const originatingFunction = getOriginatingFunctionName(error);
 
     if (error instanceof ErrorBase) {

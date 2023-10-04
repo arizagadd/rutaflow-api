@@ -128,7 +128,7 @@ const citiesCoordinates = [
     { city: 'Acapulco, GRO', lat: 16.8531, lng: -99.8237 },
 ];
 
-async function main() {
+async function main(): Promise<void> {
     const userRes = await prisma.user.createMany({
         data: users,
         // skipDuplicates: true, // This option skips records with duplicate values, e.g., in unique fields like email

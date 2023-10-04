@@ -11,7 +11,7 @@ export class UnexpectedError extends ErrorBase<Domain, AppLayer, UnexpectedError
 type DataBaseErrorType = 'CREATE_RECORD_ERROR' | 'GET_RECORD_ERROR' | 'UPDATE_RECORD_ERROR' | 'DELETE_RECORD_ERROR' | 'PRISMA_ERROR';
 export class DataBaseError extends ErrorBase<Domain, AppLayer, DataBaseErrorType> {}
 
-export function getFunctionNameFromStackTrace() {
+export function getFunctionNameFromStackTrace(): string {
     const err = new Error();
     const stackLine = err.stack?.split('\n')[2]; // Adjust the index based on your needs
     const match = stackLine?.match(/at\s+(.*)\s+\(/);
