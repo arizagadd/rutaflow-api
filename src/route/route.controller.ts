@@ -1,4 +1,4 @@
-import { Body, Controller, InternalServerErrorException, Post, Req } from '@nestjs/common';
+import { Body, Controller, InternalServerErrorException, Post, Req, Version } from '@nestjs/common';
 import { ErrorResponse, SuccessResponse } from '../shared/json-response.dto';
 import { logError } from '../shared/logger';
 import { CreateRouteByTemplateDto, UpdateRouteDto } from './dtos/route.dto';
@@ -8,6 +8,7 @@ import { RouteService } from './route.service';
 export class RouteController {
     constructor(private readonly routeService: RouteService) {}
 
+    @Version('1')
     @Post('generate/from-template')
     async generateFromTemplate(
         @Req() req: Request,
@@ -32,7 +33,7 @@ export class RouteController {
             message: 'Route created successfully.',
         };
     }
-
+    @Version('1')
     @Post('update-trajectory')
     async generate(@Req() req: Request, @Body() data: UpdateRouteDto): Promise<SuccessResponse<string> | ErrorResponse> {
         try {

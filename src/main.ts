@@ -1,4 +1,4 @@
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
@@ -10,6 +10,14 @@ async function bootstrap(): Promise<void> {
             transform: true,
         }),
     );
+    // Enable versioning, and configure the type and header if needed
+    app.enableVersioning({
+        type: VersioningType.URI,
+    });
+
+    // Set global route prefix
+    app.setGlobalPrefix('api');
+
     await app.listen(3000);
 }
 bootstrap();
