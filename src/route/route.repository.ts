@@ -344,6 +344,11 @@ export class RouteRepository {
             });
             updatePromises.push(updateOriginEventTemplatePos);
 
+            // IMPORTANT: Its possible that the google maps api could return lat and lng values with decimal point precision that
+            // don't completely match the level of precision that the user has input into the DB for each stop or vice versa (i.e 23.8999 vs 23.899954).
+            // Therefore in order to avoid any type of inconsistencies we round both the lat, lng values from each stop in the DB
+            // and the lat, lng values from each waypoint given by google to the 3rd decimal place in order to find a match if there is any
+            // Otherwise no match will be found since 23.8999 and 23.899954 are not the same value
             for (const [index, leg] of legs.entries()) {
                 // Round to the 3rd decimal place
                 const waypointsLatRounded = parseFloat(leg.end_location.lat.toFixed(3));
