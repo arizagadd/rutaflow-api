@@ -10,7 +10,7 @@ export class RouteController {
 
     @Version('1')
     @Post('generate/from-template')
-    async generateFromTemplate(
+    async generateRouteFromTemplate(
         @Req() req: Request,
         @Body() data: CreateRouteByTemplateDto,
     ): Promise<SuccessResponse<string> | ErrorResponse> {
