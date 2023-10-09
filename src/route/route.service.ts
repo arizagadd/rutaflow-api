@@ -65,6 +65,7 @@ export class RouteService {
                 }
             }
 
+            // fetch other records needed for route record creation
             const enterprise = await this.enterpriseRepository.findEnterpriseRecordById(routeTemplate.id_enterprise);
             const driver = await this.driverRepository.findDriverRecordById(body.driverId);
             const vehicle = await this.vehicleRepository.findVehicleRecordById(body.vehicleId);

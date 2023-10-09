@@ -30,7 +30,7 @@ export class EnterpriseRepository {
             return enterprise;
         } catch (error) {
             if (error instanceof DataBaseError) {
-                throw error; // Throw the specific database error.
+                throw error;
             } else {
                 throw new UnexpectedError({
                     domain: 'ENTERPRISE',

@@ -142,10 +142,12 @@ export class MapsService {
 
         const totalStops = legPolyline.length; // we don't take into account point of origin and we also remove index 0 from counter
 
+        // ###################### Maybe useful variables ##########################
         // totalDistance: `${totalDistance / 1000} km`, // convert meters to kilometers
         // totalDuration: `${totalDuration / 3600} hours`, // convert seconds to hours
         // stopInitial: legPolyline[0],
         // stopFinal: legPolyline[legPolyline.length - 1],
+        // ###################### Maybe useful variables ##########################
 
         const filteredData: FilteredDirectionsData = {
             polyline,
