@@ -22,7 +22,7 @@ export class StopRepository {
                     domain: 'STOP',
                     layer: 'REPOSITORY',
                     type: 'GET_RECORD_ERROR',
-                    message: `findStopRecordById: Stop with id ${id} not found`,
+                    message: `Stop with id ${id} not found`,
                 });
             }
 
@@ -35,7 +35,7 @@ export class StopRepository {
                     domain: 'VEHICLE',
                     layer: 'REPOSITORY',
                     type: 'UNEXPECTED_ERROR',
-                    message: `findStopRecordById: Error:${error.message}`,
+                    message: `Error:${error.message}`,
                     cause: error,
                 });
             }

@@ -6,9 +6,9 @@ import { DataBaseError, UnexpectedError } from '../shared/errors/custom-errors';
 @Injectable()
 export class EnterpriseRepository {
     constructor(private readonly prismaRepository: PrismaRepository) {}
-    async createEnterpriseRecord(data: any) {
-        return { status: 'ok', data };
-    }
+    // async createEnterpriseRecord(data: any) {
+    //     return { status: 'ok', data };
+    // }
 
     async findEnterpriseRecordById(id: number): Promise<Enterprise> {
         try {
@@ -137,7 +137,7 @@ export class EnterpriseRepository {
         }
     }
 
-    async createChecklistEventRecord(checklistId: number, routeId: number) {
+    async createChecklistEventRecord(checklistId: number, routeId: number): Promise<void> {
         try {
             const checklistEvent = await this.prismaRepository.checklistEvent.create({
                 data: {

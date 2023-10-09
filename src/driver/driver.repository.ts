@@ -1,14 +1,15 @@
 import { Injectable } from '@nestjs/common';
+import { Driver } from '@prisma/client';
 import { PrismaRepository } from '../prisma/prisma.repository';
 import { DataBaseError, UnexpectedError } from '../shared/errors/custom-errors';
 
 @Injectable()
 export class DriverRepository {
     constructor(private readonly prismaRepository: PrismaRepository) {}
-    async createDriverRecord(data: any) {
-        return { status: 'ok', data };
-    }
-    async findDriverRecordById(id: number) {
+    // async createDriverRecord(data: any) {
+    //     return { status: 'ok', data };
+    // }
+    async findDriverRecordById(id: number): Promise<Driver> {
         try {
             const driver = await this.prismaRepository.driver.findFirst({
                 where: {
@@ -20,7 +21,7 @@ export class DriverRepository {
                     domain: 'DRIVER',
                     layer: 'REPOSITORY',
                     type: 'GET_RECORD_ERROR',
-                    message: `findDriverById: Driver with id ${id} not found`,
+                    message: `Driver with id ${id} not found`,
                 });
             }
 
@@ -33,7 +34,7 @@ export class DriverRepository {
                     domain: 'DRIVER',
                     layer: 'REPOSITORY',
                     type: 'UNEXPECTED_ERROR',
-                    message: `findDriverRecordById: Error:${error.message}`,
+                    message: `Error:${error.message}`,
                     cause: error,
                 });
             }
