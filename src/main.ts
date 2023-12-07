@@ -18,6 +18,6 @@ async function bootstrap(): Promise<void> {
     // Set global route prefix
     app.setGlobalPrefix('api');
 
-    await app.listen(3000);
+    await app.listen(process.env.PORT,'0.0.0.0');
 }
 bootstrap();
