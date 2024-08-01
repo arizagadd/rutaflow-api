@@ -432,6 +432,7 @@ enum EnterpriseObjective {
 
 enum DriverStatus {
   AVAILABLE   @map("available")
+  ROUTE       @map("route")
   NODOCS      @map("nodocs")
   UNAVAILABLE @map("unavailable")
 
