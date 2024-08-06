@@ -76,4 +76,5 @@ export type UpdateRouteDirectionsParams = {
     newStopInitial: Stop;
     newStopFinal: Stop;
     newDirections: DirectionsRequestParams;
+    stopWaypoints?: number[];
 };

@@ -124,36 +124,39 @@ export class RouteService {
             const newStopInitial = await this.stopRepository.findStopRecordById(body.stopInitial);
             const newStopFinal = await this.stopRepository.findStopRecordById(body.stopFinal);
             let params: SetupRouteDirectionsParams;
-
-            if (!body.stopWaypoints) {
-                params = {
-                    stopInitial: newStopInitial,
-                    stopFinal: newStopFinal,
-                };
-            } else {
+    
+            let stopWaypointsIds: number[] | undefined;
+            if (body.stopWaypoints) {
                 const newStopWaypoints = await this.stopRepository.findManyStopsById(body.stopWaypoints);
+                stopWaypointsIds = newStopWaypoints.map(stop => stop.id_stop);
                 params = {
                     stopInitial: newStopInitial,
                     stopFinal: newStopFinal,
                     stopWaypoints: newStopWaypoints,
                 };
+            } else {
+                params = {
+                    stopInitial: newStopInitial,
+                    stopFinal: newStopFinal,
+                };
             }
-
+    
             const newDirections = this.mapsService.setUpRouteDirectionsParams(params);
             const routeDirectionsData: UpdateRouteDirectionsParams = {
                 route,
                 newStopInitial,
                 newStopFinal,
                 newDirections,
+                stopWaypoints: stopWaypointsIds, // Pass stopWaypoints IDs
             };
             route = await this.updateRouteDirections(routeDirectionsData);
-
+    
             return route;
         } catch (error) {
             if (error instanceof DomainError) {
                 throw error;
             }
-
+    
             if (error instanceof DataBaseError) {
                 throw new DomainError({
                     domain: 'ROUTE',
@@ -162,7 +165,7 @@ export class RouteService {
                     cause: error,
                 });
             }
-
+    
             throw new UnexpectedError({
                 domain: 'ROUTE',
                 layer: 'SERVICE',
@@ -172,6 +175,8 @@ export class RouteService {
             });
         }
     }
+    
+    
 
     async setRouteTemplateDirections(params: SetRouteTemplateDirectionsParams): Promise<RouteTemplate> {
         try {
@@ -243,7 +248,7 @@ export class RouteService {
                 stopFinal: params.newStopFinal.id_stop,
             };
             const updatedRoute = this.routeRepository.updateRouteRecord(params.route.id_route, routeData);
-            await this.routeRepository.matchLegsToManyEventRecords(params.route, directions);
+            await this.routeRepository.matchLegsToManyEventRecords(params.route, directions, params.stopWaypoints);
 
             return updatedRoute;
         } catch (error) {
