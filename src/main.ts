@@ -5,7 +5,7 @@ import { AppModule } from './app.module';
 async function bootstrap(): Promise<void> {
     const app = await NestFactory.create(AppModule);
     //Specific origin urls to allow the request only from them
-    const allowedOrigins = ['http://localhost:80', 'https://dev.rutaflow.com', 'https://app.rutaflow.com'];
+    const allowedOrigins = ['http://localhost', 'https://dev.rutaflow.com', 'https://app.rutaflow.com'];
 
     app.enableCors({
         origin: (origin, callback) => {
