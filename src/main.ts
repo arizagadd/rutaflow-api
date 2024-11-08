@@ -5,12 +5,19 @@ import { AppModule } from './app.module';
 async function bootstrap(): Promise<void> {
     const app = await NestFactory.create(AppModule);
 
-    // Enable CORS with specific configuration
+    const allowedOrigins = ['http://localhost:3000', 'https://dev.rutaflow.com', 'https://app.rutaflow.com'];
+
     app.enableCors({
-        origin: 'https://rutaflow-api-development.up.railway.app', // Replace with your frontend’s URL
-        methods: 'GET,POST,PUT,DELETE', // Specify allowed methods
-        allowedHeaders: 'Content-Type,Authorization', // Specify allowed headers
-        credentials: true, // Include if you need to send cookies or auth headers
+        origin: (origin, callback) => {
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true); // Allow requests from allowed origins or no origin (like Postman)
+            } else {
+                callback(new Error('Not allowed by CORS')); // Reject requests from unknown origins
+            }
+        },
+        methods: 'GET,POST,PUT,DELETE',
+        allowedHeaders: 'Content-Type,Authorization',
+        credentials: true,
     });
 
     // Global ValidationPipe for request validation
