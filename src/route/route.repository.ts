@@ -306,87 +306,79 @@ export class RouteRepository {
         try {
             const legs = directions.data.routes[0].legs;
             const updatePromises = [];
-
             // start_location represents the origin coordinates we passed to the setUpDirectionsParams
-            const originLatRounded = parseFloat(legs[0].start_location.lat.toFixed(3));
-            const originLngRounded = parseFloat(legs[0].start_location.lng.toFixed(3));
-
-            // setup origin as pos 0
+            // Round origin and destination coordinates to the 6th decimal place
+            const originLatRounded = parseFloat(legs[0].start_location.lat.toFixed(6));
+            const originLngRounded = parseFloat(legs[0].start_location.lng.toFixed(6));
+            
+            const endLatRounded = parseFloat(legs[legs.length - 1].end_location.lat.toFixed(6));
+            const endLngRounded = parseFloat(legs[legs.length - 1].end_location.lng.toFixed(6));
+    
+            // Set up origin as pos 0
             const originStop = await this.prismaRepository.stop.findFirst({
                 where: {
-                    lat: {
-                        gte: originLatRounded - 0.0005,
-                        lte: originLatRounded + 0.0005,
-                    },
-                    lon: {
-                        gte: originLngRounded - 0.0005,
-                        lte: originLngRounded + 0.0005,
-                    },
+                    lat: { gte: originLatRounded - 0.0005, lte: originLatRounded + 0.0005 },
+                    lon: { gte: originLngRounded - 0.0005, lte: originLngRounded + 0.0005 },
                 },
             });
+            
             if (!originStop) {
                 throw new DataBaseError({
                     domain: 'ROUTE',
                     layer: 'REPOSITORY',
                     type: 'GET_RECORD_ERROR',
-                    message: `Stop with lat ${originLatRounded} and lng ${originLngRounded} not found in DB `,
+                    message: `Stop with lat ${originLatRounded} and lng ${originLngRounded} not found in DB`,
                 });
             }
+    
             const correspondingOriginEventTemplate = await this.prismaRepository.eventTemplate.findFirst({
                 where: {
                     id_stop: originStop.id_stop,
                     id_route_template: routeTemplateId,
                 },
             });
-            const updateOriginEventTemplatePos = this.prismaRepository.eventTemplate.update({
-                where: { id_event_template: correspondingOriginEventTemplate.id_event_template },
-                data: { pos: 0 },
-            });
-            updatePromises.push(updateOriginEventTemplatePos);
+            
+            if (correspondingOriginEventTemplate) {
+                const updateOriginEventTemplatePos = this.prismaRepository.eventTemplate.update({
+                    where: { id_event_template: correspondingOriginEventTemplate.id_event_template },
+                    data: { pos: 0 },
+                });
+                updatePromises.push(updateOriginEventTemplatePos);
+            }
     
-            const usedStops = new Set();
-             // IMPORTANT: Its possible that the google maps api could return lat and lng values with decimal point precision that
+            const usedStops = new Set<number>();
+            // IMPORTANT: Its possible that the google maps api could return lat and lng values with decimal point precision that
             // don't completely match the level of precision that the user has input into the DB for each stop or vice versa (i.e 23.8999 vs 23.899954).
             // Therefore in order to avoid any type of inconsistencies we round both the lat, lng values from each stop in the DB
             // and the lat, lng values from each waypoint given by google to the 3rd decimal place in order to find a match if there is any
             // Otherwise no match will be found since 23.8999 and 23.899954 are not the same value
+            // Process each leg
             for (const [index, leg] of legs.entries()) {
                 // Round to the 6th decimal place
                 const waypointsLatRounded = parseFloat(leg.end_location.lat.toFixed(6));
                 const waypointsLngRounded = parseFloat(leg.end_location.lng.toFixed(6));
-
-                //console.log(`Waypoint ${index + 1}: Lat ${waypointsLatRounded}, Lon ${waypointsLngRounded}`);
-
+            
                 try {
                     // Query for all stops with matching lat and lon coordinates
                     const matchingStops = await this.prismaRepository.stop.findMany({
                         where: {
-                            lat: {
-                                gte: waypointsLatRounded - 0.001,
-                                lte: waypointsLatRounded + 0.001,
-                            },
-                            lon: {
-                                gte: waypointsLngRounded - 0.001,
-                                lte: waypointsLngRounded + 0.001,
-                            },
+                            lat: { gte: waypointsLatRounded - 0.001, lte: waypointsLatRounded + 0.001 },
+                            lon: { gte: waypointsLngRounded - 0.001, lte: waypointsLngRounded + 0.001 },
+                            id_stop: { not: originStop.id_stop }, // Exclude origin stop
                         },
                     });
-
+            
                     let stopUpdated = false;
-
+            
                     for (const stop of matchingStops) {
                         if (!usedStops.has(stop.id_stop)) {
-                            //console.log(`Matched Stop: ${stop.id_stop} for waypoint ${index + 1}`);
-
                             const correspondingEventTemplate = await this.prismaRepository.eventTemplate.findFirst({
                                 where: {
                                     id_stop: stop.id_stop,
                                     id_route_template: routeTemplateId,
                                 },
                             });
-
-                            //console.log(correspondingEventTemplate);
-
+            
                             if (correspondingEventTemplate) {
                                 const updatePromise = this.prismaRepository.eventTemplate.update({
                                     where: { id_event_template: correspondingEventTemplate.id_event_template },
@@ -403,24 +395,50 @@ export class RouteRepository {
                             console.log(`Stop ${stop.id_stop} already updated for waypoint ${index + 1}`);
                         }
                     }
-
+            
                     if (!stopUpdated) {
                         console.log(`No matching stop found for waypoint ${index + 1}`);
                     }
                 } catch (error) {
                     console.error(`Error processing waypoint ${index + 1}:`, error);
                 }
-                //console.log(`Processed waypoint: ${index + 1}`);
             }
-
+            
+    
+            // Reassign destination explicitly with the last position, even if it's the same as the origin
+            const destinationStop = await this.prismaRepository.stop.findFirst({
+                where: {
+                    lat: { gte: endLatRounded - 0.0005, lte: endLatRounded + 0.0005 },
+                    lon: { gte: endLngRounded - 0.0005, lte: endLngRounded + 0.0005 },
+                },
+            });
+            
+            if (destinationStop) {
+                const correspondingDestinationEventTemplate = await this.prismaRepository.eventTemplate.findFirst({
+                    where: {
+                        id_stop: destinationStop.id_stop,
+                        id_route_template: routeTemplateId,
+                        id_event_template: {
+                            not: correspondingOriginEventTemplate.id_event_template, // Use 'not' for inequality
+                        },
+                    },
+                });
+                
+                if (correspondingDestinationEventTemplate) {
+                    const updateDestinationEventTemplatePos = this.prismaRepository.eventTemplate.update({
+                        where: { id_event_template: correspondingDestinationEventTemplate.id_event_template },
+                        data: { pos: legs.length },
+                    });
+                    updatePromises.push(updateDestinationEventTemplatePos);
+                }
+            }
             // Execute all update promises in a single transaction
             try {
                 await this.prismaRepository.$transaction(updatePromises);
-                //console.log('All updates processed successfully.');
             } catch (error) {
                 console.error('Error executing update promises:', error);
             }
-
+    
         } catch (error) {
             if (error instanceof DataBaseError) {
                 throw error;
