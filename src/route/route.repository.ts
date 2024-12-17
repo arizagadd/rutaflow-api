@@ -308,11 +308,11 @@ export class RouteRepository {
             const updatePromises = [];
             // start_location represents the origin coordinates we passed to the setUpDirectionsParams
             // Round origin and destination coordinates to the 6th decimal place
-            const originLatRounded = parseFloat(legs[0].start_location.lat.toFixed(6));
+            /*const originLatRounded = parseFloat(legs[0].start_location.lat.toFixed(6));
             const originLngRounded = parseFloat(legs[0].start_location.lng.toFixed(6));
             
             const endLatRounded = parseFloat(legs[legs.length - 1].end_location.lat.toFixed(6));
-            const endLngRounded = parseFloat(legs[legs.length - 1].end_location.lng.toFixed(6));
+            const endLngRounded = parseFloat(legs[legs.length - 1].end_location.lng.toFixed(6));*/
     
             // Set up origin as pos 0
             /*const originStop = await this.prismaRepository.stop.findFirst({
@@ -382,7 +382,7 @@ export class RouteRepository {
                             if (correspondingEventTemplate) {
                                 const updatePromise = this.prismaRepository.eventTemplate.update({
                                     where: { id_event_template: correspondingEventTemplate.id_event_template },
-                                    data: { pos: index + 1 },
+                                    data: { pos: index },
                                 });
                                 updatePromises.push(updatePromise);
                                 usedStops.add(stop.id_stop); // Mark this stop as used
