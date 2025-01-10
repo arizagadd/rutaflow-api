@@ -306,6 +306,45 @@ export class RouteRepository {
         try {
             const legs = directions.data.routes[0].legs;
             const updatePromises = [];
+            // start_location represents the origin coordinates we passed to the setUpDirectionsParams
+            // Round origin and destination coordinates to the 6th decimal place
+            /*const originLatRounded = parseFloat(legs[0].start_location.lat.toFixed(6));
+            const originLngRounded = parseFloat(legs[0].start_location.lng.toFixed(6));
+            
+            const endLatRounded = parseFloat(legs[legs.length - 1].end_location.lat.toFixed(6));
+            const endLngRounded = parseFloat(legs[legs.length - 1].end_location.lng.toFixed(6));*/
+    
+            // Set up origin as pos 0
+            /*const originStop = await this.prismaRepository.stop.findFirst({
+                where: {
+                    lat: { gte: originLatRounded - 0.0005, lte: originLatRounded + 0.0005 },
+                    lon: { gte: originLngRounded - 0.0005, lte: originLngRounded + 0.0005 },
+                },
+            });
+            
+            if (!originStop) {
+                throw new DataBaseError({
+                    domain: 'ROUTE',
+                    layer: 'REPOSITORY',
+                    type: 'GET_RECORD_ERROR',
+                    message: `Stop with lat ${originLatRounded} and lng ${originLngRounded} not found in DB`,
+                });
+            }
+    
+            const correspondingOriginEventTemplate = await this.prismaRepository.eventTemplate.findFirst({
+                where: {
+                    id_stop: originStop.id_stop,
+                    id_route_template: routeTemplateId,
+                },
+            });
+            
+            if (correspondingOriginEventTemplate) {
+                const updateOriginEventTemplatePos = this.prismaRepository.eventTemplate.update({
+                    where: { id_event_template: correspondingOriginEventTemplate.id_event_template },
+                    data: { pos: 0 },
+                });
+                updatePromises.push(updateOriginEventTemplatePos);
+            }*/
     
             const usedStops = new Set<number>();
             // IMPORTANT: Its possible that the google maps api could return lat and lng values with decimal point precision that
@@ -365,6 +404,34 @@ export class RouteRepository {
                 }
             }
             
+    
+            // Reassign destination explicitly with the last position, even if it's the same as the origin
+            /*const destinationStop = await this.prismaRepository.stop.findFirst({
+                where: {
+                    lat: { gte: endLatRounded - 0.0005, lte: endLatRounded + 0.0005 },
+                    lon: { gte: endLngRounded - 0.0005, lte: endLngRounded + 0.0005 },
+                },
+            });
+            
+            if (destinationStop) {
+                const correspondingDestinationEventTemplate = await this.prismaRepository.eventTemplate.findFirst({
+                    where: {
+                        id_stop: destinationStop.id_stop,
+                        id_route_template: routeTemplateId,
+                        id_event_template: {
+                            not: correspondingOriginEventTemplate.id_event_template, // Use 'not' for inequality
+                        },
+                    },
+                });
+                
+                if (correspondingDestinationEventTemplate) {
+                    const updateDestinationEventTemplatePos = this.prismaRepository.eventTemplate.update({
+                        where: { id_event_template: correspondingDestinationEventTemplate.id_event_template },
+                        data: { pos: legs.length },
+                    });
+                    updatePromises.push(updateDestinationEventTemplatePos);
+                }
+            }*/
             // Execute all update promises in a single transaction
             try {
                 await this.prismaRepository.$transaction(updatePromises);
