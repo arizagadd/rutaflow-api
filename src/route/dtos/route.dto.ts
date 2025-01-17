@@ -3,19 +3,21 @@ import { IsArray, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 import * as crypto from 'crypto';
 
 // Encryption/Decryption Key
-const clave = "esternocleidomastoideoooo";
+const clave = "W3K_Ñjq*/";
 
 // Decrypt Function
-function desencriptar(txt: string): number | string {
-  const protectedValues = [null, "null", "Sin empresa"];
-  if (protectedValues.includes(txt)) return txt;
+function desencriptar(value: string): number | string {
+  value = String(value);
+
+  if (!/^[a-z0-9]+$/.test(value)) {
+      return value;
+  }
 
   for (let i = 0; ; i++) {
-    const potentialValue = String(i);
-    const hash = crypto.createHmac('sha256', clave).update(potentialValue).digest('hex');
-    if (hash.startsWith(txt)) {
-      return i;
-    }
+      const hash = crypto.createHmac('sha256', clave).update(String(i)).digest('hex');
+      if (hash.startsWith(value)) {
+          return i;
+      }
   }
 }
 
