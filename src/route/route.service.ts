@@ -31,8 +31,8 @@ export class RouteService {
     //TODO: update pos 0 event of specific route to 'completed' once driver has started journey
 
     // Generates the route that the driver will follow to complete a journey
-    async generateRouteFromTemplate(body: CreateRouteByTemplateDto): Promise<Route> {
-        try {
+    async generateRouteFromTemplate(body: CreateRouteByTemplateDto): Promise<RouteTemplate> {
+        //try {
             // origen = stop_initial, destination = stop_final which should already exist in the database upon creation of route template
             let routeTemplate = await this.routeRepository.findRouteTemplateRecordById(body.routeTemplateId);
 
@@ -55,6 +55,8 @@ export class RouteService {
 
                     //routeTemplate will be equal to the new updated record
                     routeTemplate = await this.setRouteTemplateDirections(routeTemplateData);
+
+                    return routeTemplate;
                 } catch (error) {
                     throw new DomainError({
                         domain: 'ROUTE',
@@ -66,7 +68,7 @@ export class RouteService {
             }
 
             // fetch other records needed for route record creation
-            const enterprise = await this.enterpriseRepository.findEnterpriseRecordById(routeTemplate.id_enterprise);
+            /*const enterprise = await this.enterpriseRepository.findEnterpriseRecordById(routeTemplate.id_enterprise);
             const driver = await this.driverRepository.findDriverRecordById(body.driverId);
             const vehicle = await this.vehicleRepository.findVehicleRecordById(body.vehicleId);
             const client = await this.enterpriseRepository.findClientRecordById(body.clientId);
@@ -92,8 +94,8 @@ export class RouteService {
             // creates the events that will be related to the newly created route
             await this.routeRepository.createEventRecordFromEventTemplate(routeTemplate.id_route_template, route.id_route);
 
-            return route;
-        } catch (error) {
+            return route;*/
+        /*} catch (error) {
             // Domain specific error not related to DB operations
             if (error instanceof DomainError) {
                 throw error;
@@ -115,7 +117,7 @@ export class RouteService {
                 message: `Error:${error.message}`,
                 cause: error,
             });
-        }
+        }*/
     }
 
     async updateRouteTrajectory(body: UpdateRouteDto): Promise<Route> {

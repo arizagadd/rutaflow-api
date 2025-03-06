@@ -635,21 +635,23 @@ export class RouteRepository {
                 });
             }
             
-            const createEvents = eventTemplates.map((template) => {
+            /*const createEvents = eventTemplates.map((template) => {
                 return this.prismaRepository.event.create({
                     data: {
                         id_route: routeId,
                         id_stop: template.id_stop,
                         pos: template.pos,
                         status: EventStatus.PENDING,
+                        tag: template.tag,
+                        tag_color: template.tag_color,
                     },
                 });
-            });
+            });*/
             
             //await Promise.all(updateEvents);
             
 
-            await this.prismaRepository.$transaction(createEvents);
+            //await this.prismaRepository.$transaction(createEvents);
         } catch (error) {
             if (error instanceof DataBaseError) {
                 throw error;
