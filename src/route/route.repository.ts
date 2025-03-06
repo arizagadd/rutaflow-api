@@ -584,7 +584,7 @@ export class RouteRepository {
                 });
     
                 for (const stop of matchingStops) {
-                    if (stopIdsSet.has(stop.id_stop)) {
+                    if (stopIdsSet.has(stop.id_stop) && !completedEventIds.has(stop.id_stop)) {
                         stopIdsSet.delete(stop.id_stop);
     
                         // Retrieve the tag and tag_color from the previously saved map (if exists)
