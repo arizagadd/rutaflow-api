@@ -527,6 +527,7 @@ export class RouteRepository {
         const legs = params.data.routes[0].legs;
     
         try {
+            // Fetch the events with tag and tag_color before deleting anything
             const events = await this.prismaRepository.event.findMany({
                 where: {
                     id_route: route.id_route,
@@ -534,12 +535,23 @@ export class RouteRepository {
                 select: {
                     stop: true,
                     status: true,
+                    tag: true,
+                    tag_color: true,
                 },
             });
-            
+    
             // Filter and store completed events' stop IDs
             const completedEventIds = new Set(events.filter((e) => e.status === EventStatus.COMPLETED).map(e => e.stop.id_stop));
             
+            // Fetch existing tags and tag_colors
+            const eventTagMap = new Map<number, { tag: string | null, tag_color: string | null }>();
+            events.forEach(e => {
+                if (e.status !== EventStatus.COMPLETED) {
+                    eventTagMap.set(e.stop.id_stop, { tag: e.tag, tag_color: e.tag_color });
+                }
+            });
+    
+            // Delete non-completed events
             await this.prismaRepository.event.deleteMany({
                 where: {
                     id_route: route.id_route,
@@ -556,7 +568,7 @@ export class RouteRepository {
                 // Round to the 6th decimal place
                 const waypointsLatRounded = parseFloat(leg.end_location.lat.toFixed(6));
                 const waypointsLngRounded = parseFloat(leg.end_location.lng.toFixed(6));
-
+    
                 // Query for the stops with matching lat and lon coordinates up to 6th decimal place
                 const matchingStops = await this.prismaRepository.stop.findMany({
                     where: {
@@ -572,15 +584,21 @@ export class RouteRepository {
                 });
     
                 for (const stop of matchingStops) {
-                    if (stopIdsSet.has(stop.id_stop) && !completedEventIds.has(stop.id_stop)) {
+                    if (stopIdsSet.has(stop.id_stop)) {
                         stopIdsSet.delete(stop.id_stop);
-                        console.log("id_stop ",stop.id_stop,"current ",currentPos);
+    
+                        // Retrieve the tag and tag_color from the previously saved map (if exists)
+                        const eventTag = eventTagMap.get(stop.id_stop);
+    
+                        // Create the event with the tag and tag_color information
                         const createUpdatePromise = this.prismaRepository.event.create({
                             data: {
                                 id_route: route.id_route,
                                 id_stop: stop.id_stop,
                                 pos: currentPos,
                                 status: EventStatus.PENDING,
+                                tag: eventTag?.tag ?? null, // Preserve existing tag or set to null
+                                tag_color: eventTag?.tag_color ?? null, // Preserve existing tag_color or set to null
                             },
                         });
                         updatePromises.push(createUpdatePromise);
@@ -589,6 +607,7 @@ export class RouteRepository {
                 }
             }
     
+            // Execute the transaction to create events
             await this.prismaRepository.$transaction(updatePromises);
         } catch (error) {
             throw new UnexpectedError({
@@ -602,15 +621,6 @@ export class RouteRepository {
     }
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-
     async createEventRecordFromEventTemplate(routeTemplateId: number, routeId: number): Promise<void> {
         try {
             const eventTemplates = await this.prismaRepository.eventTemplate.findMany({

@@ -143,6 +143,11 @@ model Event {
   km                Decimal?             @db.Decimal(10, 2)
   logistic_comments String?              @db.VarChar(1000)
   pos               Int?
+  ev_lat            Float?
+  ev_lon            Float?
+  deliver_status    DeliverStatus?
+  tag               String?              @db.VarChar(50)
+  tag_color         String?              @db.VarChar(45)
   driver            Driver?              @relation(fields: [id_driver], references: [id_driver], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_driver1")
   route             Route                @relation(fields: [id_route], references: [id_route], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_route1")
   stop              Stop                 @relation(fields: [id_stop], references: [id_stop], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_stop1")
@@ -385,6 +390,14 @@ enum EventStatus {
   COMPLETED @map("completed")
 
   @@map("event_status")
+}
+
+enum DeliverStatus {
+  DELIVERED       @map("delivered")
+  NOTDELIVERED    @map("notdelivered")
+  PARTIALDELIVER  @map("partialdeliver")
+
+  @@map("deliver_status")
 }
 
 enum StopType {
