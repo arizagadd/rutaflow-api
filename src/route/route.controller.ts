@@ -16,7 +16,7 @@ export class RouteController {
     ): Promise<SuccessResponse<string> | ErrorResponse> {
         try {
             const newRoute = await this.routeService.generateRouteFromTemplate(data);
-            await this.routeService.getRoute(newRoute.id_route);
+            //await this.routeService.getRoute(newRoute.id_route_template);
         } catch (error) {
             logError(error, req);
             throw new InternalServerErrorException({
