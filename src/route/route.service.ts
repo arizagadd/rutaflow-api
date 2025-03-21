@@ -66,58 +66,6 @@ export class RouteService {
                     });
                 }
             }
-
-            // fetch other records needed for route record creation
-            /*const enterprise = await this.enterpriseRepository.findEnterpriseRecordById(routeTemplate.id_enterprise);
-            const driver = await this.driverRepository.findDriverRecordById(body.driverId);
-            const vehicle = await this.vehicleRepository.findVehicleRecordById(body.vehicleId);
-            const client = await this.enterpriseRepository.findClientRecordById(body.clientId);
-
-            const routeData: CreateRouteParams = {
-                enterpriseId: enterprise.id_enterprise,
-                clientId: client.id_client,
-                vehicleId: vehicle.id_vehicle,
-                driverId: driver.id_driver,
-                routeTemplateId: routeTemplate.id_route_template,
-                name: `${routeTemplate.name} 26-09-2023`,
-                dateStart: new Date(),
-                dateEnd: new Date(),
-                polyline: routeTemplate.polyline,
-                totalDistance: routeTemplate.total_distance,
-                totalDuration: routeTemplate.total_duration,
-                totalStops: routeTemplate.total_stops,
-                stopInitial: routeTemplate.stop_initial,
-                stopFinal: routeTemplate.stop_final,
-            };
-            const route = await this.routeRepository.createRouteRecord(routeData);
-
-            // creates the events that will be related to the newly created route
-            await this.routeRepository.createEventRecordFromEventTemplate(routeTemplate.id_route_template, route.id_route);
-
-            return route;*/
-        /*} catch (error) {
-            // Domain specific error not related to DB operations
-            if (error instanceof DomainError) {
-                throw error;
-            }
-            // Database specific error
-            if (error instanceof DataBaseError) {
-                throw new DomainError({
-                    domain: 'ROUTE',
-                    layer: 'SERVICE',
-                    message: 'Unable to generate route',
-                    cause: error,
-                });
-            }
-            // Otherwise throw Unexpected error
-            throw new UnexpectedError({
-                domain: 'ROUTE',
-                layer: 'SERVICE',
-                type: 'UNEXPECTED_ERROR',
-                message: `Error:${error.message}`,
-                cause: error,
-            });
-        }*/
     }
 
     async updateRouteTrajectory(body: UpdateRouteDto): Promise<Route> {

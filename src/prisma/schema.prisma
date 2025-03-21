@@ -32,16 +32,17 @@ model ChecklistEvent {
 }
 
 model Client {
-  id_client            Int         @id @default(autoincrement())
+  id_client            Int             @id @default(autoincrement())
   id_enterprise        Int
-  name                 String?     @db.VarChar(200)
-  contract_description String?     @db.VarChar(45)
+  name                 String?         @db.VarChar(200)
+  contract_description String?         @db.VarChar(45)
   pickup_time          Int?
   delivery_time        Int?
   checklist            Checklist[]
-  enterprise           Enterprise  @relation(fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_client_enterprise1")
+  enterprise           Enterprise      @relation(fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_client_enterprise1")
   route                Route[]
   stop                 Stop[]
+  RouteTemplate        RouteTemplate[]
 
   @@index([id_enterprise], map: "fk_client_company1_idx")
   @@map("client")
@@ -232,7 +233,7 @@ model Report {
 model Route {
   id_route          Int              @id @default(autoincrement())
   id_enterprise     Int
-  id_client         Int
+  id_client         Int?
   id_vehicle        Int
   id_driver         Int
   id_route_template Int?
@@ -249,7 +250,7 @@ model Route {
   color             String?          @db.VarChar(45)
   checklist_event   ChecklistEvent[]
   event             Event[]
-  client            Client           @relation(fields: [id_client], references: [id_client], onDelete: NoAction, onUpdate: NoAction, map: "fk_route_client1")
+  client            Client?          @relation(fields: [id_client], references: [id_client], onDelete: NoAction, onUpdate: NoAction, map: "fk_route_client1")
   driver            Driver           @relation(fields: [id_driver], references: [id_driver], onDelete: NoAction, onUpdate: NoAction, map: "fk_route_driver1")
   enterprise        Enterprise       @relation(fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_route_enterprise1")
   route_template    RouteTemplate?   @relation(fields: [id_route_template], references: [id_route_template], onDelete: NoAction, onUpdate: NoAction, map: "fk_route_route_template1")
@@ -272,6 +273,7 @@ model RouteTemplate {
   color             String?         @db.VarChar(45)
   symbol            String?         @db.VarChar(45)
   id_enterprise     Int
+  id_client         Int?
   stop_initial      Int?
   stop_final        Int?
   tag               String?         @db.VarChar(100)
@@ -282,9 +284,11 @@ model RouteTemplate {
   event_template    EventTemplate[]
   route             Route[]
   enterprise        Enterprise      @relation(fields: [id_enterprise], references: [id_enterprise], onDelete: NoAction, onUpdate: NoAction, map: "fk_base_route_enterprise1")
+  client            Client?         @relation(fields: [id_client], references: [id_client], onDelete: NoAction, onUpdate: NoAction, map: "fk_base_route_client1")
   stop              Stop[]
 
   @@index([id_enterprise], map: "fk_base_route_company1_idx")
+  @@index([id_client], map: "fk_base_route_client1_idx")
   @@map("route_template")
 }
 
@@ -395,9 +399,9 @@ enum EventStatus {
 }
 
 enum DeliverStatus {
-  DELIVERED       @map("delivered")
-  NOTDELIVERED    @map("notdelivered")
-  PARTIALDELIVER  @map("partialdeliver")
+  DELIVERED      @map("delivered")
+  NOTDELIVERED   @map("notdelivered")
+  PARTIALDELIVER @map("partialdeliver")
 
   @@map("deliver_status")
 }
@@ -526,12 +530,12 @@ enum DriverManeuvers {
 }
 
 enum RouteStatus {
-  PENDING @map("pending")
+  PENDING   @map("pending")
   CHECKLIST @map("checklist")
-  ENROUTE @map("enroute")
+  ENROUTE   @map("enroute")
   CANCELLED @map("cancelled")
   COMPLETED @map("completed")
-  PAUSED @map("paused")
+  PAUSED    @map("paused")
 
   @@map("route_status")
 }
