@@ -10,6 +10,7 @@ import { RouteModule } from './route/route.module';
 import { StopModule } from './stop/stop.module';
 import { UserModule } from './user/user.module';
 import { VehicleModule } from './vehicle/vehicle.module';
+import { ClusterModule } from './cluster/cluster.module';
 
 @Module({
     imports: [
@@ -24,6 +25,7 @@ import { VehicleModule } from './vehicle/vehicle.module';
         RouteModule,
         EnterpriseModule,
         StopModule,
+        ClusterModule,
     ],
     controllers: [AppController],
     providers: [AppService],
