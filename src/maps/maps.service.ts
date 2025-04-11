@@ -32,7 +32,7 @@ export class MapsService {
                     params: {
                         origin,
                         destination,
-                        mode: TravelMode.drive,
+                        mode: TravelMode.driving,
                         key: this.apiKey,
                     },
                 });
@@ -50,7 +50,7 @@ export class MapsService {
                     params: {
                         origin,
                         destination,
-                        mode: TravelMode.drive,
+                        mode: TravelMode.driving,
                         waypoints,
                         optimize: true,
                         key: this.apiKey,
