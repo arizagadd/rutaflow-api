@@ -4,8 +4,6 @@ import { Injectable } from '@nestjs/common';
 import { FilteredDirectionsData, SetupRouteDirectionsParams } from '../route/types/route.type';
 import { DomainError, UnexpectedError } from '../shared/errors/custom-errors';
 import { DirectionsRequestParams } from './maps.type';
-import axios from 'axios';
-import { exit } from 'process';
 import polyline from '@mapbox/polyline';
 
 @Injectable()
