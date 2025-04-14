@@ -568,13 +568,12 @@ export class RouteRepository {
                 // Round to the 6th decimal place
                 let lat = 0.0;
                 let lng = 0.0;
+                
                 if (leg.end_location && leg.end_location.lat && leg.end_location.lng) {
                     lat = parseFloat(leg.end_location.lat.toFixed(6));
                     lng = parseFloat(leg.end_location.lng.toFixed(6));
-                }else if(leg.endLocation && leg.endLocation.latLng && leg.endLocation.latLng.latitude && leg.endLocation.latLng.longitude) {
-                    lat = parseFloat(leg.endLocation.latLng.latitude.toFixed(6));
-                    lng = parseFloat(leg.endLocation.latLng.longitude.toFixed(6));
                 }
+
                 const waypointsLatRounded = lat;
                 const waypointsLngRounded = lng;
     

@@ -1,4 +1,4 @@
-import { Client, DirectionsResponse, LatLng, TravelMode } from '@googlemaps/google-maps-services-js';
+import { Client, DirectionsResponse, LatLng, TravelMode, Status } from '@googlemaps/google-maps-services-js';
 import { geocode } from '@googlemaps/google-maps-services-js/dist/geocode/geocode';
 import { Injectable } from '@nestjs/common';
 import { FilteredDirectionsData, SetupRouteDirectionsParams } from '../route/types/route.type';
@@ -41,21 +41,22 @@ export class MapsService {
                 waypoints = await this.convertLocationsToLatLng(data.waypoints);
 
                 if (waypoints.length > 23) {
-                    console.log("Using Routes Preferred API for more than 23 waypoints");
-                    // Use Routes Preferred API for more than 23 waypoints
-                    return await this.getOptimizedDirectionsViaRoutesPreferred(data);
+                    // Use chunkWaypoints for more than 23 waypoints
+                    response = await this.getOptimizedDirectionsViaDirectionsClient(data);
+                }else{
+                    //Keep original functionality
+                    response = await this.googleMapsClient.directions({
+                        params: {
+                            origin,
+                            destination,
+                            mode: TravelMode.driving,
+                            waypoints,
+                            optimize: true,
+                            key: this.apiKey,
+                        },
+                    });
                 }
-                console.log("Using Google Maps API for less than 23 waypoints");
-                response = await this.googleMapsClient.directions({
-                    params: {
-                        origin,
-                        destination,
-                        mode: TravelMode.driving,
-                        waypoints,
-                        optimize: true,
-                        key: this.apiKey,
-                    },
-                });
+                
             }
             
             return response;
@@ -105,11 +106,6 @@ export class MapsService {
         }
     }
 
-    isLatLngFormat(location: string): boolean {
-        const latLngRegex = /^-?\d+(\.\d+)?,\s*-?\d+(\.\d+)?$/;
-        return latLngRegex.test(location);
-    }
-
     async convertLocationsToLatLng(locations: string[]): Promise<LatLng[]> {
         const convertedLocations: Promise<LatLng>[] = locations.map(async (location) => {
             if (this.isLatLngFormat(location)) {
@@ -126,89 +122,85 @@ export class MapsService {
         return Promise.all(convertedLocations);
     }
 
-    async getOptimizedDirectionsViaRoutesPreferred(data: DirectionsRequestParams): Promise<any> {
+    async getOptimizedDirectionsViaDirectionsClient(data: DirectionsRequestParams): Promise<DirectionsResponse> {
         const origin = await this.convertLocationToLatLng(data.origin);
         const destination = await this.convertLocationToLatLng(data.destination);
         const waypoints = await this.convertLocationsToLatLng(data.waypoints);
-
-        let allDecodedPoints: [number, number][] = [];
-        const CHUNK_SIZE = 25;
+    
+        const CHUNK_SIZE = 23; // max waypoints per request
         const waypointChunks = this.chunkWaypoints(waypoints, CHUNK_SIZE);
-
+    
         let currentOrigin = origin;
-        let fullRoute: any = {
+        let fullRoute: DirectionsResponse = {
             data: {
                 routes: [
                     {
                         legs: [],
-                        polyline: { encodedPolyline: '' },
-                        distanceMeters: 0,
-                        duration:  0 ,
-                        totalStops: 0,
+                        overview_polyline: { points: '' },
+                        bounds: null,
+                        summary: '',
+                        waypoint_order: [],
+                        copyrights: '',
+                        warnings: [],
+                        fare: undefined,
+                        overview_path: []
                     }
                 ],
+                geocoded_waypoints: [],
+                available_travel_modes: [],
+                status: Status.OK,
+                error_message: ''
             },
+            status: 0,
+            statusText: '',
+            headers: undefined,
+            config: undefined
         };
-        
+    
+        let allDecodedPoints: [number, number][] = [];
+    
         for (let i = 0; i < waypointChunks.length; i++) {
             const chunk = waypointChunks[i];
-            const nextDestination = 
-                i === waypointChunks.length - 1 && destination
-                    ? destination
-                    : chunk[chunk.length - 1];
-    
-            const chunkWaypoints = chunk.slice(0);
-    
-            const intermediates = chunkWaypoints.map((wp) => ({
-                location: { latLng: wp },
-            }));
-    
-            const requestBody = {
-                origin: { location: { latLng: currentOrigin } },
-                destination: { location: { latLng: nextDestination } },
-                travelMode: 'DRIVE',
-                intermediates,
-                optimizeWaypointOrder: true,
-            };
-    
-            const fieldMask = 'routes.optimizedIntermediateWaypointIndex,routes.legs,routes.distanceMeters,routes.duration,routes.polyline';
-    
-            try {
-                const response = await axios.post(
-                    'https://routes.googleapis.com/directions/v2:computeRoutes',
-                    requestBody,
-                    {
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Goog-Api-Key': this.apiKey,
-                            'X-Goog-FieldMask': fieldMask,
-                        },
-                    }
-                );
-    
-                const route = response.data.routes[0];
-                fullRoute.data.routes[0].legs.push(...route.legs);
-                fullRoute.data.routes[0].distanceMeters += route.distanceMeters;
-                fullRoute.data.routes[0].duration += parseInt(route.duration.replace('s', ''), 10) || 0;
-                // optional: merge polylines later
-                //fullRoute.data.routes[0].polyline.encodedPolyline += route.polyline?.encodedPolyline || '';
-                if (route.polyline?.encodedPolyline) {
-                    const decoded = polyline.decode(route.polyline.encodedPolyline); // [ [lat, lng], ... ]
-                    allDecodedPoints.push(...decoded);
-                }
-
-                // update origin for next loop
-                currentOrigin = nextDestination;
-            } catch (error) {
-                console.error('Routing chunk failed:', error.response?.data || error.message);
-                throw new Error(`Routing failed at chunk ${i + 1}`);
+        
+            const isLastChunk = i === waypointChunks.length - 1;
+        
+            let chunkWaypoints = chunk;
+            let nextDestination = destination;
+        
+            if (!isLastChunk) {
+                nextDestination = chunk[chunk.length - 1];
+                chunkWaypoints = chunk.slice(0, -1); // only waypoints, destination is separate
             }
+        
+            const response = await this.googleMapsClient.directions({
+                params: {
+                    origin: currentOrigin,
+                    destination: nextDestination,
+                    waypoints: chunkWaypoints,
+                    optimize: true,
+                    mode: TravelMode.driving,
+                    key: this.apiKey,
+                }
+            });
+        
+            const route = response.data.routes[0];
+        
+            fullRoute.data.routes[0].legs.push(...route.legs);
+        
+            if (route.overview_polyline?.points) {
+                const decoded = polyline.decode(route.overview_polyline.points);
+                allDecodedPoints.push(...decoded);
+            }
+        
+            currentOrigin = nextDestination;
         }
-        fullRoute.data.routes[0].polyline.encodedPolyline = polyline.encode(allDecodedPoints);
-        fullRoute.data.routes[0].totalStops = fullRoute.data.routes[0].legs.length + 1; // +1 for the destination
+        
+    
+        // Re-encode all polylines into one
+        fullRoute.data.routes[0].overview_polyline.points = polyline.encode(allDecodedPoints);
         return fullRoute;
     }
-
+    
     chunkWaypoints<T>(waypoints: T[], chunkSize: number): T[][] {
         const chunks: T[][] = [];
         for (let i = 0; i < waypoints.length; i += chunkSize) {
@@ -216,7 +208,6 @@ export class MapsService {
         }
         return chunks;
     }
-    
 
     /**
      * Normalizes the directions response so that downstream processing can use
@@ -236,8 +227,6 @@ export class MapsService {
         let polylineStr: string = '';
         if (route.overview_polyline && route.overview_polyline.points){
             polylineStr = route.overview_polyline.points;
-        }else if(route.polyline && route.polyline.encodedPolyline) {
-            polylineStr = route.polyline.encodedPolyline;
         }
     
         // Compute totalDistance & totalDuration
@@ -260,8 +249,7 @@ export class MapsService {
             totalDistance = route.distanceMeters;
             totalDuration = route.duration;
             totalStops = 0;
-        } 
-        else if(route.legs && Array.isArray(route.legs) && route.legs.length > 0) {
+        } else if(route.legs && Array.isArray(route.legs) && route.legs.length > 0) {
             totalDistance = route.legs.reduce((sum: number, leg: any) => {
                 // In legacy responses, leg.distance.value (in meters)
                 return sum + (leg.distance?.value || 0);
@@ -284,7 +272,6 @@ export class MapsService {
         };
     }
   
-
     setUpRouteDirectionsParams(params: SetupRouteDirectionsParams): DirectionsRequestParams {
         try {
             const origin = `${params.stopInitial.lat}, ${params.stopInitial.lon}`;
@@ -330,6 +317,11 @@ export class MapsService {
                 cause: error,
             });
         }
+    }
+
+    isLatLngFormat(location: string): boolean {
+        const latLngRegex = /^-?\d+(\.\d+)?,\s*-?\d+(\.\d+)?$/;
+        return latLngRegex.test(location);
     }
 
 }
