@@ -1,7 +1,7 @@
 import { Client, DirectionsResponse, LatLng, TravelMode, Status } from '@googlemaps/google-maps-services-js';
 import { geocode } from '@googlemaps/google-maps-services-js/dist/geocode/geocode';
-import { Injectable } from '@nestjs/common';
-import { FilteredDirectionsData, SetupRouteDirectionsParams } from '../route/types/route.type';
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { SetupRouteDirectionsParams } from '../route/types/route.type';
 import { DomainError, UnexpectedError } from '../shared/errors/custom-errors';
 import { DirectionsRequestParams } from './maps.type';
 import polyline from '@mapbox/polyline';
@@ -92,8 +92,8 @@ export class MapsService {
 
         if (response && response.data && response.data.results && response.data.results.length > 0) {
             return {
-                latitude: response.data.results[0].geometry.location.lat,
-                longitude: response.data.results[0].geometry.location.lng,
+                lat: response.data.results[0].geometry.location.lat,
+                lng: response.data.results[0].geometry.location.lng,
             };
         } else {
             throw new DomainError({
@@ -109,8 +109,8 @@ export class MapsService {
             if (this.isLatLngFormat(location)) {
                 const [latStr, lngStr] = location.split(',').map((str) => str.trim());
                 return {
-                    latitude: parseFloat(latStr),
-                    longitude: parseFloat(lngStr),
+                    lat: parseFloat(latStr),
+                    lng: parseFloat(lngStr),
                 };
             } else {
                 return this.convertLocationToLatLng(location);
@@ -121,13 +121,29 @@ export class MapsService {
     }
 
     async getOptimizedDirectionsViaDirectionsClient(data: DirectionsRequestParams): Promise<DirectionsResponse> {
-        const origin = await this.convertLocationToLatLng(data.origin);
-        const destination = await this.convertLocationToLatLng(data.destination);
-        const waypoints = await this.convertLocationsToLatLng(data.waypoints);
-    
+        type LatLngLiteral = { lat: number; lng: number }; // if not already declared
+        const origin = await this.convertLocationToLatLng(data.origin) as LatLngLiteral;
+        const destination = await this.convertLocationToLatLng(data.destination) as LatLngLiteral;
+        const rawWaypoints = await this.convertLocationsToLatLng(data.waypoints);
         const CHUNK_SIZE = 23; // max waypoints per request
-        const waypointChunks = this.chunkWaypoints(waypoints, CHUNK_SIZE);
-    
+
+        // Convert waypoints to LatLng format
+        let clusteringWaypoints = rawWaypoints.map((point: { lat: number; lng: number }) => {
+            if (typeof point === 'string') {
+              throw new Error('Expected LatLng object, got string');
+            }
+            return {
+              lat: point.lat,
+              lng: point.lng,
+            };
+        });
+
+        let clusteringResponse = await this.processJson(clusteringWaypoints, origin, destination);
+
+        const clusterPoints = clusteringResponse.orderedRoute;
+
+        const waypointChunks: LatLngLiteral[][] = this.chunkWaypoints(clusterPoints, CHUNK_SIZE);
+        
         let currentOrigin = origin;
         let fullRoute: DirectionsResponse = {
             data: {
@@ -158,7 +174,7 @@ export class MapsService {
         let allDecodedPoints: [number, number][] = [];
     
         for (let i = 0; i < waypointChunks.length; i++) {
-            const chunk = waypointChunks[i];
+            const chunk: LatLngLiteral[] = waypointChunks[i];
         
             const isLastChunk = i === waypointChunks.length - 1;
         
@@ -198,6 +214,86 @@ export class MapsService {
         fullRoute.data.routes[0].overview_polyline.points = polyline.encode(allDecodedPoints);
         return fullRoute;
     }
+
+    async processJson(
+        points: { lat: number; lng: number }[],
+        origin: { lat: number; lng: number },
+        destination: { lat: number; lng: number }
+      ): Promise<any> {
+        if (!points || points.length === 0) {
+          throw new BadRequestException('No se proporcionaron puntos válidos.');
+        }
+      
+        // --- Utility: Euclidean Distance --- 
+        // The Euclidean distance between two points (a, b) is given by:
+        //    d(a, b) = sqrt((a.lat - b.lat)^2 + (a.lng - b.lng)^2)
+        // This formula calculates the straight-line distance (as the crow flies)
+        // between two geographic coordinates. Note that for more accurate earth distances,
+        // you could consider the Haversine formula, but here we use Euclidean for simplicity.
+        function calculateDistance(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
+          return Math.sqrt(Math.pow(a.lat - b.lat, 2) + Math.pow(a.lng - b.lng, 2));
+        }
+      
+        // --- TSP Insertion Heuristic with Fixed Endpoints ---
+        // We create a route starting at the origin and ending at the destination.
+        // Then, for each intermediate point, we find the best place (i.e. insertion index)
+        // to insert that point so that the increase in total distance is minimized.
+        function orderPointsTSP(
+          points: { lat: number; lng: number }[],
+          origin: { lat: number; lng: number },
+          destination: { lat: number; lng: number }
+        ): { lat: number; lng: number }[] {
+          // Create a copy of the points (the ones to be inserted) so we don’t mutate the original array.
+          const remaining = [...points];
+      
+          // Start with a route having just the origin and destination.
+          const route = [origin, destination];
+      
+          // Continue until all points have been inserted.
+          while (remaining.length > 0) {
+            let bestIncrease = Infinity;
+            let bestInsertionIndex = -1;
+            let bestCandidateIndex = -1;
+            // Loop through each candidate point not yet in the route.
+            for (let i = 0; i < remaining.length; i++) {
+              const candidate = remaining[i];
+      
+              // Try inserting candidate between each pair of consecutive stops in the current route.
+              for (let j = 0; j < route.length - 1; j++) {
+                const currentStop = route[j];
+                const nextStop = route[j + 1];
+      
+                // Calculate the additional distance if we insert candidate between currentStop and nextStop.
+                // That is: distance(currentStop, candidate) + distance(candidate, nextStop) - distance(currentStop, nextStop)
+                const increase =
+                  calculateDistance(currentStop, candidate) +
+                  calculateDistance(candidate, nextStop) -
+                  calculateDistance(currentStop, nextStop);
+      
+                if (increase < bestIncrease) {
+                  bestIncrease = increase;
+                  bestInsertionIndex = j + 1;
+                  bestCandidateIndex = i;
+                }
+              }
+            }
+            // Remove the best candidate from the remaining set.
+            const bestCandidate = remaining.splice(bestCandidateIndex, 1)[0];
+            // Insert it into the current route at the found insertion index.
+            route.splice(bestInsertionIndex, 0, bestCandidate);
+          }
+          return route;
+        }
+      
+        // --- Use the TSP Insertion Heuristic to order the points ---
+        const orderedRoute = orderPointsTSP(points, origin, destination);
+      
+        return {
+          orderedRoute,
+          numPoints: orderedRoute.length,
+        };
+    }
+      
     
     chunkWaypoints<T>(waypoints: T[], chunkSize: number): T[][] {
         const chunks: T[][] = [];
