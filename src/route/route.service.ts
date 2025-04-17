@@ -177,18 +177,22 @@ export class RouteService {
     async updateRouteDirections(params: UpdateRouteDirectionsParams): Promise<Route> {
         try {
             const directions = await this.mapsService.getDirections(params.newDirections);
+
             if (!directions.data.routes || !directions.data.routes[0]) {
                 throw new DomainError({
                     domain: 'ROUTE',
                     layer: 'SERVICE',
-                    message: `Unable to generate route, missing DirectionsRoute[] from DirectionsResponseData.routes `,
+                    message: `Unable to generate route, missing DirectionsRoute[] from DirectionsResponseData.routes`,
                 });
             }
+        
             const filteredDirections = this.mapsService.filterDirectionsResponse(directions);
-    
+
+            // Now polyline, totalDistance, totalDuration, and totalStops are available in a normalized form.
             const events = await this.routeRepository.findManyEventRecordsByRouteId(params.route.id_route);
             const completedEvents = events.filter((e) => e.status === EventStatus.COMPLETED);
             const totalStops = filteredDirections.totalStops + completedEvents.length;
+            
             const routeData: UpdateRouteParams = {
                 polyline: filteredDirections.polyline,
                 totalDistance: filteredDirections.totalDistance,
@@ -197,15 +201,16 @@ export class RouteService {
                 stopInitial: params.newStopInitial.id_stop,
                 stopFinal: params.newStopFinal.id_stop,
             };
-            const updatedRoute = this.routeRepository.updateRouteRecord(params.route.id_route, routeData);
+        
+            const updatedRoute = await this.routeRepository.updateRouteRecord(params.route.id_route, routeData);
+            // Update the route with the new directions
             await this.routeRepository.matchLegsToManyEventRecords(params.route, directions, params.stopWaypoints);
-    
+            
             return updatedRoute;
-        } catch (error) {
+          } catch (error) {
             if (error instanceof DomainError) {
                 throw error;
             }
-    
             if (error instanceof DataBaseError) {
                 throw new DomainError({
                     domain: 'ROUTE',
@@ -214,16 +219,17 @@ export class RouteService {
                     cause: error,
                 });
             }
-    
+        
             throw new UnexpectedError({
                 domain: 'ROUTE',
                 layer: 'SERVICE',
                 type: 'UNEXPECTED_ERROR',
-                message: `Error:${error.message}`,
+                message: `Error: ${error.message}`,
                 cause: error,
             });
         }
     }
+      
 
     async getRoute(id: number): Promise<Route> {
         try {

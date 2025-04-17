@@ -525,7 +525,7 @@ export class RouteRepository {
         let posindex = 0; // Initial position index
         const updatePromises = []; // Array to store update promises for transaction
         const legs = params.data.routes[0].legs;
-    
+        
         try {
             // Fetch the events with tag and tag_color before deleting anything
             const events = await this.prismaRepository.event.findMany({
@@ -566,8 +566,16 @@ export class RouteRepository {
     
             for (const leg of legs) {
                 // Round to the 6th decimal place
-                const waypointsLatRounded = parseFloat(leg.end_location.lat.toFixed(6));
-                const waypointsLngRounded = parseFloat(leg.end_location.lng.toFixed(6));
+                let lat = 0.0;
+                let lng = 0.0;
+                
+                if (leg.end_location && leg.end_location.lat && leg.end_location.lng) {
+                    lat = parseFloat(leg.end_location.lat.toFixed(6));
+                    lng = parseFloat(leg.end_location.lng.toFixed(6));
+                }
+
+                const waypointsLatRounded = lat;
+                const waypointsLngRounded = lng;
     
                 // Query for the stops with matching lat and lon coordinates up to 6th decimal place
                 const matchingStops = await this.prismaRepository.stop.findMany({
