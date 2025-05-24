@@ -537,20 +537,25 @@ export class RouteRepository {
                     status: true,
                     tag: true,
                     tag_color: true,
+                    logistic_comments: true,
                 },
             });
     
             // Filter and store completed events' stop IDs
             const completedEventIds = new Set(events.filter((e) => e.status === EventStatus.COMPLETED).map(e => e.stop.id_stop));
             
-            // Fetch existing tags and tag_colors
-            const eventTagMap = new Map<number, { tag: string | null, tag_color: string | null }>();
-            events.forEach(e => {
+            // Fetch existing tags, tag_colors and logistic_comments for non-completed events
+            const eventTagMap = new Map<number, { tag: string | null; tag_color: string | null; logistic_comments: string | null }>();
+            events.forEach((e) => {
                 if (e.status !== EventStatus.COMPLETED) {
-                    eventTagMap.set(e.stop.id_stop, { tag: e.tag, tag_color: e.tag_color });
+                    eventTagMap.set(e.stop.id_stop, {
+                        tag: e.tag,
+                        tag_color: e.tag_color,
+                        logistic_comments: e.logistic_comments,
+                    });
                 }
             });
-    
+            
             // Delete non-completed events
             await this.prismaRepository.event.deleteMany({
                 where: {
@@ -596,7 +601,7 @@ export class RouteRepository {
                         stopIdsSet.delete(stop.id_stop);
     
                         // Retrieve the tag and tag_color from the previously saved map (if exists)
-                        const eventTag = eventTagMap.get(stop.id_stop);
+                        const old = eventTagMap.get(stop.id_stop);
     
                         // Create the event with the tag and tag_color information
                         const createUpdatePromise = this.prismaRepository.event.create({
@@ -605,8 +610,9 @@ export class RouteRepository {
                                 id_stop: stop.id_stop,
                                 pos: currentPos,
                                 status: EventStatus.PENDING,
-                                tag: eventTag?.tag ?? null, // Preserve existing tag or set to null
-                                tag_color: eventTag?.tag_color ?? null, // Preserve existing tag_color or set to null
+                                tag: old?.tag ?? null,
+                                tag_color: old?.tag_color ?? null,
+                                logistic_comments: old?.logistic_comments ?? null,
                             },
                         });
                         updatePromises.push(createUpdatePromise);
