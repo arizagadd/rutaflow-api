@@ -149,6 +149,7 @@ model Event {
   deliver_status    DeliverStatus?
   tag               String?              @db.VarChar(50)
   tag_color         String?              @db.VarChar(45)
+  created_at        DateTime?            @db.DateTime(0)
   driver            Driver?              @relation(fields: [id_driver], references: [id_driver], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_driver1")
   route             Route                @relation(fields: [id_route], references: [id_route], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_route1")
   stop              Stop                 @relation(fields: [id_stop], references: [id_stop], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_stop1")
@@ -308,7 +309,9 @@ model Stop {
   time_end       Int?
   lat            Float?
   lon            Float?
-  comments       String?         @db.VarChar(200)
+  comments       String?         @db.Text
+  comments_ext   String?         @db.Text
+  phone_notification String?     @db.VarChar(45)
   event          Event[]
   event_template EventTemplate[]
   route_template RouteTemplate?  @relation(fields: [id_base_route], references: [id_route_template], onDelete: NoAction, onUpdate: NoAction, map: "fk_address_base_route1")
