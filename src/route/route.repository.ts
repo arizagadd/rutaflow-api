@@ -615,7 +615,7 @@ export class RouteRepository {
                                 tag: old?.tag ?? null,
                                 tag_color: old?.tag_color ?? null,
                                 logistic_comments: old?.logistic_comments ?? null,
-                                created_at: old?.created_at ?? null,
+                                created_at: old?.created_at ?? new Date(),
                             },
                         });
                         updatePromises.push(createUpdatePromise);
