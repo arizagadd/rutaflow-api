@@ -182,7 +182,7 @@ model Evidence {
   img         String?           @db.Text
   type        String?           @db.VarChar(45)
   approved    EvidenceApproved?
-  event       Event             @relation(fields: [id_event], references: [id_event], onDelete: NoAction, onUpdate: NoAction, map: "fk_evidence_event1")
+  event       Event             @relation(fields: [id_event], references: [id_event], onDelete: Cascade, onUpdate: NoAction, map: "fk_evidence_event1")
 
   @@index([id_event], map: "fk_evidence_event1_idx")
   @@map("evidence")
