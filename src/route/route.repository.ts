@@ -539,11 +539,22 @@ export class RouteRepository {
                     tag_color: true,
                     logistic_comments: true,
                     created_at: true,
+                    date_service: true,
                 },
             });
 
             // Filter and store completed events' stop IDs
-            const completedEventIds = new Set(events.filter((e) => e.status === EventStatus.COMPLETED).map(e => e.stop.id_stop));
+            const completedEventIds = new Set(
+                events
+                    .filter(
+                        e =>
+                            e.status === EventStatus.COMPLETED ||     // completado normal
+                            e.date_service !== null                   // ⬅️ ya tiene evidencia
+                        //  o  e.date_completed !== null
+                    )
+                    .map(e => e.stop.id_stop)
+            );
+
 
             // Fetch existing tags, tag_colors and logistic_comments for non-completed events
             const eventTagMap = new Map<number, { tag: string | null; tag_color: string | null; logistic_comments: string | null; created_at: Date | null }>();
