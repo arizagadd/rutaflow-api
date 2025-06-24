@@ -576,6 +576,7 @@ export class RouteRepository {
                     status: {
                         not: EventStatus.COMPLETED,
                     },
+                    date_service: null
                 },
             });
 
