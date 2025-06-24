@@ -26,46 +26,46 @@ export class RouteService {
         private readonly vehicleRepository: VehicleRepository,
         private readonly driverRepository: DriverRepository,
         private readonly stopRepository: StopRepository,
-    ) {}
+    ) { }
 
     //TODO: update pos 0 event of specific route to 'completed' once driver has started journey
 
     // Generates the route that the driver will follow to complete a journey
     async generateRouteFromTemplate(body: CreateRouteByTemplateDto): Promise<RouteTemplate> {
         //try {
-            // origen = stop_initial, destination = stop_final which should already exist in the database upon creation of route template
-            let routeTemplate = await this.routeRepository.findRouteTemplateRecordById(body.routeTemplateId);
+        // origen = stop_initial, destination = stop_final which should already exist in the database upon creation of route template
+        let routeTemplate = await this.routeRepository.findRouteTemplateRecordById(body.routeTemplateId);
 
-            // if there is no polyline this means the RoutTemplate doesn't have a predefined set of directions for completing the route yet
-            // therefore a route must be generated and the data must be updated in the RouteTemplate record
-            if (!routeTemplate.polyline) {
-                try {
-                    const stopInitial = await this.stopRepository.findStopRecordById(routeTemplate.stop_initial);
-                    const stopFinal = await this.stopRepository.findStopRecordById(routeTemplate.stop_final);
-                    const directions = await this.routeRepository.prepareRouteTemplateDirections(
-                        routeTemplate.id_route_template,
-                        stopInitial,
-                        stopFinal,
-                    );
+        // if there is no polyline this means the RoutTemplate doesn't have a predefined set of directions for completing the route yet
+        // therefore a route must be generated and the data must be updated in the RouteTemplate record
+        if (!routeTemplate.polyline) {
+            try {
+                const stopInitial = await this.stopRepository.findStopRecordById(routeTemplate.stop_initial);
+                const stopFinal = await this.stopRepository.findStopRecordById(routeTemplate.stop_final);
+                const directions = await this.routeRepository.prepareRouteTemplateDirections(
+                    routeTemplate.id_route_template,
+                    stopInitial,
+                    stopFinal,
+                );
 
-                    const routeTemplateData: SetRouteTemplateDirectionsParams = {
-                        routeTemplateId: routeTemplate.id_route_template,
-                        directions,
-                    };
+                const routeTemplateData: SetRouteTemplateDirectionsParams = {
+                    routeTemplateId: routeTemplate.id_route_template,
+                    directions,
+                };
 
-                    //routeTemplate will be equal to the new updated record
-                    routeTemplate = await this.setRouteTemplateDirections(routeTemplateData);
+                //routeTemplate will be equal to the new updated record
+                routeTemplate = await this.setRouteTemplateDirections(routeTemplateData);
 
-                    return routeTemplate;
-                } catch (error) {
-                    throw new DomainError({
-                        domain: 'ROUTE',
-                        layer: 'SERVICE',
-                        message: `Unable to populate directions in RouteTemplate with id ${routeTemplate.id_route_template} `,
-                        cause: error,
-                    });
-                }
+                return routeTemplate;
+            } catch (error) {
+                throw new DomainError({
+                    domain: 'ROUTE',
+                    layer: 'SERVICE',
+                    message: `Unable to populate directions in RouteTemplate with id ${routeTemplate.id_route_template} `,
+                    cause: error,
+                });
             }
+        }
     }
 
     async updateRouteTrajectory(body: UpdateRouteDto): Promise<Route> {
@@ -74,7 +74,7 @@ export class RouteService {
             const newStopInitial = await this.stopRepository.findStopRecordById(body.stopInitial);
             const newStopFinal = await this.stopRepository.findStopRecordById(body.stopFinal);
             let params: SetupRouteDirectionsParams;
-    
+
             let stopWaypointsIds: number[] | undefined;
             if (body.stopWaypoints) {
                 const newStopWaypoints = await this.stopRepository.findManyStopsById(body.stopWaypoints);
@@ -90,7 +90,7 @@ export class RouteService {
                     stopFinal: newStopFinal,
                 };
             }
-    
+
             const newDirections = this.mapsService.setUpRouteDirectionsParams(params);
             const routeDirectionsData: UpdateRouteDirectionsParams = {
                 route,
@@ -100,13 +100,13 @@ export class RouteService {
                 stopWaypoints: stopWaypointsIds, // Pass stopWaypoints IDs
             };
             route = await this.updateRouteDirections(routeDirectionsData);
-    
+
             return route;
         } catch (error) {
             if (error instanceof DomainError) {
                 throw error;
             }
-    
+
             if (error instanceof DataBaseError) {
                 throw new DomainError({
                     domain: 'ROUTE',
@@ -115,7 +115,7 @@ export class RouteService {
                     cause: error,
                 });
             }
-    
+
             throw new UnexpectedError({
                 domain: 'ROUTE',
                 layer: 'SERVICE',
@@ -125,8 +125,8 @@ export class RouteService {
             });
         }
     }
-    
-    
+
+
 
     async setRouteTemplateDirections(params: SetRouteTemplateDirectionsParams): Promise<RouteTemplate> {
         try {
@@ -185,14 +185,20 @@ export class RouteService {
                     message: `Unable to generate route, missing DirectionsRoute[] from DirectionsResponseData.routes`,
                 });
             }
-        
+
             const filteredDirections = this.mapsService.filterDirectionsResponse(directions);
 
             // Now polyline, totalDistance, totalDuration, and totalStops are available in a normalized form.
             const events = await this.routeRepository.findManyEventRecordsByRouteId(params.route.id_route);
-            const completedEvents = events.filter((e) => e.status === EventStatus.COMPLETED);
+            const completedEvents = events.filter(e =>
+                e.status === EventStatus.COMPLETED ||    // paradas formalmente completadas
+                e.date_service != null                   // paradas con evidencia subida
+            );
+
+            console.log("eventos completados ", completedEvents);
+
             const totalStops = filteredDirections.totalStops + completedEvents.length;
-            
+
             const routeData: UpdateRouteParams = {
                 polyline: filteredDirections.polyline,
                 totalDistance: filteredDirections.totalDistance,
@@ -201,13 +207,13 @@ export class RouteService {
                 stopInitial: params.newStopInitial.id_stop,
                 stopFinal: params.newStopFinal.id_stop,
             };
-        
+
             const updatedRoute = await this.routeRepository.updateRouteRecord(params.route.id_route, routeData);
             // Update the route with the new directions
             await this.routeRepository.matchLegsToManyEventRecords(params.route, directions, params.stopWaypoints);
-            
+
             return updatedRoute;
-          } catch (error) {
+        } catch (error) {
             if (error instanceof DomainError) {
                 throw error;
             }
@@ -219,7 +225,7 @@ export class RouteService {
                     cause: error,
                 });
             }
-        
+
             throw new UnexpectedError({
                 domain: 'ROUTE',
                 layer: 'SERVICE',
@@ -229,7 +235,7 @@ export class RouteService {
             });
         }
     }
-      
+
 
     async getRoute(id: number): Promise<Route> {
         try {
