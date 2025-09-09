@@ -19,11 +19,15 @@ export class RouteController {
             //await this.routeService.getRoute(newRoute.id_route_template);
         } catch (error) {
             logError(error, req);
+            
+            // Check if it's a domain error with a specific message
+            const errorMessage = error.message || 'Route could not be created.';
+            
             throw new InternalServerErrorException({
                 status: 'error',
                 error: {
                     code: 500,
-                    message: 'Route could not be created.',
+                    message: errorMessage,
                 },
             });
         }
