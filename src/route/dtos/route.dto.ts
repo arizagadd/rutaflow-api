@@ -44,6 +44,13 @@ export class CreateRouteByTemplateDto {
   vehicleId: number;
 }
 
+export class GenerateTemplateDirectionsDto {
+  @IsNumber()
+  @IsNotEmpty()
+  @Transform(({ value }) => desencriptar(value), { toClassOnly: true })
+  routeTemplateId: number;
+}
+
 export class UpdateRouteDto {
   @IsNumber()
   @IsNotEmpty()
