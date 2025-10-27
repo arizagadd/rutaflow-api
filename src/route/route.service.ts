@@ -30,6 +30,46 @@ export class RouteService {
 
     //TODO: update pos 0 event of specific route to 'completed' once driver has started journey
 
+    // Generates directions for a route template without creating a route
+    async generateTemplateDirections(body: { routeTemplateId: number }): Promise<RouteTemplate> {
+        // Get the route template
+        let routeTemplate = await this.routeRepository.findRouteTemplateRecordById(body.routeTemplateId);
+
+        // If there is no polyline, generate directions and update the template
+        if (!routeTemplate.polyline) {
+            try {
+                const stopInitial = await this.stopRepository.findStopRecordById(routeTemplate.stop_initial);
+                const stopFinal = await this.stopRepository.findStopRecordById(routeTemplate.stop_final);
+                const directions = await this.routeRepository.prepareRouteTemplateDirections(
+                    routeTemplate.id_route_template,
+                    stopInitial,
+                    stopFinal,
+                );
+
+                const routeTemplateData: SetRouteTemplateDirectionsParams = {
+                    routeTemplateId: routeTemplate.id_route_template,
+                    directions,
+                };
+                // Update the template with the generated directions
+                routeTemplate = await this.setRouteTemplateDirections(routeTemplateData);
+            } catch (error) {
+                // Pass through specific coordinate validation errors
+                if (error instanceof DomainError && error.message.includes('coordinates')) {
+                    throw error;
+                }
+                
+                throw new DomainError({
+                    domain: 'ROUTE',
+                    layer: 'SERVICE',
+                    message: `Unable to populate directions in RouteTemplate with id ${routeTemplate.id_route_template}: ${error.message}`,
+                    cause: error,
+                });
+            }
+        }
+
+        return routeTemplate;
+    }
+
     // Generates the route that the driver will follow to complete a journey
     async generateRouteFromTemplate(body: CreateRouteByTemplateDto): Promise<Route> {
         // origen = stop_initial, destination = stop_final which should already exist in the database upon creation of route template

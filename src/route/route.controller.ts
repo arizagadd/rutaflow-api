@@ -1,7 +1,7 @@
 import { Body, Controller, InternalServerErrorException, Post, Req, Version } from '@nestjs/common';
 import { ErrorResponse, SuccessResponse } from '../shared/json-response.dto';
 import { logError } from '../shared/logger';
-import { CreateRouteByTemplateDto, UpdateRouteDto } from './dtos/route.dto';
+import { CreateRouteByTemplateDto, GenerateTemplateDirectionsDto, UpdateRouteDto } from './dtos/route.dto';
 import { RouteService } from './route.service';
 
 @Controller('route')
@@ -37,6 +37,43 @@ export class RouteController {
             message: 'Route created successfully.',
         };
     }
+
+    @Version('1')
+    @Post('template/generate-directions')
+    async generateTemplateDirections(
+        @Req() req: Request,
+        @Body() data: GenerateTemplateDirectionsDto,
+    ): Promise<SuccessResponse<any> | ErrorResponse> {
+        try {
+            const updatedTemplate = await this.routeService.generateTemplateDirections(data);
+            return {
+                status: 'success',
+                message: 'Template directions generated successfully.',
+                data: {
+                    routeTemplateId: updatedTemplate.id_route_template,
+                    name: updatedTemplate.name,
+                    polyline: updatedTemplate.polyline,
+                    totalDistance: updatedTemplate.total_distance,
+                    totalDuration: updatedTemplate.total_duration,
+                    totalStops: updatedTemplate.total_stops,
+                },
+            };
+        } catch (error) {
+            logError(error, req);
+            
+            // Check if it's a domain error with a specific message
+            const errorMessage = error.message || 'Template directions could not be generated.';
+            
+            throw new InternalServerErrorException({
+                status: 'error',
+                error: {
+                    code: 500,
+                    message: errorMessage,
+                },
+            });
+        }
+    }
+
     @Version('1')
     @Post('update-trajectory')
     async generate(@Req() req: Request, @Body() data: UpdateRouteDto): Promise<SuccessResponse<string> | ErrorResponse> {
