@@ -312,6 +312,7 @@ model Stop {
   comments       String?         @db.Text
   comments_ext   String?         @db.Text
   phone_notification String?     @db.VarChar(45)
+  is_archived    Int?            @default(0)
   event          Event[]
   event_template EventTemplate[]
   route_template RouteTemplate?  @relation(fields: [id_base_route], references: [id_route_template], onDelete: NoAction, onUpdate: NoAction, map: "fk_address_base_route1")

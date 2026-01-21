@@ -382,7 +382,8 @@ export class RouteService {
             const newStopFinal = await this.stopRepository.findStopRecordById(body.stopFinal);
             
             // Validar que las paradas de origen y destino no estén archivadas
-            if (newStopInitial.is_archived === 1 || newStopInitial.is_archived === true) {
+            // is_archived es Int? (puede ser null, 0 o 1)
+            if (newStopInitial.is_archived === 1) {
                 throw new DomainError({
                     domain: 'ROUTE',
                     layer: 'SERVICE',
@@ -390,7 +391,7 @@ export class RouteService {
                 });
             }
             
-            if (newStopFinal.is_archived === 1 || newStopFinal.is_archived === true) {
+            if (newStopFinal.is_archived === 1) {
                 throw new DomainError({
                     domain: 'ROUTE',
                     layer: 'SERVICE',
@@ -405,8 +406,9 @@ export class RouteService {
                 const newStopWaypoints = await this.stopRepository.findManyStopsById(body.stopWaypoints);
                 
                 // Filtrar paradas archivadas y validar
+                // is_archived es Int? (puede ser null, 0 o 1)
                 const validWaypoints = newStopWaypoints.filter(stop => {
-                    return stop.is_archived !== 1 && stop.is_archived !== true;
+                    return stop.is_archived !== 1;
                 });
                 
                 if (validWaypoints.length !== newStopWaypoints.length) {
