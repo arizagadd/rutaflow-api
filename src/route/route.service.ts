@@ -340,16 +340,53 @@ export class RouteService {
             let route = await this.routeRepository.findRouteRecordById(body.routeId);
             const newStopInitial = await this.stopRepository.findStopRecordById(body.stopInitial);
             const newStopFinal = await this.stopRepository.findStopRecordById(body.stopFinal);
+            
+            // Validar que las paradas de origen y destino no estén archivadas
+            if (newStopInitial.is_archived === 1 || newStopInitial.is_archived === true) {
+                throw new DomainError({
+                    domain: 'ROUTE',
+                    layer: 'SERVICE',
+                    message: `La parada de origen está archivada y no puede usarse en rutas`,
+                });
+            }
+            
+            if (newStopFinal.is_archived === 1 || newStopFinal.is_archived === true) {
+                throw new DomainError({
+                    domain: 'ROUTE',
+                    layer: 'SERVICE',
+                    message: `La parada de destino está archivada y no puede usarse en rutas`,
+                });
+            }
+            
             let params: SetupRouteDirectionsParams;
 
             let stopWaypointsIds: number[] | undefined;
-            if (body.stopWaypoints) {
+            if (body.stopWaypoints && body.stopWaypoints.length > 0) {
                 const newStopWaypoints = await this.stopRepository.findManyStopsById(body.stopWaypoints);
-                stopWaypointsIds = newStopWaypoints.map(stop => stop.id_stop);
+                
+                // Filtrar paradas archivadas y validar
+                const validWaypoints = newStopWaypoints.filter(stop => {
+                    return stop.is_archived !== 1 && stop.is_archived !== true;
+                });
+                
+                if (validWaypoints.length !== newStopWaypoints.length) {
+                    const archivedCount = newStopWaypoints.length - validWaypoints.length;
+                    console.warn(`⚠️ ${archivedCount} parada(s) archivada(s) fueron filtradas de los waypoints`);
+                }
+                
+                if (validWaypoints.length === 0 && body.stopWaypoints.length > 0) {
+                    throw new DomainError({
+                        domain: 'ROUTE',
+                        layer: 'SERVICE',
+                        message: `Todas las paradas intermedias están archivadas y no pueden usarse en rutas`,
+                    });
+                }
+                
+                stopWaypointsIds = validWaypoints.map(stop => stop.id_stop);
                 params = {
                     stopInitial: newStopInitial,
                     stopFinal: newStopFinal,
-                    stopWaypoints: newStopWaypoints,
+                    stopWaypoints: validWaypoints,
                 };
             } else {
                 params = {
