@@ -82,11 +82,15 @@ export class RouteController {
             await this.routeService.getRoute(updatedRoute.id_route);
         } catch (error) {
             logError(error, req);
+            
+            // Pass through the actual error message for better debugging
+            const errorMessage = error.message || 'Route could not be updated.';
+            
             throw new InternalServerErrorException({
                 status: 'error',
                 error: {
                     code: 500,
-                    message: 'Route could not be updated.',
+                    message: errorMessage,
                 },
             });
         }
