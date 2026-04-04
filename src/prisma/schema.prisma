@@ -85,6 +85,8 @@ model Driver {
   alias               String?                   @db.VarChar(45)
   img                 String?                   @db.VarChar(200)
   status              DriverStatus?
+  ine_doc             String?                   @db.VarChar(500)
+  license_doc         String?                   @db.VarChar(500)
   ine_exp_date        DateTime?                 @db.Date
   license_exp_date    DateTime?                 @db.Date
   insurance_status    DriverInsuranceStatus?
@@ -365,12 +367,14 @@ model Vehicle {
   brand            String?        @db.VarChar(100)
   model            String?        @db.VarChar(45)
   year             Int?
-  color            String?        @db.VarChar(45)
-  motor            String?        @db.VarChar(45)
-  serial_number    String?        @db.VarChar(45)
-  insurance_number String?        @db.VarChar(45)
-  fuel_type        String?        @db.VarChar(45)
-  plate_number     String?        @db.VarChar(45)
+  color             String?        @db.VarChar(45)
+  motor             String?        @db.VarChar(45)
+  serial_number     String?        @db.VarChar(45)
+  insurance_number  String?        @db.VarChar(45)
+  insurance_policy  String?        @db.VarChar(500)
+  insurance_expiration DateTime?    @db.Date
+  fuel_type         String?        @db.VarChar(45)
+  plate_number      String?        @db.VarChar(45)
   capacity         String?        @db.VarChar(45)
   dimension        String?        @db.VarChar(45)
   comments         String?        @db.VarChar(500)
