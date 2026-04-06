@@ -27,33 +27,36 @@ export class NotificationService {
   }
 
   /**
-   * Formatea número mexicano a formato internacional
-   * 3311493852 → +523311493852
+   * México WhatsApp: por defecto +521 + 10 dígitos. WHATSAPP_MX_USE_LEGACY_52=1 → +52 + 10 (sin 1 móvil).
    */
   private formatMexicanPhone(phone: string): string {
-    let cleaned = phone.replace(/[\s\-\(\)]/g, '');
+    const legacy =
+      process.env.WHATSAPP_MX_USE_LEGACY_52 === '1';
+    let digits = phone.replace(/\D/g, '');
 
-    if (cleaned.startsWith('+')) {
-      cleaned = cleaned.slice(1);
+    if (legacy) {
+      if (digits.length === 13 && digits.startsWith('521')) {
+        digits = '52' + digits.slice(3);
+      }
+      if (digits.length === 10) {
+        return `+52${digits}`;
+      }
+      if (digits.length === 12 && digits.startsWith('52')) {
+        return `+${digits}`;
+      }
+      return `+${digits}`;
     }
 
-    // Solo dígitos a partir de aquí
-    const digits = cleaned.replace(/\D/g, '');
     if (digits.length === 13 && digits.startsWith('521')) {
-      cleaned = '52' + digits.slice(3);
-    } else {
-      cleaned = digits;
+      return `+${digits}`;
     }
-
-    if (cleaned.length === 10) {
-      return `+52${cleaned}`;
+    if (digits.length === 12 && digits.startsWith('52')) {
+      return `+521${digits.slice(2)}`;
     }
-
-    if (cleaned.length === 12 && cleaned.startsWith('52')) {
-      return `+${cleaned}`;
+    if (digits.length === 10) {
+      return `+521${digits.replace(/^0+/, '')}`;
     }
-
-    return cleaned.startsWith('+') ? cleaned : `+${cleaned}`;
+    return `+${digits}`;
   }
 
   async sendWhatsApp(to: string, contentSid: string, contentVariables: any) {
