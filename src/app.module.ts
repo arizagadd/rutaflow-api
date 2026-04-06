@@ -11,6 +11,7 @@ import { StopModule } from './stop/stop.module';
 import { UserModule } from './user/user.module';
 import { VehicleModule } from './vehicle/vehicle.module';
 import { ClusterModule } from './cluster/cluster.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
     imports: [
