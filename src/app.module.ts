@@ -27,6 +27,7 @@ import { NotificationModule } from './notification/notification.module';
         EnterpriseModule,
         StopModule,
         ClusterModule,
+        NotificationModule,
     ],
     controllers: [AppController],
     providers: [AppService],

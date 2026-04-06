@@ -18,7 +18,11 @@ export class NotificationController {
 
   @Post('cliente')
   async notifyCliente(
-    @Body() body: { phone: string; clientName: string; stopName: string },
+    @Body() body: {
+      phone: string;
+      clientName: string;
+      stopName: string;
+    },
   ) {
     return this.notificationService.notifyCliente(
       body.phone,
@@ -27,14 +31,40 @@ export class NotificationController {
     );
   }
 
+  /**
+   * Compatible con el panel (main.js): acepta `to` o `phone`, plantilla o texto libre.
+   */
   @Post('send')
   async sendGeneric(
-    @Body() body: { to: string; contentSid: string; contentVariables: any },
+    @Body()
+    body: {
+      to?: string;
+      phone?: string;
+      text?: string;
+      contentSid?: string;
+      contentVariables?: any;
+    },
   ) {
-    return this.notificationService.sendWhatsApp(
-      body.to,
-      body.contentSid,
-      body.contentVariables,
-    );
+    const dest = (body.to || body.phone || '').trim();
+    if (!dest) {
+      return { success: false, message: 'Falta teléfono (to o phone).' };
+    }
+
+    if (body.contentSid) {
+      return this.notificationService.sendWhatsApp(
+        dest,
+        body.contentSid,
+        body.contentVariables,
+      );
+    }
+
+    if (body.text != null && String(body.text).trim() !== '') {
+      return this.notificationService.sendWhatsAppText(dest, String(body.text));
+    }
+
+    return {
+      success: false,
+      message: 'Falta contentSid (plantilla) o text (mensaje libre).',
+    };
   }
 }
