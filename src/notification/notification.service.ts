@@ -34,7 +34,15 @@ export class NotificationService {
     let cleaned = phone.replace(/[\s\-\(\)]/g, '');
 
     if (cleaned.startsWith('+')) {
-      return cleaned;
+      cleaned = cleaned.slice(1);
+    }
+
+    // Solo dígitos a partir de aquí
+    const digits = cleaned.replace(/\D/g, '');
+    if (digits.length === 13 && digits.startsWith('521')) {
+      cleaned = '52' + digits.slice(3);
+    } else {
+      cleaned = digits;
     }
 
     if (cleaned.length === 10) {
@@ -45,7 +53,7 @@ export class NotificationService {
       return `+${cleaned}`;
     }
 
-    return cleaned;
+    return cleaned.startsWith('+') ? cleaned : `+${cleaned}`;
   }
 
   async sendWhatsApp(to: string, contentSid: string, contentVariables: any) {
@@ -130,14 +138,13 @@ export class NotificationService {
     }
   }
 
-  async notifyConductor(phone: string, routeName: string, date: string) {
+  async notifyConductor(phone: string, routeName: string, _date: string) {
     const contentSid =
       process.env.TWILIO_TEMPLATE_ROUTE_ASSIGN ||
+      process.env.TEMPLATE_NOTIFICACIONES_DE_RUTA ||
       'HXb3f55276067d464b8d8e457478e122be';
-    const contentVariables = {
-      '1': routeName,
-      '2': date || new Date().toISOString().split('T')[0],
-    };
+    // Plantilla notificaciones_de_ruta: solo {{1}} = nombre de ruta. Enviar {{2}} u otros rompe la entrega (Failed en consola Twilio).
+    const contentVariables = { '1': routeName };
     return this.sendWhatsApp(phone, contentSid, contentVariables);
   }
 
