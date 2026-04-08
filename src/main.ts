@@ -8,6 +8,7 @@ async function bootstrap(): Promise<void> {
     const allowedOrigins = [
         'https://app.rutaflow.com',
         'https://dev.rutaflow.com',
+        'https://driver.rutaflow.com',
         'http://localhost:3000',
         'http://127.0.0.1:3000',
         'http://localhost:5173',
