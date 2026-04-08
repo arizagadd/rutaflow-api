@@ -10,9 +10,9 @@ export class NotificationController {
     @Body() body: { phone: string; routeName: string; date: string },
   ) {
     return this.notificationService.notifyConductor(
-      body.phone,
-      body.routeName,
-      body.date,
+      String(body.phone ?? '').trim(),
+      String(body.routeName ?? ''),
+      String(body.date ?? ''),
     );
   }
 
@@ -25,9 +25,9 @@ export class NotificationController {
     },
   ) {
     return this.notificationService.notifyCliente(
-      body.phone,
-      body.clientName,
-      body.stopName,
+      String(body.phone ?? '').trim(),
+      String(body.clientName ?? ''),
+      String(body.stopName ?? ''),
     );
   }
 
@@ -45,7 +45,7 @@ export class NotificationController {
       contentVariables?: any;
     },
   ) {
-    const dest = (body.to || body.phone || '').trim();
+    const dest = String(body.to ?? body.phone ?? '').trim();
     if (!dest) {
       return { success: false, message: 'Falta teléfono (to o phone).' };
     }
