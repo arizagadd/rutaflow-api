@@ -136,8 +136,24 @@ export class NotificationService {
         message: 'Notificación enviada correctamente.',
       };
     } catch (error: any) {
+      const code = error?.code;
+      // WhatsApp: texto libre solo dentro de la ventana de 24 h tras el último mensaje del usuario.
+      if (code === 63016 || code === '63016') {
+        return {
+          success: false,
+          error: 'whatsapp_template_required',
+          message:
+            'WhatsApp no permite texto libre fuera de la ventana de 24 h. Usa plantilla aprobada: POST /api/notification/send con contentSid y contentVariables, o los endpoints /conductor y /cliente.',
+          twilioCode: 63016,
+        };
+      }
       const msg = error.message || 'Error de Twilio';
-      return { success: false, error: msg, message: msg };
+      return {
+        success: false,
+        error: msg,
+        message: msg,
+        ...(code != null && { twilioCode: code }),
+      };
     }
   }
 
