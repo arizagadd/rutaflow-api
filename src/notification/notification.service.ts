@@ -33,27 +33,28 @@ export class NotificationService {
   }
 
   /**
-   * Solo TWILIO_SMS_FROM (E.164). No reutilizar TWILIO_WHATSAPP_FROM: el sender de WhatsApp
-   * suele no ser válido para Programmable SMS (Twilio 21659). Mismo criterio que send_sms.php en el panel.
+   * SMS: TWILIO_SMS_FROM (E.164). Mismo default que send_sms.php: +12565308609.
+   * No usar TWILIO_WHATSAPP_FROM para SMS (whatsapp:+… no es válido como From de SMS → 21659).
    */
-  private getFromSms(): string | null {
+  private getFromSms(): string {
     const raw = process.env.TWILIO_SMS_FROM?.trim();
-    if (!raw) return null;
-    const d = raw.replace(/\D/g, '');
-    if (d.length < 10) return null;
-    return raw.startsWith('+') ? raw : `+${d}`;
+    const fallback = '+12565308609';
+    const chosen = raw && raw.length > 0 ? raw : fallback;
+    const d = chosen.replace(/\D/g, '');
+    if (d.length < 10) return fallback;
+    return chosen.startsWith('+') ? chosen : `+${d}`;
   }
 
   /** SMS clásico (no WhatsApp). Mismo formateo de destino que las notificaciones MX. */
   async sendSms(to: string, body: string) {
     const client = this.getClient();
     const from = this.getFromSms();
-    if (!client || !from) {
+    if (!client) {
       return {
         success: false,
         message:
-          'SMS: defina TWILIO_SMS_FROM (mismo número que send_sms.php del panel, p. ej. +12565308609) además de TWILIO_ACCOUNT_SID y TWILIO_AUTH_TOKEN.',
-        error: 'twilio_sms_not_configured',
+          'SMS: defina TWILIO_ACCOUNT_SID y TWILIO_AUTH_TOKEN. TWILIO_SMS_FROM es opcional (default +12565308609, igual que send_sms.php).',
+        error: 'twilio_not_configured',
       };
     }
 
