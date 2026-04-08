@@ -59,6 +59,34 @@ export class NotificationService {
     return `+${digits}`;
   }
 
+  /**
+   * Twilio 21656: sin vacíos, sin saltos/tab ni >4 espacios seguidos, máx. 1600 chars.
+   * @see https://www.twilio.com/docs/api/errors/21656
+   */
+  private sanitizeOneContentValue(value: unknown): string {
+    let s =
+      value == null
+        ? ''
+        : String(value)
+            .replace(/\r\n|\r|\n|\t/g, ' ')
+            .replace(/ {5,}/g, '    ')
+            .trim();
+    if (s.length > 1600) {
+      s = s.slice(0, 1600);
+    }
+    return s.length > 0 ? s : '—';
+  }
+
+  private normalizeContentVariables(
+    variables: Record<string, unknown>,
+  ): Record<string, string> {
+    const out: Record<string, string> = {};
+    for (const [key, val] of Object.entries(variables)) {
+      out[key] = this.sanitizeOneContentValue(val);
+    }
+    return out;
+  }
+
   async sendWhatsApp(to: string, contentSid: string, contentVariables: any) {
     const client = this.getClient();
     const from = this.getFromWhatsApp();
@@ -74,13 +102,21 @@ export class NotificationService {
     const formattedPhone = this.formatMexicanPhone(to);
     const toWhatsApp = `whatsapp:${formattedPhone}`;
 
-    let variables = contentVariables;
+    let variables: Record<string, unknown> = contentVariables;
     if (typeof contentVariables === 'string') {
       try {
-        variables = JSON.parse(contentVariables);
+        variables = JSON.parse(contentVariables) as Record<string, unknown>;
       } catch {
         variables = { '1': contentVariables };
       }
+    }
+
+    if (
+      variables &&
+      typeof variables === 'object' &&
+      !Array.isArray(variables)
+    ) {
+      variables = this.normalizeContentVariables(variables);
     }
 
     try {
@@ -103,8 +139,23 @@ export class NotificationService {
       console.error('Error Code:', error.code);
       console.error('Error Message:', error.message);
       console.error('Full Error:', JSON.stringify(error, null, 2));
+      const code = error?.code;
+      if (code === 21656 || code === '21656') {
+        return {
+          success: false,
+          error: 'twilio_content_variables_invalid',
+          message:
+            'Twilio 21656: la plantilla no coincide con las variables enviadas. Si tu plantilla solo tiene {{1}}, define TWILIO_CLIENT_NOTIFY_VARS=1 en el servidor. Revisa en Twilio Console el Content (SID) y los placeholders aprobados.',
+          twilioCode: 21656,
+        };
+      }
       const msg = error.message || 'Error de Twilio';
-      return { success: false, error: msg, message: msg };
+      return {
+        success: false,
+        error: msg,
+        message: msg,
+        ...(code != null && { twilioCode: code }),
+      };
     }
   }
 
@@ -167,14 +218,36 @@ export class NotificationService {
     return this.sendWhatsApp(phone, contentSid, contentVariables);
   }
 
-  async notifyCliente(phone: string, clientName: string, stopName: string) {
+  /**
+   * Plantilla típica Rutaflow: corpcopy_va_en_camino — {{1}} cliente, {{2}} conductor.
+   * Override: TWILIO_TEMPLATE_CLIENT_NOTIFY. Una sola variable: TWILIO_CLIENT_NOTIFY_VARS=1.
+   */
+  async notifyCliente(phone: string, clientName: string, secondPlaceholder: string) {
     const contentSid =
       process.env.TWILIO_TEMPLATE_CLIENT_NOTIFY ||
-      'HXe896350388914baab3086eb293b5993b';
-    const contentVariables = {
-      '1': clientName,
-      '2': stopName,
-    };
+      'HX8634c5ceed46670f40c129c9d1623485';
+
+    const singleVar =
+      process.env.TWILIO_CLIENT_NOTIFY_VARS === '1' ||
+      process.env.TWILIO_CLIENT_NOTIFY_SINGLE_VAR === '1' ||
+      process.env.TWILIO_CLIENT_NOTIFY_SINGLE_VAR === 'true';
+
+    const n1 = this.sanitizeOneContentValue(clientName);
+    const n2 = this.sanitizeOneContentValue(secondPlaceholder);
+
+    const contentVariables = singleVar
+      ? {
+          '1':
+            n1 === '—' && n2 === '—'
+              ? 'Actualización de entrega'
+              : [n1, n2].filter((s) => s !== '—').join('. ') ||
+                'Actualización de entrega',
+        }
+      : {
+          '1': n1,
+          '2': n2,
+        };
+
     return this.sendWhatsApp(phone, contentSid, contentVariables);
   }
 }

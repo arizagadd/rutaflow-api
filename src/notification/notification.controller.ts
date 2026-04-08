@@ -1,5 +1,6 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { NotificationService } from './notification.service';
+import { NotifyClienteDto } from './dto/notify-cliente.dto';
 
 @Controller('notification')
 export class NotificationController {
@@ -17,17 +18,12 @@ export class NotificationController {
   }
 
   @Post('cliente')
-  async notifyCliente(
-    @Body() body: {
-      phone: string;
-      clientName: string;
-      stopName: string;
-    },
-  ) {
+  async notifyCliente(@Body() body: NotifyClienteDto) {
+    const second = String(body.driverName ?? body.stopName ?? '').trim();
     return this.notificationService.notifyCliente(
       String(body.phone ?? '').trim(),
       String(body.clientName ?? ''),
-      String(body.stopName ?? ''),
+      second,
     );
   }
 
