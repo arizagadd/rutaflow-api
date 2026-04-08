@@ -33,6 +33,71 @@ export class NotificationService {
   }
 
   /**
+   * Número Twilio en E.164 para SMS. TWILIO_SMS_FROM o el mismo número que TWILIO_WHATSAPP_FROM (sin prefijo whatsapp:).
+   */
+  private getFromSms(): string | null {
+    const raw = process.env.TWILIO_SMS_FROM?.trim();
+    if (raw) {
+      const d = raw.replace(/\D/g, '');
+      if (d.length >= 10) {
+        return raw.startsWith('+') ? raw : `+${d}`;
+      }
+    }
+    const wa = process.env.TWILIO_WHATSAPP_FROM?.trim();
+    if (!wa) return null;
+    if (wa.toLowerCase().startsWith('whatsapp:')) {
+      const n = wa.slice(9).replace(/\s/g, '');
+      return n.startsWith('+') ? n : `+${n.replace(/\D/g, '')}`;
+    }
+    return wa.startsWith('+') ? wa : `+${wa.replace(/\D/g, '')}`;
+  }
+
+  /** SMS clásico (no WhatsApp). Mismo formateo de destino que las notificaciones MX. */
+  async sendSms(to: string, body: string) {
+    const client = this.getClient();
+    const from = this.getFromSms();
+    if (!client || !from) {
+      return {
+        success: false,
+        message:
+          'SMS: defina TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN y TWILIO_SMS_FROM o TWILIO_WHATSAPP_FROM.',
+        error: 'twilio_sms_not_configured',
+      };
+    }
+
+    const formattedPhone = this.formatMexicanPhone(to);
+    const text = String(body ?? '')
+      .trim()
+      .slice(0, 1600);
+
+    try {
+      const messagingServiceSid = this.getMessagingServiceSid();
+      const message = await client.messages.create({
+        from,
+        to: formattedPhone,
+        body: text || 'Rutaflow',
+        ...(messagingServiceSid && { messagingServiceSid }),
+      });
+      return {
+        success: true,
+        sid: message.sid,
+        channel: 'sms' as const,
+        message: 'SMS enviado',
+      };
+    } catch (error: any) {
+      const code = error?.code;
+      const msg = error.message || 'Error de Twilio (SMS)';
+      return {
+        success: false,
+        error: msg,
+        message: msg,
+        channel: 'sms' as const,
+        ...(code != null && { twilioCode: code }),
+      };
+    }
+  }
+
+  /**
    * México WhatsApp: por defecto +521 + 10 dígitos. WHATSAPP_MX_USE_LEGACY_52=1 → +52 + 10 (sin 1 móvil).
    */
   private formatMexicanPhone(phone: string): string {

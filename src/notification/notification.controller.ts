@@ -27,6 +27,22 @@ export class NotificationController {
     );
   }
 
+  /** SMS clásico (Twilio Programmable SMS), no WhatsApp. Body: `{ phone, text }` o `body`. */
+  @Post('sms')
+  async sendSms(
+    @Body() body: { phone?: string; text?: string; body?: string },
+  ) {
+    const phone = String(body.phone ?? '').trim();
+    const text = String(body.text ?? body.body ?? '').trim();
+    if (!phone) {
+      return { success: false, message: 'Falta phone.' };
+    }
+    if (!text) {
+      return { success: false, message: 'Falta text o body.' };
+    }
+    return this.notificationService.sendSms(phone, text);
+  }
+
   /**
    * Compatible con el panel (main.js): acepta `to` o `phone`, plantilla o texto libre.
    */
