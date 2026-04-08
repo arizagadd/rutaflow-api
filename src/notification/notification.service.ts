@@ -26,6 +26,12 @@ export class NotificationService {
     return `whatsapp:${raw.replace(/^\+/, '')}`;
   }
 
+  /** Opcional: Messaging Service SID (MG…). Ver Twilio Content + Messaging Services. */
+  private getMessagingServiceSid(): string | undefined {
+    const mg = process.env.TWILIO_MESSAGING_SERVICE_SID?.trim();
+    return mg || undefined;
+  }
+
   /**
    * México WhatsApp: por defecto +521 + 10 dígitos. WHATSAPP_MX_USE_LEGACY_52=1 → +52 + 10 (sin 1 móvil).
    */
@@ -125,11 +131,13 @@ export class NotificationService {
       );
       console.log(`Content Variables: ${JSON.stringify(variables)}`);
 
+      const messagingServiceSid = this.getMessagingServiceSid();
       const message = await client.messages.create({
         from,
         to: toWhatsApp,
         contentSid,
         contentVariables: JSON.stringify(variables),
+        ...(messagingServiceSid && { messagingServiceSid }),
       });
 
       console.log(`WhatsApp message sent successfully. SID: ${message.sid}`);
@@ -176,10 +184,12 @@ export class NotificationService {
     const toWhatsApp = `whatsapp:${formattedPhone}`;
 
     try {
+      const messagingServiceSid = this.getMessagingServiceSid();
       const message = await client.messages.create({
         from,
         to: toWhatsApp,
         body: body || '',
+        ...(messagingServiceSid && { messagingServiceSid }),
       });
       return {
         success: true,
