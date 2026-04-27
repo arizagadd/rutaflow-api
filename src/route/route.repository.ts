@@ -543,11 +543,13 @@ export class RouteRepository {
                     logistic_comments: true,
                     created_at: true,
                     date_service: true,
+                    id_event: true,
+                    id_stop: true,
                 },
             });
 
             // Filter and store completed events' stop IDs
-            const completedEventIds = new Set(
+            const completedEventStopIds = new Set(
                 events
                     .filter(
                         e =>
@@ -661,11 +663,12 @@ export class RouteRepository {
                     });
 
                     for (const stop of matchingStops) {
-                        if (stopIdsSet.has(stop.id_stop) && !completedEventIds.has(stop.id_stop)) {
+                        if (stopIdsSet.has(stop.id_stop) && !completedEventStopIds.has(stop.id_stop)) {
                             stopIdsSet.delete(stop.id_stop);
 
-                            // Retrieve the tag and tag_color from the previously saved map (if exists)
-                            const old = eventTagMap.get(stop.id_stop);
+                            // Retrieve the tag and tag_color from the pool
+                            const pool = eventPool.get(stop.id_stop) || [];
+                            const old = pool.shift();
 
                             // Create the event with the tag and tag_color information
                             const createUpdatePromise = this.prismaRepository.event.create({
