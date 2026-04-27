@@ -561,17 +561,18 @@ export class RouteRepository {
             );
 
 
-            // Fetch existing tags, tag_colors and logistic_comments for non-completed events
             // Use a map of arrays to handle duplicate stops in the same route
             const eventPool = new Map<number, any[]>();
-            const completedEventIds = new Set<number>();
+            const allEventIds = new Set<number>();
             const inServiceEventIds = new Set<number>();
+            const completedEventIds = new Set<number>();
 
             events.forEach((e) => {
                 if (!eventPool.has(e.id_stop)) {
                     eventPool.set(e.id_stop, []);
                 }
                 eventPool.get(e.id_stop).push(e);
+                allEventIds.add(e.id_event);
                 
                 if (e.status === EventStatus.COMPLETED) {
                     completedEventIds.add(e.id_event);
@@ -581,56 +582,66 @@ export class RouteRepository {
                 }
             });
 
-            // Delete only non-completed and non-in-service events
-            await this.prismaRepository.event.deleteMany({
-                where: {
-                    id_route: route.id_route,
-                    status: {
-                        not: EventStatus.COMPLETED,
-                    },
-                    date_service: null
-                },
-            });
-
+            const matchedEventIds = new Set<number>();
             let currentPos = posindex; // Start from posindex (usually 0)
 
             if (!optimize) {
                 // ── MANUAL REORDER MODE ──
-                // When optimize is false, preserve the exact order from stopWaypoints array.
-                // This is used after drag-and-drop reordering in the web admin panel.
-                console.log('🔀 matchLegsToManyEventRecords: Manual reorder mode (optimize=false), preserving stopWaypoints order');
+                console.log('🔀 matchLegsToManyEventRecords: Manual reorder mode (optimize=false), preserving existing events');
 
                 for (const stopId of stopWaypoints) {
-                    // Get the next available event for this stop from our pool
                     const pool = eventPool.get(stopId) || [];
-                    const existingEvent = pool.shift(); // Consume one
+                    const existingEvent = pool.shift(); // Get next available event for this stop
 
-                    if (existingEvent && (completedEventIds.has(existingEvent.id_event) || inServiceEventIds.has(existingEvent.id_event))) {
-                        // This event was NOT deleted. We should update its position to match the new order.
+                    if (existingEvent) {
+                        // PRESERVE AND UPDATE: The event exists, just update its position
+                        matchedEventIds.add(existingEvent.id_event);
                         const updatePromise = this.prismaRepository.event.update({
                             where: { id_event: existingEvent.id_event },
                             data: { pos: currentPos }
                         });
                         updatePromises.push(updatePromise);
                     } else {
-                        // Create a NEW event in the new position
+                        // CREATE: This is a new stop added to the route
                         const createPromise = this.prismaRepository.event.create({
                             data: {
                                 id_route: route.id_route,
                                 id_stop: stopId,
                                 pos: currentPos,
                                 status: EventStatus.PENDING,
-                                tag: existingEvent?.tag ?? null,
-                                tag_color: existingEvent?.tag_color ?? null,
-                                logistic_comments: existingEvent?.logistic_comments ?? null,
-                                created_at: existingEvent?.created_at ?? new Date(),
+                                created_at: new Date(),
                             },
                         });
                         updatePromises.push(createPromise);
                     }
                     currentPos++;
                 }
+
+                // DELETE: Remove events that were NOT matched (meaning they were removed from the route)
+                // BUT only if they are not completed or in-service (safety check)
+                const eventsToDelete = Array.from(allEventIds).filter(id => 
+                    !matchedEventIds.has(id) && 
+                    !completedEventIds.has(id) && 
+                    !inServiceEventIds.has(id)
+                );
+
+                if (eventsToDelete.length > 0) {
+                    await this.prismaRepository.event.deleteMany({
+                        where: { id_event: { in: eventsToDelete } }
+                    });
+                }
             } else {
+                // ── OPTIMIZED MODE (Google Maps) ──
+                // In optimized mode, we still use the delete-and-recreate approach because 
+                // matching by location is more reliable when the whole route changes.
+                
+                await this.prismaRepository.event.deleteMany({
+                    where: {
+                        id_route: route.id_route,
+                        status: { not: EventStatus.COMPLETED },
+                        date_service: null
+                    },
+                });
                 // ── OPTIMIZED MODE (default) ──
                 // Match events to legs based on Google Maps response coordinates
                 const stopIdsSet = new Set<number>(stopWaypoints);
