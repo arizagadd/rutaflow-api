@@ -560,19 +560,26 @@ export class RouteRepository {
 
 
             // Fetch existing tags, tag_colors and logistic_comments for non-completed events
-            const eventTagMap = new Map<number, { tag: string | null; tag_color: string | null; logistic_comments: string | null; created_at: Date | null }>();
+            // Use a map of arrays to handle duplicate stops in the same route
+            const eventPool = new Map<number, any[]>();
+            const completedEventIds = new Set<number>();
+            const inServiceEventIds = new Set<number>();
+
             events.forEach((e) => {
-                if (e.status !== EventStatus.COMPLETED) {
-                    eventTagMap.set(e.stop.id_stop, {
-                        tag: e.tag,
-                        tag_color: e.tag_color,
-                        logistic_comments: e.logistic_comments,
-                        created_at: e.created_at,
-                    });
+                if (!eventPool.has(e.id_stop)) {
+                    eventPool.set(e.id_stop, []);
+                }
+                eventPool.get(e.id_stop).push(e);
+                
+                if (e.status === EventStatus.COMPLETED) {
+                    completedEventIds.add(e.id_event);
+                }
+                if (e.date_service != null) {
+                    inServiceEventIds.add(e.id_event);
                 }
             });
 
-            // Delete non-completed events
+            // Delete only non-completed and non-in-service events
             await this.prismaRepository.event.deleteMany({
                 where: {
                     id_route: route.id_route,
@@ -583,7 +590,7 @@ export class RouteRepository {
                 },
             });
 
-            let currentPos = posindex + completedEventIds.size;
+            let currentPos = posindex; // Start from posindex (usually 0)
 
             if (!optimize) {
                 // ── MANUAL REORDER MODE ──
@@ -592,26 +599,33 @@ export class RouteRepository {
                 console.log('🔀 matchLegsToManyEventRecords: Manual reorder mode (optimize=false), preserving stopWaypoints order');
 
                 for (const stopId of stopWaypoints) {
-                    if (completedEventIds.has(stopId)) {
-                        continue; // Skip completed events, they are not deleted
+                    // Get the next available event for this stop from our pool
+                    const pool = eventPool.get(stopId) || [];
+                    const existingEvent = pool.shift(); // Consume one
+
+                    if (existingEvent && (completedEventIds.has(existingEvent.id_event) || inServiceEventIds.has(existingEvent.id_event))) {
+                        // This event was NOT deleted. We should update its position to match the new order.
+                        const updatePromise = this.prismaRepository.event.update({
+                            where: { id_event: existingEvent.id_event },
+                            data: { pos: currentPos }
+                        });
+                        updatePromises.push(updatePromise);
+                    } else {
+                        // Create a NEW event in the new position
+                        const createPromise = this.prismaRepository.event.create({
+                            data: {
+                                id_route: route.id_route,
+                                id_stop: stopId,
+                                pos: currentPos,
+                                status: EventStatus.PENDING,
+                                tag: existingEvent?.tag ?? null,
+                                tag_color: existingEvent?.tag_color ?? null,
+                                logistic_comments: existingEvent?.logistic_comments ?? null,
+                                created_at: existingEvent?.created_at ?? new Date(),
+                            },
+                        });
+                        updatePromises.push(createPromise);
                     }
-
-                    // Retrieve the tag and tag_color from the previously saved map (if exists)
-                    const old = eventTagMap.get(stopId);
-
-                    const createPromise = this.prismaRepository.event.create({
-                        data: {
-                            id_route: route.id_route,
-                            id_stop: stopId,
-                            pos: currentPos,
-                            status: EventStatus.PENDING,
-                            tag: old?.tag ?? null,
-                            tag_color: old?.tag_color ?? null,
-                            logistic_comments: old?.logistic_comments ?? null,
-                            created_at: old?.created_at ?? new Date(),
-                        },
-                    });
-                    updatePromises.push(createPromise);
                     currentPos++;
                 }
             } else {
