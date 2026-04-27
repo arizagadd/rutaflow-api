@@ -76,6 +76,14 @@ export class UpdateRouteDto {
       .map((v: string) => desencriptar(v))
   )
   stopWaypoints?: number[];
+
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === 'false' || value === '0' || value === false) return false;
+    if (value === 'true' || value === '1' || value === true) return true;
+    return value;
+  }, { toClassOnly: true })
+  optimize?: boolean;
 }
 
 export class CreateRouteDto {

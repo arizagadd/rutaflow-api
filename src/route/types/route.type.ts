@@ -69,6 +69,7 @@ export type SetupRouteDirectionsParams = {
     stopInitial: Stop;
     stopFinal: Stop;
     stopWaypoints?: Stop[];
+    optimize?: boolean;
 };
 
 export type UpdateRouteDirectionsParams = {
@@ -77,4 +78,5 @@ export type UpdateRouteDirectionsParams = {
     newStopFinal: Stop;
     newDirections: DirectionsRequestParams;
     stopWaypoints?: number[];
+    optimize?: boolean;
 };

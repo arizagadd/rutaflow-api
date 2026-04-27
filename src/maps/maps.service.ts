@@ -49,7 +49,7 @@ export class MapsService {
                             destination,
                             mode: TravelMode.driving,
                             waypoints,
-                            optimize: true,
+                            optimize: data.optimize !== false,
                             key: this.apiKey,
                         },
                     });
@@ -191,7 +191,7 @@ export class MapsService {
                     origin: currentOrigin,
                     destination: nextDestination,
                     waypoints: chunkWaypoints,
-                    optimize: true,
+                    optimize: data.optimize !== false,
                     mode: TravelMode.driving,
                     key: this.apiKey,
                 }
@@ -398,6 +398,7 @@ export class MapsService {
                     origin,
                     destination,
                     waypoints: Array.from(coordinatesSet), // Converting Set back to Array
+                    optimize: params.optimize,
                 };
             }
 

@@ -429,11 +429,13 @@ export class RouteService {
                     stopInitial: newStopInitial,
                     stopFinal: newStopFinal,
                     stopWaypoints: validWaypoints,
+                    optimize: body.optimize,
                 };
             } else {
                 params = {
                     stopInitial: newStopInitial,
                     stopFinal: newStopFinal,
+                    optimize: body.optimize,
                 };
             }
 
@@ -444,6 +446,7 @@ export class RouteService {
                 newStopFinal,
                 newDirections,
                 stopWaypoints: stopWaypointsIds, // Pass stopWaypoints IDs
+                optimize: body.optimize,
             };
             route = await this.updateRouteDirections(routeDirectionsData);
 
@@ -602,7 +605,7 @@ export class RouteService {
 
             const updatedRoute = await this.routeRepository.updateRouteRecord(params.route.id_route, routeData);
             // Update the route with the new directions
-            await this.routeRepository.matchLegsToManyEventRecords(params.route, directions, params.stopWaypoints);
+            await this.routeRepository.matchLegsToManyEventRecords(params.route, directions, params.stopWaypoints, params.optimize !== false);
 
             return updatedRoute;
         } catch (error) {

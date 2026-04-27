@@ -128,6 +128,9 @@ export class RouteRepository {
                 where: {
                     id_route: routeId,
                 },
+                orderBy: {
+                    pos: 'asc',
+                },
             });
             if (!events) {
                 throw new DataBaseError({
@@ -521,7 +524,7 @@ export class RouteRepository {
         }
     }
 
-    async matchLegsToManyEventRecords(route: Route, params: DirectionsResponse, stopWaypoints: number[]): Promise<void> {
+    async matchLegsToManyEventRecords(route: Route, params: DirectionsResponse, stopWaypoints: number[], optimize: boolean = true): Promise<void> {
         let posindex = 0; // Initial position index
         const updatePromises = []; // Array to store update promises for transaction
         const legs = params.data.routes[0].legs;
@@ -580,58 +583,92 @@ export class RouteRepository {
                 },
             });
 
-            const stopIdsSet = new Set<number>(stopWaypoints);
             let currentPos = posindex + completedEventIds.size;
 
-            for (const leg of legs) {
-                // Round to the 6th decimal place
-                let lat = 0.0;
-                let lng = 0.0;
+            if (!optimize) {
+                // ── MANUAL REORDER MODE ──
+                // When optimize is false, preserve the exact order from stopWaypoints array.
+                // This is used after drag-and-drop reordering in the web admin panel.
+                console.log('🔀 matchLegsToManyEventRecords: Manual reorder mode (optimize=false), preserving stopWaypoints order');
 
-                if (leg.end_location && leg.end_location.lat && leg.end_location.lng) {
-                    lat = parseFloat(leg.end_location.lat.toFixed(6));
-                    lng = parseFloat(leg.end_location.lng.toFixed(6));
+                for (const stopId of stopWaypoints) {
+                    if (completedEventIds.has(stopId)) {
+                        continue; // Skip completed events, they are not deleted
+                    }
+
+                    // Retrieve the tag and tag_color from the previously saved map (if exists)
+                    const old = eventTagMap.get(stopId);
+
+                    const createPromise = this.prismaRepository.event.create({
+                        data: {
+                            id_route: route.id_route,
+                            id_stop: stopId,
+                            pos: currentPos,
+                            status: EventStatus.PENDING,
+                            tag: old?.tag ?? null,
+                            tag_color: old?.tag_color ?? null,
+                            logistic_comments: old?.logistic_comments ?? null,
+                            created_at: old?.created_at ?? new Date(),
+                        },
+                    });
+                    updatePromises.push(createPromise);
+                    currentPos++;
                 }
+            } else {
+                // ── OPTIMIZED MODE (default) ──
+                // Match events to legs based on Google Maps response coordinates
+                const stopIdsSet = new Set<number>(stopWaypoints);
 
-                const waypointsLatRounded = lat;
-                const waypointsLngRounded = lng;
+                for (const leg of legs) {
+                    // Round to the 6th decimal place
+                    let lat = 0.0;
+                    let lng = 0.0;
 
-                // Query for the stops with matching lat and lon coordinates up to 6th decimal place
-                const matchingStops = await this.prismaRepository.stop.findMany({
-                    where: {
-                        lat: {
-                            gte: waypointsLatRounded - 0.0005,
-                            lte: waypointsLatRounded + 0.0005,
-                        },
-                        lon: {
-                            gte: waypointsLngRounded - 0.0005,
-                            lte: waypointsLngRounded + 0.0005,
-                        },
-                    },
-                });
+                    if (leg.end_location && leg.end_location.lat && leg.end_location.lng) {
+                        lat = parseFloat(leg.end_location.lat.toFixed(6));
+                        lng = parseFloat(leg.end_location.lng.toFixed(6));
+                    }
 
-                for (const stop of matchingStops) {
-                    if (stopIdsSet.has(stop.id_stop) && !completedEventIds.has(stop.id_stop)) {
-                        stopIdsSet.delete(stop.id_stop);
+                    const waypointsLatRounded = lat;
+                    const waypointsLngRounded = lng;
 
-                        // Retrieve the tag and tag_color from the previously saved map (if exists)
-                        const old = eventTagMap.get(stop.id_stop);
-
-                        // Create the event with the tag and tag_color information
-                        const createUpdatePromise = this.prismaRepository.event.create({
-                            data: {
-                                id_route: route.id_route,
-                                id_stop: stop.id_stop,
-                                pos: currentPos,
-                                status: EventStatus.PENDING,
-                                tag: old?.tag ?? null,
-                                tag_color: old?.tag_color ?? null,
-                                logistic_comments: old?.logistic_comments ?? null,
-                                created_at: old?.created_at ?? new Date(),
+                    // Query for the stops with matching lat and lon coordinates up to 6th decimal place
+                    const matchingStops = await this.prismaRepository.stop.findMany({
+                        where: {
+                            lat: {
+                                gte: waypointsLatRounded - 0.0005,
+                                lte: waypointsLatRounded + 0.0005,
                             },
-                        });
-                        updatePromises.push(createUpdatePromise);
-                        currentPos++;
+                            lon: {
+                                gte: waypointsLngRounded - 0.0005,
+                                lte: waypointsLngRounded + 0.0005,
+                            },
+                        },
+                    });
+
+                    for (const stop of matchingStops) {
+                        if (stopIdsSet.has(stop.id_stop) && !completedEventIds.has(stop.id_stop)) {
+                            stopIdsSet.delete(stop.id_stop);
+
+                            // Retrieve the tag and tag_color from the previously saved map (if exists)
+                            const old = eventTagMap.get(stop.id_stop);
+
+                            // Create the event with the tag and tag_color information
+                            const createUpdatePromise = this.prismaRepository.event.create({
+                                data: {
+                                    id_route: route.id_route,
+                                    id_stop: stop.id_stop,
+                                    pos: currentPos,
+                                    status: EventStatus.PENDING,
+                                    tag: old?.tag ?? null,
+                                    tag_color: old?.tag_color ?? null,
+                                    logistic_comments: old?.logistic_comments ?? null,
+                                    created_at: old?.created_at ?? new Date(),
+                                },
+                            });
+                            updatePromises.push(createUpdatePromise);
+                            currentPos++;
+                        }
                     }
                 }
             }
