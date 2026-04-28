@@ -403,32 +403,39 @@ export class RouteService {
 
             let stopWaypointsIds: number[] | undefined;
             if (body.stopWaypoints && body.stopWaypoints.length > 0) {
-                const newStopWaypoints = await this.stopRepository.findManyStopsById(body.stopWaypoints);
-                
-                // Filtrar paradas archivadas y validar
-                // is_archived es Int? (puede ser null, 0 o 1)
-                const validWaypoints = newStopWaypoints.filter(stop => {
-                    return stop.is_archived !== 1;
-                });
-                
-                if (validWaypoints.length !== newStopWaypoints.length) {
-                    const archivedCount = newStopWaypoints.length - validWaypoints.length;
+                const uniqueIds = [...new Set(body.stopWaypoints)];
+                const newStopWaypoints = await this.stopRepository.findManyStopsById(uniqueIds);
+                const stopById = new Map(newStopWaypoints.map((stop) => [stop.id_stop, stop]));
+
+                // Preservar el orden enviado por el cliente (p. ej. drag-and-drop en admin).
+                // findManyStopsById devuelve filas en orden arbitrario de BD; si mapeamos con map(),
+                // matchLegsToManyEventRecords(…, optimize:false) reasignaba pos incorrectamente.
+                const orderedWaypoints = [];
+                for (const id of body.stopWaypoints) {
+                    const stop = stopById.get(id);
+                    if (stop && stop.is_archived !== 1) {
+                        orderedWaypoints.push(stop);
+                    }
+                }
+
+                const archivedCount = newStopWaypoints.filter((s) => s.is_archived === 1).length;
+                if (archivedCount > 0) {
                     console.warn(`⚠️ ${archivedCount} parada(s) archivada(s) fueron filtradas de los waypoints`);
                 }
-                
-                if (validWaypoints.length === 0 && body.stopWaypoints.length > 0) {
+
+                if (orderedWaypoints.length === 0 && body.stopWaypoints.length > 0) {
                     throw new DomainError({
                         domain: 'ROUTE',
                         layer: 'SERVICE',
                         message: `Todas las paradas intermedias están archivadas y no pueden usarse en rutas`,
                     });
                 }
-                
-                stopWaypointsIds = validWaypoints.map(stop => stop.id_stop);
+
+                stopWaypointsIds = orderedWaypoints.map((stop) => stop.id_stop);
                 params = {
                     stopInitial: newStopInitial,
                     stopFinal: newStopFinal,
-                    stopWaypoints: validWaypoints,
+                    stopWaypoints: orderedWaypoints,
                     optimize: body.optimize,
                 };
             } else {
