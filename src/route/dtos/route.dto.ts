@@ -6,19 +6,27 @@ import * as crypto from "crypto";
 const clave = "W3K_Ñjq*/";
 
 // Decrypt Function
-function desencriptar(value: string): number | string {
+function desencriptar(value: string | number): number | string {
   value = String(value);
+
+  // Si ya es un número entero puro (sin ceros a la izquierda que indiquen un hash hexadecimal),
+  // lo retornamos directamente para evitar que lo confunda con un prefijo de hash corto.
+  if (/^(0|[1-9]\d*)$/.test(value)) {
+      return parseInt(value, 10);
+  }
 
   if (!/^[a-z0-9]+$/.test(value)) {
       return value;
   }
 
-  for (let i = 0; ; i++) {
+  // Límite de seguridad para evitar bucles infinitos en producción
+  for (let i = 0; i < 100000; i++) {
       const hash = crypto.createHmac('sha256', clave).update(String(i)).digest('hex');
       if (hash.startsWith(value)) {
           return i;
       }
   }
+  return value; // Si no lo encuentra, lo devuelve intacto
 }
 
 
