@@ -464,10 +464,11 @@ export class RouteService {
             }
 
             if (error instanceof DataBaseError) {
+                const detailedMessage = error.message || 'Unable to update route';
                 throw new DomainError({
                     domain: 'ROUTE',
                     layer: 'SERVICE',
-                    message: `Unable to update route`,
+                    message: detailedMessage,
                     cause: error,
                 });
             }
