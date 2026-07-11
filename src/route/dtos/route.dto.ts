@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsArray, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 import * as crypto from "crypto";
 
 // Encryption/Decryption Key
@@ -21,6 +21,18 @@ function desencriptar(value: string | number): number | string {
       }
   }
   return value; // Si no lo encuentra, lo devuelve intacto
+}
+
+function parseStopWaypoints(value: unknown): number[] | undefined {
+  if (value == null || value === '') {
+    return undefined;
+  }
+  const raw = Array.isArray(value) ? value : String(value).split(',');
+  const ids = raw
+    .map((v) => String(v).trim())
+    .filter((v) => v !== '' && v !== 'null' && v !== '0')
+    .map((v) => desencriptar(v) as number);
+  return ids.length > 0 ? ids : undefined;
 }
 
 
@@ -70,13 +82,7 @@ export class UpdateRouteDto {
   stopFinal: number;
 
   @IsOptional()
-  @IsArray()
-  @Transform(({ value }) =>
-    value
-      .toString()
-      .split(',')
-      .map((v: string) => desencriptar(v))
-  )
+  @Transform(({ value }) => parseStopWaypoints(value))
   stopWaypoints?: number[];
 
   @IsOptional()
@@ -100,13 +106,7 @@ export class CreateRouteDto {
   stopFinal: number;
 
   @IsOptional()
-  @IsArray()
-  @Transform(({ value }) =>
-    value
-      .toString()
-      .split(',')
-      .map((v: string) => desencriptar(v))
-  )
+  @Transform(({ value }) => parseStopWaypoints(value))
   stopWaypoints?: number[];
 }
 
