@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EventStatus, Route, RouteTemplate } from '@prisma/client';
+import { EventStatus, Route, RouteTemplate, Stop } from '@prisma/client';
 import { DriverRepository } from '../driver/driver.repository';
 import { EnterpriseRepository } from '../enterprise/enterprise.repository';
 import { MapsService } from '../maps/maps.service';
@@ -38,8 +38,12 @@ export class RouteService {
         // If there is no polyline, generate directions and update the template
         if (!routeTemplate.polyline) {
             try {
-                const stopInitial = await this.stopRepository.findStopRecordById(routeTemplate.stop_initial);
-                const stopFinal = await this.stopRepository.findStopRecordById(routeTemplate.stop_final);
+                const stopInitial = await this.ensureStopCoordinates(
+                    await this.stopRepository.findStopRecordById(routeTemplate.stop_initial),
+                );
+                const stopFinal = await this.ensureStopCoordinates(
+                    await this.stopRepository.findStopRecordById(routeTemplate.stop_final),
+                );
                 const directions = await this.routeRepository.prepareRouteTemplateDirections(
                     routeTemplate.id_route_template,
                     stopInitial,
@@ -79,8 +83,12 @@ export class RouteService {
         // therefore a route must be generated and the data must be updated in the RouteTemplate record
         if (!routeTemplate.polyline) {
             try {
-                const stopInitial = await this.stopRepository.findStopRecordById(routeTemplate.stop_initial);
-                const stopFinal = await this.stopRepository.findStopRecordById(routeTemplate.stop_final);
+                const stopInitial = await this.ensureStopCoordinates(
+                    await this.stopRepository.findStopRecordById(routeTemplate.stop_initial),
+                );
+                const stopFinal = await this.ensureStopCoordinates(
+                    await this.stopRepository.findStopRecordById(routeTemplate.stop_final),
+                );
                 const directions = await this.routeRepository.prepareRouteTemplateDirections(
                     routeTemplate.id_route_template,
                     stopInitial,
@@ -375,11 +383,32 @@ export class RouteService {
         }
     }
 
+    /** Geocodifica y persiste lat/lon si la parada solo tiene dirección escrita. */
+    private async ensureStopCoordinates(stop: Stop): Promise<Stop> {
+        if (this.mapsService.hasValidCoordinates(stop.lat, stop.lon)) {
+            return stop;
+        }
+        const location = this.mapsService.buildStopAddress(stop);
+        if (!location) {
+            throw new DomainError({
+                domain: 'ROUTE',
+                layer: 'SERVICE',
+                message: `La parada "${stop.title || stop.id_stop}" no tiene coordenadas ni dirección. Edítala en Paradas y guarda una ubicación válida.`,
+            });
+        }
+        const coords = await this.mapsService.convertLocationToLatLng(location) as { lat: number; lng: number };
+        return this.stopRepository.updateStopCoordinates(stop.id_stop, coords.lat, coords.lng);
+    }
+
     async updateRouteTrajectory(body: UpdateRouteDto): Promise<Route> {
         try {
             let route = await this.routeRepository.findRouteRecordById(body.routeId);
-            const newStopInitial = await this.stopRepository.findStopRecordById(body.stopInitial);
-            const newStopFinal = await this.stopRepository.findStopRecordById(body.stopFinal);
+            const newStopInitial = await this.ensureStopCoordinates(
+                await this.stopRepository.findStopRecordById(body.stopInitial),
+            );
+            const newStopFinal = await this.ensureStopCoordinates(
+                await this.stopRepository.findStopRecordById(body.stopFinal),
+            );
             
             // Validar que las paradas de origen y destino no estén archivadas
             // is_archived es Int? (puede ser null, 0 o 1)
@@ -414,7 +443,7 @@ export class RouteService {
                 for (const id of body.stopWaypoints) {
                     const stop = stopById.get(id);
                     if (stop && stop.is_archived !== 1) {
-                        orderedWaypoints.push(stop);
+                        orderedWaypoints.push(await this.ensureStopCoordinates(stop));
                     }
                 }
 

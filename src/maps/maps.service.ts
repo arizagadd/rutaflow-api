@@ -1,6 +1,7 @@
 import { Client, DirectionsResponse, LatLng, TravelMode, Status } from '@googlemaps/google-maps-services-js';
 import { geocode } from '@googlemaps/google-maps-services-js/dist/geocode/geocode';
 import { Injectable, BadRequestException } from '@nestjs/common';
+import { Stop } from '@prisma/client';
 import { SetupRouteDirectionsParams } from '../route/types/route.type';
 import { DomainError, UnexpectedError } from '../shared/errors/custom-errors';
 import { DirectionsRequestParams } from './maps.type';
@@ -82,9 +83,57 @@ export class MapsService {
         }
     }
 
+    hasValidCoordinates(lat: number | null | undefined, lon: number | null | undefined): boolean {
+        if (lat == null || lon == null) return false;
+        const latNum = Number(lat);
+        const lonNum = Number(lon);
+        return !Number.isNaN(latNum) && !Number.isNaN(lonNum)
+            && Math.abs(latNum) <= 90 && Math.abs(lonNum) <= 180
+            && !(latNum === 0 && lonNum === 0);
+    }
+
+    buildStopAddress(stop: Pick<Stop, 'title' | 'line1' | 'line2' | 'city' | 'zip'>): string | null {
+        const parts = [stop.line1, stop.line2, stop.city, stop.zip, stop.title]
+            .filter((part) => part != null && String(part).trim() !== '');
+        return parts.length > 0 ? parts.join(', ') : null;
+    }
+
+    resolveStopLocation(stop: Stop): string {
+        if (this.hasValidCoordinates(stop.lat, stop.lon)) {
+            return `${stop.lat}, ${stop.lon}`;
+        }
+        const address = this.buildStopAddress(stop);
+        if (address) {
+            return address;
+        }
+        throw new DomainError({
+            domain: 'MAP',
+            layer: 'SERVICE',
+            message: `La parada "${stop.title || stop.id_stop}" no tiene coordenadas ni dirección. Edítala en Paradas y guarda una ubicación válida.`,
+        });
+    }
+
     async convertLocationToLatLng(location: string): Promise<LatLng> {
+        const trimmed = (location || '').trim();
+        if (!trimmed || trimmed === 'null, null' || trimmed === 'null,null') {
+            throw new DomainError({
+                domain: 'MAP',
+                layer: 'SERVICE',
+                message: 'La parada no tiene coordenadas ni dirección válida. Edítala en Paradas antes de crear la ruta.',
+            });
+        }
+
+        if (this.isLatLngFormat(trimmed)) {
+            const [latStr, lngStr] = trimmed.split(',').map((str) => str.trim());
+            const lat = parseFloat(latStr);
+            const lng = parseFloat(lngStr);
+            if (this.hasValidCoordinates(lat, lng)) {
+                return { lat, lng };
+            }
+        }
+
         const params = {
-            address: location,
+            address: trimmed,
             key: this.apiKey,
         };
 
@@ -95,27 +144,19 @@ export class MapsService {
                 lat: response.data.results[0].geometry.location.lat,
                 lng: response.data.results[0].geometry.location.lng,
             };
-        } else {
-            throw new DomainError({
-                domain: 'MAP',
-                layer: 'SERVICE',
-                message: `Cannot convert location "${location}" to latitude and longitude.`,
-            });
         }
+
+        throw new DomainError({
+            domain: 'MAP',
+            layer: 'SERVICE',
+            message: `No se pudo ubicar "${trimmed}". Verifica la dirección de la parada en Paradas.`,
+        });
     }
 
     async convertLocationsToLatLng(locations: string[]): Promise<LatLng[]> {
-        const convertedLocations: Promise<LatLng>[] = locations.map(async (location) => {
-            if (this.isLatLngFormat(location)) {
-                const [latStr, lngStr] = location.split(',').map((str) => str.trim());
-                return {
-                    lat: parseFloat(latStr),
-                    lng: parseFloat(lngStr),
-                };
-            } else {
-                return this.convertLocationToLatLng(location);
-            }
-        });
+        const convertedLocations: Promise<LatLng>[] = locations
+            .filter((location) => location != null && String(location).trim() !== '' && String(location).trim() !== 'null, null')
+            .map(async (location) => this.convertLocationToLatLng(location));
 
         return Promise.all(convertedLocations);
     }
@@ -368,8 +409,8 @@ export class MapsService {
   
     setUpRouteDirectionsParams(params: SetupRouteDirectionsParams): DirectionsRequestParams {
         try {
-            const origin = `${params.stopInitial.lat}, ${params.stopInitial.lon}`;
-            const destination = `${params.stopFinal.lat}, ${params.stopFinal.lon}`;
+            const origin = this.resolveStopLocation(params.stopInitial);
+            const destination = this.resolveStopLocation(params.stopFinal);
             const coordinatesSet = new Set<string>(); // Using Set to ensure uniqueness
             let requestData: DirectionsRequestParams;
 
@@ -381,16 +422,9 @@ export class MapsService {
                 };
             } else {
                 params.stopWaypoints.forEach((stop) => {
-                    const { lat, lon } = stop;
-
-                    // Checking if the coordinates are neither for stop_initial nor for stop_final
-                    if (
-                        !(
-                            (lat === params.stopInitial?.lat && lon === params.stopInitial?.lon) ||
-                            (lat === params.stopFinal?.lat && lon === params.stopFinal?.lon)
-                        )
-                    ) {
-                        coordinatesSet.add(`${lat}, ${lon}`);
+                    const location = this.resolveStopLocation(stop);
+                    if (location !== origin && location !== destination) {
+                        coordinatesSet.add(location);
                     }
                 });
 
@@ -404,6 +438,9 @@ export class MapsService {
 
             return requestData;
         } catch (error) {
+            if (error instanceof DomainError) {
+                throw error;
+            }
             throw new UnexpectedError({
                 domain: 'MAP',
                 layer: 'SERVICE',
