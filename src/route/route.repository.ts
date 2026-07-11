@@ -593,12 +593,15 @@ export class RouteRepository {
 
             const matchedEventIds = new Set<number>();
             let currentPos = posindex; // Start from posindex (usually 0)
+            const waypointIds = stopWaypoints ?? [];
 
-            if (!optimize) {
-                // ── MANUAL REORDER MODE ──
-                console.log('🔀 matchLegsToManyEventRecords: Manual reorder mode (optimize=false), preserving existing events');
+            // When explicit stop IDs are provided, always match by ID (coordinate matching
+            // fails after geocoding or when lat/lon differ slightly from Directions API).
+            if (waypointIds.length > 0 || !optimize) {
+                // ── ID-BASED MODE (manual reorder or explicit waypoints) ──
+                console.log('🔀 matchLegsToManyEventRecords: ID-based mode, waypoints=', waypointIds.length);
 
-                for (const stopId of stopWaypoints) {
+                for (const stopId of waypointIds) {
                     const pool = eventPool.get(stopId) || [];
                     const existingEvent = pool.shift(); // Get next available event for this stop
 
