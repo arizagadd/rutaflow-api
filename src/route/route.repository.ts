@@ -595,9 +595,10 @@ export class RouteRepository {
             let currentPos = posindex; // Start from posindex (usually 0)
             const waypointIds = stopWaypoints ?? [];
 
-            // When explicit stop IDs are provided, always match by ID (coordinate matching
-            // fails after geocoding or when lat/lon differ slightly from Directions API).
-            if (waypointIds.length > 0 || !optimize) {
+            // Match by stop ID only when the client sends explicit waypoint IDs.
+            // Never wipe events when optimize=false but no waypoints were provided (e.g. after add_stops
+            // if stopWaypoints failed to parse on the wire).
+            if (waypointIds.length > 0) {
                 // ── ID-BASED MODE (manual reorder or explicit waypoints) ──
                 console.log('🔀 matchLegsToManyEventRecords: ID-based mode, waypoints=', waypointIds.length);
 
