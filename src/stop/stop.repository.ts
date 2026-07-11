@@ -74,4 +74,33 @@ export class StopRepository {
             }
         }
     }
+
+    async updateStopCoordinates(id: number, lat: number, lon: number): Promise<Stop> {
+        try {
+            const stop = await this.prismaRepository.stop.update({
+                where: { id_stop: id },
+                data: { lat, lon },
+            });
+            if (!stop) {
+                throw new DataBaseError({
+                    domain: 'STOP',
+                    layer: 'REPOSITORY',
+                    type: 'UPDATE_RECORD_ERROR',
+                    message: `Stop with id ${id} not found`,
+                });
+            }
+            return stop;
+        } catch (error) {
+            if (error instanceof DataBaseError) {
+                throw error;
+            }
+            throw new UnexpectedError({
+                domain: 'STOP',
+                layer: 'REPOSITORY',
+                type: 'UNEXPECTED_ERROR',
+                message: `Error:${error.message}`,
+                cause: error,
+            });
+        }
+    }
 }

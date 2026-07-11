@@ -1,14 +1,18 @@
 import { DirectionsResponse } from '@googlemaps/google-maps-services-js';
 import { Injectable } from '@nestjs/common';
 import { Event, EventStatus, EventTemplate, Route, RouteTemplate, Stop } from '@prisma/client';
+import { MapsService } from '../maps/maps.service';
 import { DirectionsRequestParams } from '../maps/maps.type';
 import { PrismaRepository } from '../prisma/prisma.repository';
-import { DataBaseError, UnexpectedError } from '../shared/errors/custom-errors';
+import { DataBaseError, DomainError, UnexpectedError } from '../shared/errors/custom-errors';
 import { CreateRouteParams, UpdateRouteParams, UpdateRouteTemplateParams } from './types/route.type';
 
 @Injectable()
 export class RouteRepository {
-    constructor(private readonly prismaRepository: PrismaRepository) { }
+    constructor(
+        private readonly prismaRepository: PrismaRepository,
+        private readonly mapsService: MapsService,
+    ) { }
 
     async createRouteRecord(data: CreateRouteParams): Promise<Route> {
         try {
@@ -209,8 +213,8 @@ export class RouteRepository {
 
     async prepareRouteTemplateDirections(routeTemplateId: number, stopInitial: Stop, stopFinal: Stop): Promise<DirectionsRequestParams> {
         try {
-            const origin = `${stopInitial.lat}, ${stopInitial.lon}`;
-            const destination = `${stopFinal.lat}, ${stopFinal.lon}`;
+            const origin = this.mapsService.resolveStopLocation(stopInitial);
+            const destination = this.mapsService.resolveStopLocation(stopFinal);
             const coordinatesSet = new Set<string>(); // Using Set to ensure uniqueness
             let requestData: DirectionsRequestParams;
 
@@ -224,11 +228,13 @@ export class RouteRepository {
             });
 
             eventTemplates.forEach((event) => {
-                const { lat, lon } = event.stop;
-
-                // Check if the coordinates are neither for stop_initial nor for stop_final
-                if (!((lat === stopInitial.lat && lon === stopInitial.lon) || (lat === stopFinal.lat && lon === stopFinal.lon))) {
-                    coordinatesSet.add(`${lat}, ${lon}`);
+                try {
+                    const location = this.mapsService.resolveStopLocation(event.stop);
+                    if (location !== origin && location !== destination) {
+                        coordinatesSet.add(location);
+                    }
+                } catch {
+                    // Skip waypoints without usable location
                 }
             });
 
@@ -247,6 +253,9 @@ export class RouteRepository {
 
             return requestData;
         } catch (error) {
+            if (error instanceof DomainError) {
+                throw error;
+            }
             throw new UnexpectedError({
                 domain: 'ROUTE',
                 layer: 'REPOSITORY',
