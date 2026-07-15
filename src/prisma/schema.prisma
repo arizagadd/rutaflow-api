@@ -243,6 +243,7 @@ model Route {
   name              String?          @db.VarChar(200)
   date_start        DateTime?        @db.DateTime(0)
   date_end          DateTime?        @db.DateTime(0)
+  date_started      DateTime?        @db.DateTime(0)
   polyline          String?          @db.VarChar(2500)
   total_duration    Float?           @db.Float
   total_distance    Float?           @db.Float
